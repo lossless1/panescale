@@ -30,12 +30,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can drag terminal tiles by title bar, resize via edge/corner handles, click to bring to front, and close via title bar
   4. User can copy/paste text in terminal tiles and configure font, font size, and color scheme
   5. Canvas layout (tile positions, sizes, viewport) persists to disk and restores identically on app relaunch, with auto-save on changes
-**Plans**: 3 plans
+**Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Scaffold Tauri project, app shell layout, theme system, infinite canvas with dot grid and pan/zoom
-- [ ] 01-02-PLAN.md — Rust PTY backend with portable-pty, Channel streaming, shell detection
-- [ ] 01-03-PLAN.md — Terminal tiles on canvas with xterm.js, focus system, drag/resize/z-index, state persistence
+- [ ] 01-01-PLAN.md — Scaffold Tauri v2 project, install all dependencies, configure Vitest with test stubs
+- [ ] 01-02-PLAN.md — App shell layout, theme system, infinite canvas with dot grid, pan/zoom, rubber-band effect
+- [ ] 01-03-PLAN.md — Rust PTY backend with portable-pty, Channel streaming, shell detection, Rust tests
+- [ ] 01-04-PLAN.md — Terminal tiles on canvas with xterm.js, focus system, drag/resize/z-index, copy/paste
+- [ ] 01-05-PLAN.md — Canvas state persistence with atomic writes, debounced auto-save, restore on launch
 
 ### Phase 2: Sidebar + Session Persistence
 **Goal**: Users can browse project files in a sidebar, manage multiple projects, and have terminal sessions (not just layout) survive restarts via transparent tmux integration
@@ -106,7 +108,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Canvas + Terminal Core | 0/3 | Planning complete | - |
+| 1. Canvas + Terminal Core | 0/5 | Planning complete | - |
 | 2. Sidebar + Session Persistence | 0/3 | Not started | - |
 | 3. Terminal Polish + Canvas Refinement | 0/2 | Not started | - |
 | 4. Git UI | 0/3 | Not started | - |
