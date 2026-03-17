@@ -57,10 +57,10 @@ Plans:
 ### Phase 3: Terminal Polish + Canvas Refinement
 **Goal**: Terminal tiles gain power-user features (search, clickable URLs, process indicators, labels) and the canvas gains navigation and organizational tools
 **Depends on**: Phase 2
-**Requirements**: TERM-06, TERM-09, TERM-10, TERM-11, TERM-12, TERM-13, CANV-05, CANV-06, CANV-07
+**Requirements**: TERM-06, TERM-09, TERM-10, TERM-11, TERM-12, TERM-13, TERM-16, CANV-05, CANV-06, CANV-07
 **Success Criteria** (what must be TRUE):
   1. User can search within terminal output to find text, see clickable URLs that open in system browser, and see the running process name in the title bar
-  2. User can configure scrollback buffer size, assign color badges/labels to terminals, and set startup commands that auto-run on session restore
+  2. User can rename terminals, configure scrollback buffer size, assign color badges/labels, set startup commands, and receive notification sounds when processes complete
   3. User can see a minimap overview for navigating large canvases, and sees alignment guides when dragging tiles near other tiles
   4. User can create named canvas regions with optional background color to visually group related tiles
 **Plans**: TBD
