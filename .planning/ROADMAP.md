@@ -42,7 +42,7 @@ Plans:
 ### Phase 2: Sidebar + Session Persistence
 **Goal**: Users can browse project files in a sidebar, manage multiple projects, and have terminal sessions (not just layout) survive restarts via transparent tmux integration
 **Depends on**: Phase 1
-**Requirements**: SIDE-01, SIDE-02, SIDE-03, SIDE-04, SIDE-05, SIDE-06, SIDE-07, PERS-02, THEM-02, THEM-03, CANV-04
+**Requirements**: SIDE-01, SIDE-02, SIDE-03, SIDE-04, SIDE-05, SIDE-06, SIDE-07, SIDE-08, SIDE-09, PERS-02, THEM-02, THEM-03, THEM-04, CANV-04
 **Success Criteria** (what must be TRUE):
   1. User can open a folder, see its file tree in the left sidebar, expand/collapse folders, and switch between multiple open projects
   2. User can create, rename, and delete files/folders from the sidebar, search files with Cmd+K fuzzy finder, and drag files onto the canvas

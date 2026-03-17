@@ -49,6 +49,8 @@
 - [ ] **SIDE-05**: User can create, rename, and delete files/folders from the sidebar
 - [ ] **SIDE-06**: User can search/filter files with a fuzzy finder (Cmd+K)
 - [ ] **SIDE-07**: User can drag files from the sidebar onto the canvas to create content tiles
+- [ ] **SIDE-08**: Sidebar shows a list of all open terminal tiles with name and working directory
+- [ ] **SIDE-09**: Clicking a terminal entry in the sidebar pans the canvas to that terminal and focuses it
 
 ### Git UI
 
@@ -80,6 +82,7 @@
 - [x] **THEM-01**: User can switch between dark and light themes
 - [ ] **THEM-02**: App detects system theme preference and applies it by default
 - [ ] **THEM-03**: Terminal color schemes are available (Dracula, Solarized, One Dark, etc.)
+- [ ] **THEM-04**: App window has rounded corners on macOS (transparent webview + border-radius)
 
 ### Cross-Platform
 
@@ -164,6 +167,8 @@
 | SIDE-05 | Phase 2 | Pending |
 | SIDE-06 | Phase 2 | Pending |
 | SIDE-07 | Phase 2 | Pending |
+| SIDE-08 | Phase 2 | Pending |
+| SIDE-09 | Phase 2 | Pending |
 | GIT-01 | Phase 4 | Pending |
 | GIT-02 | Phase 4 | Pending |
 | GIT-03 | Phase 4 | Pending |
@@ -183,13 +188,14 @@
 | THEM-01 | Phase 1 | Complete |
 | THEM-02 | Phase 2 | Pending |
 | THEM-03 | Phase 2 | Pending |
+| THEM-04 | Phase 2 | Pending |
 | PLAT-01 | Phase 1 | Pending |
 | PLAT-02 | Phase 1 | Pending |
 | PLAT-03 | Phase 1 | Complete |
 
 **Coverage:**
-- v1 requirements: 55 total
-- Mapped to phases: 55
+- v1 requirements: 58 total
+- Mapped to phases: 58
 - Unmapped: 0
 
 ---
