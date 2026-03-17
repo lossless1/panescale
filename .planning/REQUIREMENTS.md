@@ -36,9 +36,9 @@
 
 ### Session Persistence
 
-- [ ] **PERS-01**: Canvas layout (tile positions, sizes, viewport) persists to disk and restores on reopen
+- [x] **PERS-01**: Canvas layout (tile positions, sizes, viewport) persists to disk and restores on reopen
 - [ ] **PERS-02**: Terminal sessions persist via tmux (transparent to user) and reconnect on app restart
-- [ ] **PERS-03**: Canvas state saves automatically with debounced writes (500ms) and immediately on tile create/close
+- [x] **PERS-03**: Canvas state saves automatically with debounced writes (500ms) and immediately on tile create/close
 
 ### Sidebar / File Navigation
 
@@ -154,9 +154,9 @@
 | TERM-14 | Phase 1 | Complete |
 | TERM-15 | Phase 1 | Complete |
 | TERM-16 | Phase 3 | Pending |
-| PERS-01 | Phase 1 | Pending |
+| PERS-01 | Phase 1 | Complete |
 | PERS-02 | Phase 2 | Pending |
-| PERS-03 | Phase 1 | Pending |
+| PERS-03 | Phase 1 | Complete |
 | SIDE-01 | Phase 2 | Pending |
 | SIDE-02 | Phase 2 | Pending |
 | SIDE-03 | Phase 2 | Pending |

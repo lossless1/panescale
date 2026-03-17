@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-17T14:20:37.264Z"
-last_activity: 2026-03-17 -- Completed Plan 01-02 App shell + canvas with theme system
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-03-17T14:25:41Z"
+last_activity: 2026-03-17 -- Completed Plan 01-05 State persistence with atomic writes
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -25,28 +25,28 @@ See: .planning/PROJECT.md (updated 2026-03-17)
 
 ## Current Position
 
-Phase: 1 of 5 (Canvas + Terminal Core)
-Plan: 5 of 5 in current phase
-Status: Executing
-Last activity: 2026-03-17 -- Completed Plan 01-04 Terminal tiles on canvas
+Phase: 1 of 5 (Canvas + Terminal Core) -- COMPLETE
+Plan: 5 of 5 in current phase -- ALL COMPLETE
+Status: Phase 1 Complete
+Last activity: 2026-03-17 -- Completed Plan 01-05 State persistence with atomic writes
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 6 min
-- Total execution time: 0.39 hours
+- Total plans completed: 5
+- Average duration: 5 min
+- Total execution time: 0.43 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 4 | 23 min | 6 min |
+| 01 | 5 | 26 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6m), 01-03 (10m), 01-02 (3m), 01-04 (4m)
+- Last 5 plans: 01-01 (6m), 01-03 (10m), 01-02 (3m), 01-04 (4m), 01-05 (3m)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -74,6 +74,9 @@ Recent decisions affecting current work:
 - [01-04]: WebGL addon with try/catch fallback to DOM renderer for broad compatibility
 - [01-04]: Escape key capture phase handler for exiting terminal focus mode
 - [01-04]: Shift+scroll = canvas pan, regular scroll = terminal scrollback
+- [01-05]: dirs crate for cross-platform app data directory resolution
+- [01-05]: Hydration gate in App.tsx prevents flash of empty canvas before state loads
+- [01-05]: restored flag on deserialized nodes enables PTY respawn detection
 
 ### Pending Todos
 
@@ -86,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T14:19:48Z
-Stopped at: Completed 01-04-PLAN.md
-Resume file: .planning/phases/01-canvas-terminal-core/01-05-PLAN.md
+Last session: 2026-03-17T14:25:41Z
+Stopped at: Completed 01-05-PLAN.md (Phase 1 complete)
+Resume file: Next phase
