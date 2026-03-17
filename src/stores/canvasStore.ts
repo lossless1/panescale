@@ -11,13 +11,11 @@ interface CanvasState {
   viewport: Viewport;
   maxZIndex: number;
   onNodesChange: (changes: NodeChange[]) => void;
-  addTerminalNode: (position: { x: number; y: number }, ptyId: string, cwd: string) => void;
+  addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   removeNode: (id: string) => void;
   bringToFront: (id: string) => void;
   setViewport: (viewport: Viewport) => void;
 }
-
-let nodeIdCounter = 0;
 
 export const useCanvasStore = create<CanvasState>((set, get) => ({
   nodes: [],
@@ -30,15 +28,14 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     }));
   },
 
-  addTerminalNode: (position, ptyId, cwd) => {
+  addTerminalNode: (position, cwd) => {
     const newZIndex = get().maxZIndex + 1;
-    nodeIdCounter += 1;
-    const id = `terminal-${nodeIdCounter}`;
+    const id = crypto.randomUUID();
     const newNode: Node = {
       id,
       type: "terminal",
       position,
-      data: { ptyId, cwd },
+      data: { cwd, shellType: "shell" },
       dragHandle: ".drag-handle",
       style: { width: 640, height: 480 },
       zIndex: newZIndex,

@@ -6,19 +6,23 @@ import {
   type ViewportHelperFunctionOptions,
   type Viewport,
   type NodeTypes,
+  type Node,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { useEscapeToCanvas } from "../../hooks/useFocusMode";
 import { CanvasBackground } from "./CanvasBackground";
+import { TerminalNode } from "./TerminalNode";
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 2.0;
 const RUBBER_BAND_DURATION = 150;
 
-// Terminal node type will be registered when implemented in Plan 04
-const nodeTypes: NodeTypes = {};
+const nodeTypes: NodeTypes = {
+  terminal: TerminalNode,
+};
 
 /**
  * Rubber-band zoom effect: subtle bounce when hitting zoom limits.
@@ -69,6 +73,8 @@ function CanvasInner() {
   const nodes = useCanvasStore((s) => s.nodes);
   const onNodesChange = useCanvasStore((s) => s.onNodesChange);
   const setViewport = useCanvasStore((s) => s.setViewport);
+  const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
+  const bringToFront = useCanvasStore((s) => s.bringToFront);
 
   const reactFlow = useReactFlow();
   const spaceHeldRef = useRef(false);
@@ -76,6 +82,7 @@ function CanvasInner() {
 
   useKeyboardShortcuts();
   useRubberBandEffect();
+  useEscapeToCanvas();
 
   // Cmd/Ctrl+scroll = zoom
   const handleWheel = useCallback(
@@ -133,11 +140,22 @@ function CanvasInner() {
   );
 
   const handlePaneDoubleClick = useCallback(
-    (_event: React.MouseEvent) => {
-      // Terminal spawn will be wired in Plan 04
-      console.log("[Canvas] Double-click on pane -- terminal spawn placeholder");
+    (event: React.MouseEvent) => {
+      const position = reactFlow.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      const cwd = "~"; // Default cwd; PTY backend resolves home directory
+      addTerminalNode(position, cwd);
     },
-    [],
+    [reactFlow, addTerminalNode],
+  );
+
+  const handleNodeClick = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      bringToFront(node.id);
+    },
+    [bringToFront],
   );
 
   return (
@@ -170,6 +188,7 @@ function CanvasInner() {
         onMoveEnd={handleMoveEnd}
         onPaneClick={undefined}
         onDoubleClick={handlePaneDoubleClick}
+        onNodeClick={handleNodeClick}
         proOptions={{ hideAttribution: true }}
       >
         <CanvasBackground />
