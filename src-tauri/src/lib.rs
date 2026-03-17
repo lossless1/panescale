@@ -1,5 +1,6 @@
 mod platform;
 mod pty;
+mod state;
 
 pub fn run() {
     tauri::Builder::default()
@@ -11,6 +12,8 @@ pub fn run() {
             pty::commands::pty_write,
             pty::commands::pty_resize,
             pty::commands::pty_kill,
+            state::state_save,
+            state::state_load,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
