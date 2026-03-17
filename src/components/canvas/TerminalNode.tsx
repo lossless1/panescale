@@ -16,6 +16,7 @@ import { TerminalTitleBar } from "./TerminalTitleBar";
 type TerminalNodeData = {
   cwd: string;
   shellType: string;
+  restored?: boolean;
 };
 
 /**

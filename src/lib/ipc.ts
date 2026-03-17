@@ -31,3 +31,37 @@ export async function ptyResize(
 export async function ptyKill(ptyId: string): Promise<void> {
   return invoke("pty_kill", { ptyId });
 }
+
+// --- State Persistence ---
+
+export interface SerializedNode {
+  id: string;
+  position: { x: number; y: number };
+  width: number;
+  height: number;
+  zIndex: number;
+  data: {
+    cwd: string;
+    shellType: string;
+  };
+}
+
+export interface CanvasSnapshot {
+  nodes: SerializedNode[];
+  viewport: { x: number; y: number; zoom: number };
+  maxZIndex: number;
+}
+
+export async function stateSave(snapshot: CanvasSnapshot): Promise<void> {
+  return invoke("state_save", { canvas: JSON.stringify(snapshot) });
+}
+
+export async function stateLoad(): Promise<CanvasSnapshot | null> {
+  const raw = await invoke<string | null>("state_load");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as CanvasSnapshot;
+  } catch {
+    return null;
+  }
+}

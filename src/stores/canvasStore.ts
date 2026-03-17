@@ -5,22 +5,27 @@ import {
   type NodeChange,
   applyNodeChanges,
 } from "@xyflow/react";
+import { stateLoad } from "../lib/ipc";
+import { deserializeCanvas, forceSave } from "../lib/persistence";
 
 interface CanvasState {
   nodes: Node[];
   viewport: Viewport;
   maxZIndex: number;
+  hydrated: boolean;
   onNodesChange: (changes: NodeChange[]) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   removeNode: (id: string) => void;
   bringToFront: (id: string) => void;
   setViewport: (viewport: Viewport) => void;
+  loadFromDisk: () => Promise<void>;
 }
 
 export const useCanvasStore = create<CanvasState>((set, get) => ({
   nodes: [],
   viewport: { x: 0, y: 0, zoom: 1 },
   maxZIndex: 0,
+  hydrated: false,
 
   onNodesChange: (changes: NodeChange[]) => {
     set((state) => ({
@@ -44,12 +49,16 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       nodes: [...state.nodes, newNode],
       maxZIndex: newZIndex,
     }));
+    // Immediate save on tile create (PERS-03)
+    forceSave();
   },
 
   removeNode: (id) => {
     set((state) => ({
       nodes: state.nodes.filter((n) => n.id !== id),
     }));
+    // Immediate save on tile close (PERS-03)
+    forceSave();
   },
 
   bringToFront: (id) => {
@@ -64,5 +73,25 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   setViewport: (viewport) => {
     set({ viewport });
+  },
+
+  loadFromDisk: async () => {
+    try {
+      const snapshot = await stateLoad();
+      if (snapshot) {
+        const restored = deserializeCanvas(snapshot);
+        set({
+          nodes: restored.nodes,
+          viewport: restored.viewport,
+          maxZIndex: restored.maxZIndex,
+          hydrated: true,
+        });
+      } else {
+        set({ hydrated: true });
+      }
+    } catch (err) {
+      console.error("Failed to load canvas state from disk:", err);
+      set({ hydrated: true });
+    }
   },
 }));
