@@ -1,3 +1,6 @@
+mod platform;
+mod pty;
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
