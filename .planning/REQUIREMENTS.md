@@ -7,9 +7,9 @@
 
 ### Canvas
 
-- [ ] **CANV-01**: User can pan the canvas via scroll wheel, Space+drag, and middle-click+drag
-- [ ] **CANV-02**: User can zoom in/out via Cmd+/-, Ctrl+scroll, and pinch-to-zoom on trackpad
-- [ ] **CANV-03**: Canvas displays a dot grid background with minor and major dots for spatial orientation
+- [x] **CANV-01**: User can pan the canvas via scroll wheel, Space+drag, and middle-click+drag
+- [x] **CANV-02**: User can zoom in/out via Cmd+/-, Ctrl+scroll, and pinch-to-zoom on trackpad
+- [x] **CANV-03**: Canvas displays a dot grid background with minor and major dots for spatial orientation
 - [ ] **CANV-04**: All tile positions and sizes snap to the grid (with modifier key to override)
 - [ ] **CANV-05**: User can see a minimap overview for navigating large canvases
 - [ ] **CANV-06**: User sees alignment guides when dragging tiles near other tiles (edge/center snapping)
@@ -77,7 +77,7 @@
 
 ### Theming
 
-- [ ] **THEM-01**: User can switch between dark and light themes
+- [x] **THEM-01**: User can switch between dark and light themes
 - [ ] **THEM-02**: App detects system theme preference and applies it by default
 - [ ] **THEM-03**: Terminal color schemes are available (Dracula, Solarized, One Dark, etc.)
 
@@ -85,7 +85,7 @@
 
 - [ ] **PLAT-01**: App runs on macOS, Linux, and Windows
 - [ ] **PLAT-02**: Keyboard shortcuts are platform-appropriate (Cmd on macOS, Ctrl on Windows/Linux)
-- [ ] **PLAT-03**: App uses native window chrome and behavior per platform
+- [x] **PLAT-03**: App uses native window chrome and behavior per platform
 
 ## v2 Requirements
 
@@ -131,9 +131,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CANV-01 | Phase 1 | Pending |
-| CANV-02 | Phase 1 | Pending |
-| CANV-03 | Phase 1 | Pending |
+| CANV-01 | Phase 1 | Complete |
+| CANV-02 | Phase 1 | Complete |
+| CANV-03 | Phase 1 | Complete |
 | CANV-04 | Phase 2 | Pending |
 | CANV-05 | Phase 3 | Pending |
 | CANV-06 | Phase 3 | Pending |
@@ -180,12 +180,12 @@
 | CONT-01 | Phase 5 | Pending |
 | CONT-02 | Phase 5 | Pending |
 | CONT-03 | Phase 5 | Pending |
-| THEM-01 | Phase 1 | Pending |
+| THEM-01 | Phase 1 | Complete |
 | THEM-02 | Phase 2 | Pending |
 | THEM-03 | Phase 2 | Pending |
 | PLAT-01 | Phase 1 | Pending |
 | PLAT-02 | Phase 1 | Pending |
-| PLAT-03 | Phase 1 | Pending |
+| PLAT-03 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 55 total
