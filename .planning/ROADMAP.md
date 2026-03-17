@@ -1,0 +1,113 @@
+# Roadmap: Excalicode
+
+## Overview
+
+Excalicode delivers a spatial terminal workspace in five phases. Phase 1 proves the core value: an infinite canvas with live terminal tiles that persist across restarts. Phase 2 adds the sidebar file browser and tmux-backed session persistence. Phase 3 layers terminal power features and canvas refinements. Phase 4 delivers the full git UI. Phase 5 completes the product with SSH remote terminals and content tiles (notes, images, file previews).
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: Canvas + Terminal Core** - Infinite canvas with live terminal tiles, layout persistence, cross-platform foundation
+- [ ] **Phase 2: Sidebar + Session Persistence** - File tree browser, tmux session restore, theming polish, grid snapping
+- [ ] **Phase 3: Terminal Polish + Canvas Refinement** - Terminal power features (search, URLs, badges), minimap, alignment guides, canvas regions
+- [ ] **Phase 4: Git UI** - Full git workflow in sidebar: status, staging, commits, branches, diffs, log, stash, merge conflicts
+- [ ] **Phase 5: SSH + Content Tiles** - SSH connection manager with remote terminals, markdown notes, images, file previews on canvas
+
+## Phase Details
+
+### Phase 1: Canvas + Terminal Core
+**Goal**: Users can pan/zoom an infinite canvas, spawn terminal tiles by double-clicking, drag and resize them freely, and have the entire layout survive app restarts
+**Depends on**: Nothing (first phase)
+**Requirements**: CANV-01, CANV-02, CANV-03, TERM-01, TERM-02, TERM-03, TERM-04, TERM-05, TERM-07, TERM-08, TERM-14, TERM-15, PERS-01, PERS-03, PLAT-01, PLAT-02, PLAT-03, THEM-01
+**Success Criteria** (what must be TRUE):
+  1. User can pan the canvas (scroll wheel, Space+drag, middle-click) and zoom (Cmd/Ctrl+/-, Ctrl+scroll, pinch) with a visible dot grid background
+  2. User can double-click empty canvas space to spawn a terminal tile that opens in the active directory, type commands, and see output
+  3. User can drag terminal tiles by title bar, resize via edge/corner handles, click to bring to front, and close via title bar
+  4. User can copy/paste text in terminal tiles and configure font, font size, and color scheme
+  5. Canvas layout (tile positions, sizes, viewport) persists to disk and restores identically on app relaunch, with auto-save on changes
+**Plans**: TBD
+
+Plans:
+- [ ] 01-01: TBD
+- [ ] 01-02: TBD
+- [ ] 01-03: TBD
+
+### Phase 2: Sidebar + Session Persistence
+**Goal**: Users can browse project files in a sidebar, manage multiple projects, and have terminal sessions (not just layout) survive restarts via transparent tmux integration
+**Depends on**: Phase 1
+**Requirements**: SIDE-01, SIDE-02, SIDE-03, SIDE-04, SIDE-05, SIDE-06, SIDE-07, PERS-02, THEM-02, THEM-03, CANV-04
+**Success Criteria** (what must be TRUE):
+  1. User can open a folder, see its file tree in the left sidebar, expand/collapse folders, and switch between multiple open projects
+  2. User can create, rename, and delete files/folders from the sidebar, search files with Cmd+K fuzzy finder, and drag files onto the canvas
+  3. Terminal sessions persist across app restarts -- closing and reopening the app reconnects to running terminal sessions with scrollback intact
+  4. App detects system theme preference on launch, and user has access to terminal color schemes (Dracula, Solarized, One Dark, etc.)
+  5. Tile positions and sizes snap to the grid, with a modifier key to override snapping
+**Plans**: TBD
+
+Plans:
+- [ ] 02-01: TBD
+- [ ] 02-02: TBD
+- [ ] 02-03: TBD
+
+### Phase 3: Terminal Polish + Canvas Refinement
+**Goal**: Terminal tiles gain power-user features (search, clickable URLs, process indicators, labels) and the canvas gains navigation and organizational tools
+**Depends on**: Phase 2
+**Requirements**: TERM-06, TERM-09, TERM-10, TERM-11, TERM-12, TERM-13, CANV-05, CANV-06, CANV-07
+**Success Criteria** (what must be TRUE):
+  1. User can search within terminal output to find text, see clickable URLs that open in system browser, and see the running process name in the title bar
+  2. User can configure scrollback buffer size, assign color badges/labels to terminals, and set startup commands that auto-run on session restore
+  3. User can see a minimap overview for navigating large canvases, and sees alignment guides when dragging tiles near other tiles
+  4. User can create named canvas regions with optional background color to visually group related tiles
+**Plans**: TBD
+
+Plans:
+- [ ] 03-01: TBD
+- [ ] 03-02: TBD
+
+### Phase 4: Git UI
+**Goal**: Users can perform their full daily git workflow without leaving the app -- status, staging, committing, branching, diffing, log browsing, stashing, and conflict resolution
+**Depends on**: Phase 2
+**Requirements**: GIT-01, GIT-02, GIT-03, GIT-04, GIT-05, GIT-06, GIT-07, GIT-08, GIT-09
+**Success Criteria** (what must be TRUE):
+  1. User can see staged, unstaged, and untracked files in a git status panel, and stage/unstage individual files
+  2. User can write a commit message and commit staged changes, and view inline or side-by-side diffs for changed files
+  3. User can see all branches with current branch indicated, create/switch/delete branches, and view commit log with branch topology graph
+  4. User can stash changes and manage stashes (apply, pop, drop), and resolve merge conflicts through a dedicated UI
+**Plans**: TBD
+
+Plans:
+- [ ] 04-01: TBD
+- [ ] 04-02: TBD
+- [ ] 04-03: TBD
+
+### Phase 5: SSH + Content Tiles
+**Goal**: Users can manage SSH connections and spawn remote terminal tiles on the canvas, and enrich their workspace with markdown notes, images, and file preview cards
+**Depends on**: Phase 1 (terminal IPC), Phase 2 (sidebar drag-to-canvas)
+**Requirements**: SSH-01, SSH-02, SSH-03, SSH-04, CONT-01, CONT-02, CONT-03
+**Success Criteria** (what must be TRUE):
+  1. User can save SSH connections (host, user, key, port), organize them into groups, and connect to spawn a remote terminal tile on the canvas
+  2. Remote terminal tiles behave identically to local terminals (drag, resize, z-index, close)
+  3. User can create markdown note tiles with rich text editing, place images on the canvas, and open files from the sidebar as syntax-highlighted read-only preview tiles
+**Plans**: TBD
+
+Plans:
+- [ ] 05-01: TBD
+- [ ] 05-02: TBD
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Canvas + Terminal Core | 0/3 | Not started | - |
+| 2. Sidebar + Session Persistence | 0/3 | Not started | - |
+| 3. Terminal Polish + Canvas Refinement | 0/2 | Not started | - |
+| 4. Git UI | 0/3 | Not started | - |
+| 5. SSH + Content Tiles | 0/2 | Not started | - |

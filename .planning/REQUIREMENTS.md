@@ -130,66 +130,66 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CANV-01 | — | Pending |
-| CANV-02 | — | Pending |
-| CANV-03 | — | Pending |
-| CANV-04 | — | Pending |
-| CANV-05 | — | Pending |
-| CANV-06 | — | Pending |
-| CANV-07 | — | Pending |
-| TERM-01 | — | Pending |
-| TERM-02 | — | Pending |
-| TERM-03 | — | Pending |
-| TERM-04 | — | Pending |
-| TERM-05 | — | Pending |
-| TERM-06 | — | Pending |
-| TERM-07 | — | Pending |
-| TERM-08 | — | Pending |
-| TERM-09 | — | Pending |
-| TERM-10 | — | Pending |
-| TERM-11 | — | Pending |
-| TERM-12 | — | Pending |
-| TERM-13 | — | Pending |
-| TERM-14 | — | Pending |
-| TERM-15 | — | Pending |
-| PERS-01 | — | Pending |
-| PERS-02 | — | Pending |
-| PERS-03 | — | Pending |
-| SIDE-01 | — | Pending |
-| SIDE-02 | — | Pending |
-| SIDE-03 | — | Pending |
-| SIDE-04 | — | Pending |
-| SIDE-05 | — | Pending |
-| SIDE-06 | — | Pending |
-| SIDE-07 | — | Pending |
-| GIT-01 | — | Pending |
-| GIT-02 | — | Pending |
-| GIT-03 | — | Pending |
-| GIT-04 | — | Pending |
-| GIT-05 | — | Pending |
-| GIT-06 | — | Pending |
-| GIT-07 | — | Pending |
-| GIT-08 | — | Pending |
-| GIT-09 | — | Pending |
-| SSH-01 | — | Pending |
-| SSH-02 | — | Pending |
-| SSH-03 | — | Pending |
-| SSH-04 | — | Pending |
-| CONT-01 | — | Pending |
-| CONT-02 | — | Pending |
-| CONT-03 | — | Pending |
-| THEM-01 | — | Pending |
-| THEM-02 | — | Pending |
-| THEM-03 | — | Pending |
-| PLAT-01 | — | Pending |
-| PLAT-02 | — | Pending |
-| PLAT-03 | — | Pending |
+| CANV-01 | Phase 1 | Pending |
+| CANV-02 | Phase 1 | Pending |
+| CANV-03 | Phase 1 | Pending |
+| CANV-04 | Phase 2 | Pending |
+| CANV-05 | Phase 3 | Pending |
+| CANV-06 | Phase 3 | Pending |
+| CANV-07 | Phase 3 | Pending |
+| TERM-01 | Phase 1 | Pending |
+| TERM-02 | Phase 1 | Pending |
+| TERM-03 | Phase 1 | Pending |
+| TERM-04 | Phase 1 | Pending |
+| TERM-05 | Phase 1 | Pending |
+| TERM-06 | Phase 3 | Pending |
+| TERM-07 | Phase 1 | Pending |
+| TERM-08 | Phase 1 | Pending |
+| TERM-09 | Phase 3 | Pending |
+| TERM-10 | Phase 3 | Pending |
+| TERM-11 | Phase 3 | Pending |
+| TERM-12 | Phase 3 | Pending |
+| TERM-13 | Phase 3 | Pending |
+| TERM-14 | Phase 1 | Pending |
+| TERM-15 | Phase 1 | Pending |
+| PERS-01 | Phase 1 | Pending |
+| PERS-02 | Phase 2 | Pending |
+| PERS-03 | Phase 1 | Pending |
+| SIDE-01 | Phase 2 | Pending |
+| SIDE-02 | Phase 2 | Pending |
+| SIDE-03 | Phase 2 | Pending |
+| SIDE-04 | Phase 2 | Pending |
+| SIDE-05 | Phase 2 | Pending |
+| SIDE-06 | Phase 2 | Pending |
+| SIDE-07 | Phase 2 | Pending |
+| GIT-01 | Phase 4 | Pending |
+| GIT-02 | Phase 4 | Pending |
+| GIT-03 | Phase 4 | Pending |
+| GIT-04 | Phase 4 | Pending |
+| GIT-05 | Phase 4 | Pending |
+| GIT-06 | Phase 4 | Pending |
+| GIT-07 | Phase 4 | Pending |
+| GIT-08 | Phase 4 | Pending |
+| GIT-09 | Phase 4 | Pending |
+| SSH-01 | Phase 5 | Pending |
+| SSH-02 | Phase 5 | Pending |
+| SSH-03 | Phase 5 | Pending |
+| SSH-04 | Phase 5 | Pending |
+| CONT-01 | Phase 5 | Pending |
+| CONT-02 | Phase 5 | Pending |
+| CONT-03 | Phase 5 | Pending |
+| THEM-01 | Phase 1 | Pending |
+| THEM-02 | Phase 2 | Pending |
+| THEM-03 | Phase 2 | Pending |
+| PLAT-01 | Phase 1 | Pending |
+| PLAT-02 | Phase 1 | Pending |
+| PLAT-03 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 48 total
-- Mapped to phases: 0
-- Unmapped: 48 ⚠️
+- v1 requirements: 54 total
+- Mapped to phases: 54
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-17*
-*Last updated: 2026-03-17 after initial definition*
+*Last updated: 2026-03-17 after roadmap creation*
