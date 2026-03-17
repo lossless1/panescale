@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-17T14:13:31Z"
+last_updated: "2026-03-17T14:20:37.264Z"
 last_activity: 2026-03-17 -- Completed Plan 01-02 App shell + canvas with theme system
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -26,27 +26,27 @@ See: .planning/PROJECT.md (updated 2026-03-17)
 ## Current Position
 
 Phase: 1 of 5 (Canvas + Terminal Core)
-Plan: 4 of 5 in current phase
+Plan: 5 of 5 in current phase
 Status: Executing
-Last activity: 2026-03-17 -- Completed Plan 01-02 App shell + canvas with theme system
+Last activity: 2026-03-17 -- Completed Plan 01-04 Terminal tiles on canvas
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 6 min
-- Total execution time: 0.32 hours
+- Total execution time: 0.39 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 3 | 19 min | 6 min |
+| 01 | 4 | 23 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6m), 01-03 (10m), 01-02 (3m)
+- Last 5 plans: 01-01 (6m), 01-03 (10m), 01-02 (3m), 01-04 (4m)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -70,6 +70,10 @@ Recent decisions affecting current work:
 - [01-02]: localStorage for theme persistence (simpler than tauri-plugin-store for single string)
 - [01-02]: panOnDrag=[0,1] enables both left-click and middle-click canvas panning
 - [01-02]: Keyboard shortcuts use capture phase to intercept before browser zoom
+- [01-04]: PTY ID managed by component (usePty hook), not stored in canvas store
+- [01-04]: WebGL addon with try/catch fallback to DOM renderer for broad compatibility
+- [01-04]: Escape key capture phase handler for exiting terminal focus mode
+- [01-04]: Shift+scroll = canvas pan, regular scroll = terminal scrollback
 
 ### Pending Todos
 
@@ -82,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T14:13:31Z
-Stopped at: Completed 01-02-PLAN.md
-Resume file: .planning/phases/01-canvas-terminal-core/01-04-PLAN.md
+Last session: 2026-03-17T14:19:48Z
+Stopped at: Completed 01-04-PLAN.md
+Resume file: .planning/phases/01-canvas-terminal-core/01-05-PLAN.md

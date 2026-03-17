@@ -17,20 +17,20 @@
 
 ### Terminal Tiles
 
-- [ ] **TERM-01**: User can double-click empty canvas space to spawn a terminal tile at that position
+- [x] **TERM-01**: User can double-click empty canvas space to spawn a terminal tile at that position
 - [x] **TERM-02**: Terminal opens in the active project's working directory
-- [ ] **TERM-03**: User can drag terminal tiles by the title bar to reposition on canvas
-- [ ] **TERM-04**: User can resize terminal tiles using 8 resize handles (4 edges, 4 corners)
-- [ ] **TERM-05**: User can select text and copy/paste in terminal tiles
+- [x] **TERM-03**: User can drag terminal tiles by the title bar to reposition on canvas
+- [x] **TERM-04**: User can resize terminal tiles using 8 resize handles (4 edges, 4 corners)
+- [x] **TERM-05**: User can select text and copy/paste in terminal tiles
 - [ ] **TERM-06**: Terminal tiles have configurable scrollback buffer
-- [ ] **TERM-07**: Clicking a terminal tile brings it to front (z-index layering)
-- [ ] **TERM-08**: User can close a terminal tile via the title bar
+- [x] **TERM-07**: Clicking a terminal tile brings it to front (z-index layering)
+- [x] **TERM-08**: User can close a terminal tile via the title bar
 - [ ] **TERM-09**: User can search within terminal output (find text)
 - [ ] **TERM-10**: Terminal detects and makes URLs clickable (opens in system browser)
 - [ ] **TERM-11**: Terminal title bar shows the currently running process name
 - [ ] **TERM-12**: User can rename terminal tiles and assign color badges/labels for identification
 - [ ] **TERM-13**: User can configure startup commands per terminal that auto-run on restore
-- [ ] **TERM-14**: User can configure terminal font, font size, and color scheme
+- [x] **TERM-14**: User can configure terminal font, font size, and color scheme
 - [x] **TERM-15**: Terminal supports the user's default shell (bash, zsh, fish, PowerShell)
 - [ ] **TERM-16**: Terminal plays a notification sound when a long-running process completes and the terminal is waiting for user input
 
@@ -138,20 +138,20 @@
 | CANV-05 | Phase 3 | Pending |
 | CANV-06 | Phase 3 | Pending |
 | CANV-07 | Phase 3 | Pending |
-| TERM-01 | Phase 1 | Pending |
+| TERM-01 | Phase 1 | Complete |
 | TERM-02 | Phase 1 | Complete |
-| TERM-03 | Phase 1 | Pending |
-| TERM-04 | Phase 1 | Pending |
-| TERM-05 | Phase 1 | Pending |
+| TERM-03 | Phase 1 | Complete |
+| TERM-04 | Phase 1 | Complete |
+| TERM-05 | Phase 1 | Complete |
 | TERM-06 | Phase 3 | Pending |
-| TERM-07 | Phase 1 | Pending |
-| TERM-08 | Phase 1 | Pending |
+| TERM-07 | Phase 1 | Complete |
+| TERM-08 | Phase 1 | Complete |
 | TERM-09 | Phase 3 | Pending |
 | TERM-10 | Phase 3 | Pending |
 | TERM-11 | Phase 3 | Pending |
 | TERM-12 | Phase 3 | Pending |
 | TERM-13 | Phase 3 | Pending |
-| TERM-14 | Phase 1 | Pending |
+| TERM-14 | Phase 1 | Complete |
 | TERM-15 | Phase 1 | Complete |
 | TERM-16 | Phase 3 | Pending |
 | PERS-01 | Phase 1 | Pending |
