@@ -24,13 +24,5 @@
       "csp": null
     }
   },
-  "plugins": {
-    "fs": {
-      "scope": {
-        "allow": ["$APPDATA/**", "$HOME/**"],
-        "deny": []
-      }
-    },
-    "store": {}
-  }
+  "plugins": {}
 }
