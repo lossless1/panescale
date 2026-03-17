@@ -1,3 +1,4 @@
+pub mod commands;
 pub mod manager;
 
-pub use manager::{PtyEvent, PtyManager};
+pub use manager::PtyManager;
