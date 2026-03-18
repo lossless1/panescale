@@ -42,10 +42,10 @@
 
 ### Sidebar / File Navigation
 
-- [ ] **SIDE-01**: Left sidebar shows a file tree for the active project folder
-- [ ] **SIDE-02**: User can expand/collapse folders in the file tree
-- [ ] **SIDE-03**: User can open a folder to set it as the active project
-- [ ] **SIDE-04**: User can switch between multiple open projects/workspaces
+- [x] **SIDE-01**: Left sidebar shows a file tree for the active project folder
+- [x] **SIDE-02**: User can expand/collapse folders in the file tree
+- [x] **SIDE-03**: User can open a folder to set it as the active project
+- [x] **SIDE-04**: User can switch between multiple open projects/workspaces
 - [ ] **SIDE-05**: User can create, rename, and delete files/folders from the sidebar
 - [ ] **SIDE-06**: User can search/filter files with a fuzzy finder (Cmd+K)
 - [ ] **SIDE-07**: User can drag files from the sidebar onto the canvas to create content tiles
@@ -160,10 +160,10 @@
 | PERS-01 | Phase 1 | Complete |
 | PERS-02 | Phase 2 | Pending |
 | PERS-03 | Phase 1 | Complete |
-| SIDE-01 | Phase 2 | Pending |
-| SIDE-02 | Phase 2 | Pending |
-| SIDE-03 | Phase 2 | Pending |
-| SIDE-04 | Phase 2 | Pending |
+| SIDE-01 | Phase 2 | Complete |
+| SIDE-02 | Phase 2 | Complete |
+| SIDE-03 | Phase 2 | Complete |
+| SIDE-04 | Phase 2 | Complete |
 | SIDE-05 | Phase 2 | Pending |
 | SIDE-06 | Phase 2 | Pending |
 | SIDE-07 | Phase 2 | Pending |
