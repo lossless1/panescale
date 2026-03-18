@@ -1,4 +1,5 @@
 mod fs;
+mod git;
 mod platform;
 mod pty;
 mod state;
@@ -28,6 +29,26 @@ pub fn run() {
             fs::commands::fs_rename,
             fs::commands::fs_delete,
             fs::commands::fs_move,
+            git::commands::git_is_repo,
+            git::commands::git_status,
+            git::commands::git_stage_file,
+            git::commands::git_unstage_file,
+            git::commands::git_commit,
+            git::commands::git_diff_file,
+            git::commands::git_stage_hunk,
+            git::commands::git_unstage_hunk,
+            git::commands::git_branches,
+            git::commands::git_create_branch,
+            git::commands::git_switch_branch,
+            git::commands::git_delete_branch,
+            git::commands::git_log,
+            git::commands::git_stash_save,
+            git::commands::git_stash_list,
+            git::commands::git_stash_apply,
+            git::commands::git_stash_pop,
+            git::commands::git_stash_drop,
+            git::commands::git_conflicts,
+            git::commands::git_resolve_conflict,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
