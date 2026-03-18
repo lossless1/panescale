@@ -23,6 +23,11 @@ pub fn run() {
             state::state_save,
             state::state_load,
             fs::commands::fs_read_dir,
+            fs::commands::fs_create_file,
+            fs::commands::fs_create_dir,
+            fs::commands::fs_rename,
+            fs::commands::fs_delete,
+            fs::commands::fs_move,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

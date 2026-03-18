@@ -56,3 +56,75 @@ pub fn fs_read_dir(path: String) -> Result<Vec<FileEntry>, String> {
 
     Ok(entries)
 }
+
+#[tauri::command]
+pub fn fs_create_file(path: String) -> Result<(), String> {
+    if let Some(parent) = std::path::Path::new(&path).parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    std::fs::File::create(&path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn fs_create_dir(path: String) -> Result<(), String> {
+    std::fs::create_dir_all(&path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn fs_rename(from: String, to: String) -> Result<(), String> {
+    std::fs::rename(&from, &to).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn fs_delete(path: String) -> Result<(), String> {
+    let p = std::path::Path::new(&path);
+    if p.is_dir() {
+        std::fs::remove_dir_all(p).map_err(|e| e.to_string())?;
+    } else {
+        std::fs::remove_file(p).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn fs_move(from: String, to_dir: String) -> Result<(), String> {
+    let from_path = std::path::Path::new(&from);
+    let file_name = from_path
+        .file_name()
+        .ok_or_else(|| "Cannot determine file name".to_string())?;
+    let dest = std::path::Path::new(&to_dir).join(file_name);
+
+    // Try rename first (fast, same filesystem)
+    match std::fs::rename(&from, &dest) {
+        Ok(()) => Ok(()),
+        Err(_) => {
+            // Fallback: copy then delete (cross-filesystem)
+            if from_path.is_dir() {
+                copy_dir_recursive(from_path, &dest)?;
+                std::fs::remove_dir_all(from_path).map_err(|e| e.to_string())?;
+            } else {
+                std::fs::copy(&from, &dest).map_err(|e| e.to_string())?;
+                std::fs::remove_file(&from).map_err(|e| e.to_string())?;
+            }
+            Ok(())
+        }
+    }
+}
+
+fn copy_dir_recursive(src: &std::path::Path, dst: &std::path::Path) -> Result<(), String> {
+    std::fs::create_dir_all(dst).map_err(|e| e.to_string())?;
+    for entry in std::fs::read_dir(src).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+        if src_path.is_dir() {
+            copy_dir_recursive(&src_path, &dst_path)?;
+        } else {
+            std::fs::copy(&src_path, &dst_path).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}

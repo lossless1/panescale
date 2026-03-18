@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { useProjectStore } from "../../stores/projectStore";
 import { fsReadDir, type FileEntry } from "../../lib/ipc";
 import { FileTreeItem } from "./FileTreeItem";
+import { ContextMenu } from "./ContextMenu";
 
 export function FileTree() {
   const activeProject = useProjectStore((s) => s.activeProject());
@@ -14,6 +15,12 @@ export function FileTree() {
   const [dirContents, setDirContents] = useState<Map<string, FileEntry[]>>(
     new Map(),
   );
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    entry: FileEntry | null;
+    parentPath: string;
+  } | null>(null);
 
   // Load root directory when active project changes
   useEffect(() => {
@@ -45,6 +52,33 @@ export function FileTree() {
       });
     },
     [dirContents],
+  );
+
+  const refreshDir = useCallback(
+    (path: string) => {
+      fsReadDir(path).then((entries) => {
+        setDirContents((prev) => new Map(prev).set(path, entries));
+      });
+    },
+    [],
+  );
+
+  const handleRightClick = useCallback(
+    (event: React.MouseEvent, entry: FileEntry) => {
+      event.preventDefault();
+      // Determine the parent path for this entry
+      const parentPath = entry.path.substring(
+        0,
+        entry.path.lastIndexOf("/"),
+      );
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        entry,
+        parentPath,
+      });
+    },
+    [],
   );
 
   const handleOpenFolder = useCallback(async () => {
@@ -152,8 +186,25 @@ export function FileTree() {
           depth={depth}
           expanded={expandedDirs.has(entry.path)}
           onToggle={toggleDir}
+          onRightClick={handleRightClick}
         />
       ))}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          entry={contextMenu.entry}
+          parentPath={contextMenu.parentPath}
+          onClose={() => setContextMenu(null)}
+          onRefresh={() => {
+            refreshDir(contextMenu.parentPath);
+            // Also refresh the entry's own path if it was a directory
+            if (contextMenu.entry?.is_dir) {
+              refreshDir(contextMenu.entry.path);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
