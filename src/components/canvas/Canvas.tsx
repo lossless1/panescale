@@ -15,9 +15,13 @@ import { useCanvasStore } from "../../stores/canvasStore";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useEscapeToCanvas } from "../../hooks/useFocusMode";
 import { magneticSnapPosition } from "../../lib/gridSnap";
+import { extensionToTileType } from "../../lib/ipc";
 import { CanvasBackground } from "./CanvasBackground";
 import { SnapLines } from "./SnapLines";
 import { TerminalNode } from "./TerminalNode";
+import { NoteNode } from "./NoteNode";
+import { ImageNode } from "./ImageNode";
+import { FilePreviewNode } from "./FilePreviewNode";
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 2.0;
@@ -25,6 +29,9 @@ const RUBBER_BAND_DURATION = 150;
 
 const nodeTypes: NodeTypes = {
   terminal: TerminalNode,
+  note: NoteNode,
+  image: ImageNode,
+  'file-preview': FilePreviewNode,
 };
 
 /**
@@ -77,6 +84,7 @@ function CanvasInner() {
   const onNodesChange = useCanvasStore((s) => s.onNodesChange);
   const setViewport = useCanvasStore((s) => s.setViewport);
   const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
+  const addContentNode = useCanvasStore((s) => s.addContentNode);
   const bringToFront = useCanvasStore((s) => s.bringToFront);
   const snapLines = useCanvasStore((s) => s.snapLines);
   const setSnapLines = useCanvasStore((s) => s.setSnapLines);
@@ -201,10 +209,35 @@ function CanvasInner() {
     [bringToFront],
   );
 
+  const handleDragOver = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      if (e.dataTransfer.types.includes('application/excalicode-file')) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    },
+    [],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      const raw = e.dataTransfer.getData('application/excalicode-file');
+      if (!raw) return;
+      e.preventDefault();
+      const fileData = JSON.parse(raw) as { path: string; name: string; ext: string };
+      const position = reactFlow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      const tileType = extensionToTileType(fileData.ext);
+      addContentNode(position, tileType, fileData);
+    },
+    [reactFlow, addContentNode],
+  );
+
   return (
     <div
       ref={handleWrapperRef}
       onWheel={handleWheel}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
       style={{ width: "100%", height: "100%" }}
     >
       <style>{`

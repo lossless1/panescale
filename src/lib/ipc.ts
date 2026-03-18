@@ -69,6 +69,17 @@ export async function ptyEnsureTmux(
   return invoke<boolean>("pty_ensure_tmux", { onProgress: channel });
 }
 
+// --- Content Tile Helpers ---
+
+export type ContentTileType = 'note' | 'image' | 'file-preview';
+
+export function extensionToTileType(ext: string): ContentTileType {
+  const lower = ext.toLowerCase();
+  if (lower === '.md' || lower === '.mdx') return 'note';
+  if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp'].includes(lower)) return 'image';
+  return 'file-preview';
+}
+
 // --- File System ---
 
 export interface FileEntry {
@@ -82,6 +93,26 @@ export interface FileEntry {
 
 export async function fsReadDir(path: string): Promise<FileEntry[]> {
   return invoke<FileEntry[]>("fs_read_dir", { path });
+}
+
+export async function fsCreateFile(path: string): Promise<void> {
+  return invoke("fs_create_file", { path });
+}
+
+export async function fsCreateDir(path: string): Promise<void> {
+  return invoke("fs_create_dir", { path });
+}
+
+export async function fsRename(from: string, to: string): Promise<void> {
+  return invoke("fs_rename", { from, to });
+}
+
+export async function fsDelete(path: string): Promise<void> {
+  return invoke("fs_delete", { path });
+}
+
+export async function fsMove(from: string, toDir: string): Promise<void> {
+  return invoke("fs_move", { from, toDir });
 }
 
 // --- State Persistence ---

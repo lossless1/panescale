@@ -5,7 +5,7 @@ import {
   type NodeChange,
   applyNodeChanges,
 } from "@xyflow/react";
-import { stateLoad } from "../lib/ipc";
+import { stateLoad, type ContentTileType } from "../lib/ipc";
 import { deserializeCanvas, forceSave } from "../lib/persistence";
 
 export interface SnapLinePositions {
@@ -21,6 +21,7 @@ interface CanvasState {
   snapLines: SnapLinePositions | null;
   onNodesChange: (changes: NodeChange[]) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
+  addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
   removeNode: (id: string) => void;
   bringToFront: (id: string) => void;
   setViewport: (viewport: Viewport) => void;
@@ -58,6 +59,30 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       maxZIndex: newZIndex,
     }));
     // Immediate save on tile create (PERS-03)
+    forceSave();
+  },
+
+  addContentNode: (position, tileType, fileData) => {
+    const newZIndex = get().maxZIndex + 1;
+    const id = crypto.randomUUID();
+    const sizes: Record<ContentTileType, { width: number; height: number }> = {
+      'note': { width: 400, height: 300 },
+      'image': { width: 400, height: 300 },
+      'file-preview': { width: 500, height: 400 },
+    };
+    const newNode: Node = {
+      id,
+      type: tileType,
+      position,
+      data: { filePath: fileData.path, fileName: fileData.name },
+      dragHandle: '.drag-handle',
+      style: sizes[tileType],
+      zIndex: newZIndex,
+    };
+    set((state) => ({
+      nodes: [...state.nodes, newNode],
+      maxZIndex: newZIndex,
+    }));
     forceSave();
   },
 

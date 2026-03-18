@@ -5,6 +5,7 @@ interface FileTreeItemProps {
   depth: number;
   expanded: boolean;
   onToggle: (path: string) => void;
+  onRightClick?: (event: React.MouseEvent, entry: FileEntry) => void;
 }
 
 export function FileTreeItem({
@@ -12,11 +13,36 @@ export function FileTreeItem({
   depth,
   expanded,
   onToggle,
+  onRightClick,
 }: FileTreeItemProps) {
   const paddingLeft = 8 + depth * 16;
+  const isFile = !entry.is_dir;
 
   return (
     <div
+      draggable={isFile}
+      onDragStart={(e) => {
+        if (entry.is_dir) {
+          e.preventDefault();
+          return;
+        }
+        const ext = entry.name.includes('.')
+          ? '.' + entry.name.split('.').pop()
+          : '';
+        e.dataTransfer.setData(
+          'application/excalicode-file',
+          JSON.stringify({
+            path: entry.path,
+            name: entry.name,
+            ext,
+          }),
+        );
+        e.dataTransfer.effectAllowed = 'copy';
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onRightClick?.(e, entry);
+      }}
       onClick={() => {
         if (entry.is_dir) {
           onToggle(entry.path);
@@ -31,7 +57,7 @@ export function FileTreeItem({
         paddingTop: 4,
         paddingBottom: 4,
         fontSize: 13,
-        cursor: entry.is_dir ? "pointer" : "default",
+        cursor: entry.is_dir ? "pointer" : isFile ? "grab" : "default",
         userSelect: "none",
         whiteSpace: "nowrap",
         overflow: "hidden",
