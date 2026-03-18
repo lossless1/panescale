@@ -25,16 +25,20 @@ import { TerminalNode } from "./TerminalNode";
 import { NoteNode } from "./NoteNode";
 import { ImageNode } from "./ImageNode";
 import { FilePreviewNode } from "./FilePreviewNode";
+import { RegionNode } from "./RegionNode";
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 2.0;
 const RUBBER_BAND_DURATION = 150;
+
+const REGION_COLORS = ["#3b82f6", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4"];
 
 const nodeTypes: NodeTypes = {
   terminal: TerminalNode,
   note: NoteNode,
   image: ImageNode,
   'file-preview': FilePreviewNode,
+  region: RegionNode,
 };
 
 /**
@@ -88,6 +92,7 @@ function CanvasInner() {
   const setViewport = useCanvasStore((s) => s.setViewport);
   const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
   const addContentNode = useCanvasStore((s) => s.addContentNode);
+  const addRegion = useCanvasStore((s) => s.addRegion);
   const bringToFront = useCanvasStore((s) => s.bringToFront);
   const snapLines = useCanvasStore((s) => s.snapLines);
   const setSnapLines = useCanvasStore((s) => s.setSnapLines);
@@ -99,6 +104,14 @@ function CanvasInner() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [minimapVisible, setMinimapVisible] = useState(false);
   const [alignGuides, setAlignGuides] = useState<AlignmentGuide[]>([]);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
+  // Region group drag: track initial positions of contained nodes when region drag starts
+  const regionDragRef = useRef<{
+    regionId: string;
+    startPos: { x: number; y: number };
+    containedPositions: Map<string, { x: number; y: number }>;
+  } | null>(null);
 
   useKeyboardShortcuts();
   useRubberBandEffect();
@@ -121,9 +134,58 @@ function CanvasInner() {
     setPanToNode(null);
   }, [panToNodeId, nodes, reactFlow, bringToFront, setPanToNode]);
 
+  // Region group drag: capture initial positions on drag start
+  const handleNodeDragStart = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      if (node.type === "region") {
+        const rw = (node.style?.width as number) ?? 400;
+        const rh = (node.style?.height as number) ?? 300;
+        const rx = node.position.x;
+        const ry = node.position.y;
+
+        const contained = new Map<string, { x: number; y: number }>();
+        for (const n of nodes) {
+          if (n.id === node.id || n.type === "region") continue;
+          const nx = n.position.x;
+          const ny = n.position.y;
+          if (nx >= rx && ny >= ry && nx < rx + rw && ny < ry + rh) {
+            contained.set(n.id, { x: nx, y: ny });
+          }
+        }
+        regionDragRef.current = {
+          regionId: node.id,
+          startPos: { x: rx, y: ry },
+          containedPositions: contained,
+        };
+      } else {
+        regionDragRef.current = null;
+      }
+    },
+    [nodes],
+  );
+
   // Magnetic snap on drag: snap node position to grid within threshold
   const handleNodeDrag = useCallback(
     (event: React.MouseEvent, node: Node) => {
+      // Region group drag: move contained tiles by same delta
+      if (node.type === "region" && regionDragRef.current && regionDragRef.current.regionId === node.id) {
+        const dx = node.position.x - regionDragRef.current.startPos.x;
+        const dy = node.position.y - regionDragRef.current.startPos.y;
+        const changes: NodeChange[] = [];
+        for (const [id, pos] of regionDragRef.current.containedPositions) {
+          changes.push({
+            type: "position",
+            id,
+            position: { x: pos.x + dx, y: pos.y + dy },
+            dragging: true,
+          });
+        }
+        if (changes.length > 0) {
+          onNodesChange(changes);
+        }
+        return;
+      }
+
       // Cmd/Ctrl held: free positioning, no snap
       if (event.ctrlKey || event.metaKey) {
         setSnapLines(null);
@@ -162,6 +224,7 @@ function CanvasInner() {
   const handleNodeDragStop = useCallback(() => {
     setSnapLines(null);
     setAlignGuides([]);
+    regionDragRef.current = null;
   }, [setSnapLines]);
 
   // Cmd/Ctrl+scroll = zoom
@@ -250,6 +313,60 @@ function CanvasInner() {
     [bringToFront],
   );
 
+  // Context menu for region creation (right-click with 2+ selected nodes)
+  const handlePaneContextMenu = useCallback(
+    (event: MouseEvent | React.MouseEvent) => {
+      event.preventDefault();
+      const selectedNodes = nodes.filter((n) => n.selected && n.type !== "region");
+      if (selectedNodes.length >= 2) {
+        setContextMenu({ x: event.clientX, y: event.clientY });
+      }
+    },
+    [nodes],
+  );
+
+  const handleGroupAsRegion = useCallback(() => {
+    const selectedNodes = nodes.filter((n) => n.selected && n.type !== "region");
+    if (selectedNodes.length < 2) return;
+
+    // Calculate bounding box of selected nodes
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of selectedNodes) {
+      const w = (n.style?.width as number) ?? (n.measured?.width as number) ?? 640;
+      const h = (n.style?.height as number) ?? (n.measured?.height as number) ?? 480;
+      minX = Math.min(minX, n.position.x);
+      minY = Math.min(minY, n.position.y);
+      maxX = Math.max(maxX, n.position.x + w);
+      maxY = Math.max(maxY, n.position.y + h);
+    }
+
+    const padding = 20;
+    const name = window.prompt("Region name:", "Region") || "Region";
+    const color = REGION_COLORS[Math.floor(Math.random() * REGION_COLORS.length)];
+    addRegion(
+      { x: minX - padding, y: minY - padding - 32 }, // 32px for header
+      { width: maxX - minX + padding * 2, height: maxY - minY + padding * 2 + 32 },
+      name,
+      color,
+    );
+    setContextMenu(null);
+  }, [nodes, addRegion]);
+
+  // Close context menu on click or Escape
+  useEffect(() => {
+    if (!contextMenu) return;
+    const handleClick = () => setContextMenu(null);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setContextMenu(null);
+    };
+    document.addEventListener("click", handleClick);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("click", handleClick);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [contextMenu]);
+
   const handleDragOver = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       if (e.dataTransfer.types.includes('application/excalicode-file')) {
@@ -306,8 +423,10 @@ function CanvasInner() {
         onPaneClick={undefined}
         onDoubleClick={handlePaneDoubleClick}
         onNodeClick={handleNodeClick}
+        onNodeDragStart={handleNodeDragStart}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
+        onPaneContextMenu={handlePaneContextMenu}
         proOptions={{ hideAttribution: true }}
       >
         <CanvasBackground />
@@ -334,6 +453,47 @@ function CanvasInner() {
           />
         )}
       </ReactFlow>
+      {contextMenu && (
+        <div
+          style={{
+            position: "fixed",
+            top: contextMenu.y,
+            left: contextMenu.x,
+            zIndex: 10000,
+            background: "var(--bg-secondary)",
+            border: "1px solid var(--border)",
+            borderRadius: 6,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            padding: "4px 0",
+            minWidth: 160,
+          }}
+        >
+          <button
+            onClick={handleGroupAsRegion}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              background: "none",
+              border: "none",
+              color: "var(--text-primary)",
+              padding: "6px 12px",
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.background = "var(--accent)";
+              (e.target as HTMLElement).style.color = "#fff";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.background = "none";
+              (e.target as HTMLElement).style.color = "var(--text-primary)";
+            }}
+          >
+            Group as Region
+          </button>
+        </div>
+      )}
     </div>
   );
 }

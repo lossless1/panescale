@@ -119,6 +119,7 @@ export async function fsMove(from: string, toDir: string): Promise<void> {
 
 export interface SerializedNode {
   id: string;
+  type?: string;
   position: { x: number; y: number };
   width: number;
   height: number;
@@ -129,6 +130,8 @@ export interface SerializedNode {
     customName?: string;
     badgeColor?: string;
     startupCommand?: string;
+    regionName?: string;
+    regionColor?: string;
   };
 }
 

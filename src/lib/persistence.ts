@@ -17,6 +17,7 @@ export function serializeCanvas(state: {
 }): CanvasSnapshot {
   const nodes: SerializedNode[] = state.nodes.map((n) => ({
     id: n.id,
+    type: n.type ?? "terminal",
     position: { x: n.position.x, y: n.position.y },
     width: (n.style?.width as number) ?? (n.measured?.width as number) ?? 640,
     height: (n.style?.height as number) ?? (n.measured?.height as number) ?? 480,
@@ -27,6 +28,8 @@ export function serializeCanvas(state: {
       customName: (n.data as Record<string, unknown>).customName as string | undefined,
       badgeColor: (n.data as Record<string, unknown>).badgeColor as string | undefined,
       startupCommand: (n.data as Record<string, unknown>).startupCommand as string | undefined,
+      regionName: (n.data as Record<string, unknown>).regionName as string | undefined,
+      regionColor: (n.data as Record<string, unknown>).regionColor as string | undefined,
     },
   }));
   return {
@@ -45,22 +48,22 @@ export function deserializeCanvas(snapshot: CanvasSnapshot): {
   viewport: { x: number; y: number; zoom: number };
   maxZIndex: number;
 } {
-  const nodes: Node[] = snapshot.nodes.map((sn) => ({
-    id: sn.id,
-    type: "terminal",
-    position: { x: sn.position.x, y: sn.position.y },
-    data: {
-      cwd: sn.data.cwd,
-      shellType: sn.data.shellType,
-      restored: true,
-      customName: sn.data.customName,
-      badgeColor: sn.data.badgeColor,
-      startupCommand: sn.data.startupCommand,
-    },
-    dragHandle: ".drag-handle",
-    style: { width: sn.width, height: sn.height },
-    zIndex: sn.zIndex,
-  }));
+  const nodes: Node[] = snapshot.nodes.map((sn) => {
+    const nodeType = sn.type ?? "terminal";
+    const isRegion = nodeType === "region";
+    return {
+      id: sn.id,
+      type: nodeType,
+      position: { x: sn.position.x, y: sn.position.y },
+      data: {
+        ...sn.data,
+        ...(!isRegion ? { restored: true } : {}),
+      },
+      dragHandle: isRegion ? ".region-drag-handle" : ".drag-handle",
+      style: { width: sn.width, height: sn.height },
+      zIndex: sn.zIndex,
+    };
+  });
   return {
     nodes,
     viewport: snapshot.viewport,

@@ -26,6 +26,7 @@ interface CanvasState {
   setBellActive: (id: string, active: boolean) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
+  addRegion: (position: { x: number; y: number }, size: { width: number; height: number }, name: string, color: string) => void;
   removeNode: (id: string) => void;
   bringToFront: (id: string) => void;
   setViewport: (viewport: Viewport) => void;
@@ -113,6 +114,21 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       nodes: [...state.nodes, newNode],
       maxZIndex: newZIndex,
     }));
+    forceSave();
+  },
+
+  addRegion: (position, size, name, color) => {
+    const id = crypto.randomUUID();
+    const newNode: Node = {
+      id,
+      type: "region",
+      position,
+      data: { regionName: name, regionColor: color },
+      dragHandle: ".region-drag-handle",
+      style: { width: size.width, height: size.height },
+      zIndex: -1,
+    };
+    set((state) => ({ nodes: [...state.nodes, newNode] }));
     forceSave();
   },
 
