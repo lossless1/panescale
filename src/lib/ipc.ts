@@ -361,3 +361,72 @@ export async function gitResolveConflict(
 ): Promise<void> {
   return invoke("git_resolve_conflict", { repoPath, filePath, resolution });
 }
+
+// --- SSH ---
+
+export type SshEvent =
+  | { event: "data"; data: { bytes: number[] } }
+  | { event: "exit"; data: { code: number | null } };
+
+export interface SshConnectionConfig {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  user: string;
+  keyPath?: string;
+  group?: string;
+}
+
+export interface SshGroup {
+  name: string;
+  connectionIds: string[];
+}
+
+export async function sshConnect(
+  connectionId: string,
+  password: string | null,
+  cols: number,
+  rows: number,
+  onEvent: Channel<SshEvent>,
+): Promise<string> {
+  return invoke<string>("ssh_connect", {
+    connectionId,
+    password,
+    cols,
+    rows,
+    onEvent,
+  });
+}
+
+export async function sshWrite(
+  sessionId: string,
+  data: Uint8Array,
+): Promise<void> {
+  return invoke("ssh_write", { sessionId, data: Array.from(data) });
+}
+
+export async function sshResize(
+  sessionId: string,
+  cols: number,
+  rows: number,
+): Promise<void> {
+  return invoke("ssh_resize", { sessionId, cols, rows });
+}
+
+export async function sshDisconnect(sessionId: string): Promise<void> {
+  return invoke("ssh_disconnect", { sessionId });
+}
+
+export async function sshSaveConnections(
+  connections: SshConnectionConfig[],
+): Promise<void> {
+  return invoke("ssh_save_connections", {
+    connectionsJson: JSON.stringify(connections),
+  });
+}
+
+export async function sshLoadConnections(): Promise<SshConnectionConfig[]> {
+  const raw = await invoke<string>("ssh_load_connections");
+  return JSON.parse(raw);
+}
