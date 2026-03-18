@@ -73,9 +73,9 @@
 
 ### Content Tiles
 
-- [ ] **CONT-01**: User can create markdown note tiles on the canvas with rich text editing
-- [ ] **CONT-02**: User can place image tiles on the canvas (drag from sidebar or filesystem)
-- [ ] **CONT-03**: User can open files from the sidebar as read-only syntax-highlighted preview tiles on the canvas
+- [x] **CONT-01**: User can create markdown note tiles on the canvas with rich text editing
+- [x] **CONT-02**: User can place image tiles on the canvas (drag from sidebar or filesystem)
+- [x] **CONT-03**: User can open files from the sidebar as read-only syntax-highlighted preview tiles on the canvas
 
 ### Theming
 
@@ -182,9 +182,9 @@
 | SSH-02 | Phase 5 | Pending |
 | SSH-03 | Phase 5 | Pending |
 | SSH-04 | Phase 5 | Pending |
-| CONT-01 | Phase 5 | Pending |
-| CONT-02 | Phase 5 | Pending |
-| CONT-03 | Phase 5 | Pending |
+| CONT-01 | Phase 5 | Complete |
+| CONT-02 | Phase 5 | Complete |
+| CONT-03 | Phase 5 | Complete |
 | THEM-01 | Phase 1 | Complete |
 | THEM-02 | Phase 2 | Complete |
 | THEM-03 | Phase 2 | Complete |

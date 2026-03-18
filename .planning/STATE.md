@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-18T14:51:24.022Z"
-last_activity: 2026-03-18 -- Completed Plan 04-04 Stash management & conflict resolution
+status: executing
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-18T15:12:03.201Z"
+last_activity: 2026-03-18 -- Completed Plan 05-02 Content tile upgrades
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 18
-  completed_plans: 18
-  percent: 100
+  total_plans: 21
+  completed_plans: 19
+  percent: 90
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-17)
 
 **Core value:** Users can visually organize and interact with multiple terminal sessions on an infinite canvas, with layout and session state persisting across restarts via tmux.
-**Current focus:** Phase 4: Git UI
+**Current focus:** Phase 5: SSH & Content Tiles
 
 ## Current Position
 
-Phase: 4 of 5 (Git UI)
-Plan: 4 of 4 in current phase (complete)
-Status: Phase Complete
-Last activity: 2026-03-18 -- Completed Plan 04-04 Stash management & conflict resolution
+Phase: 5 of 5 (SSH & Content Tiles)
+Plan: 2 of 3 in current phase
+Status: In Progress
+Last activity: 2026-03-18 -- Completed Plan 05-02 Content tile upgrades
 
-Progress: [██████████] 100%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [██████████] 100%
 | Phase 04 P03 | 3 | 2 tasks | 5 files |
 | Phase 04 P02 | 3 | 2 tasks | 7 files |
 | Phase 04 P04 | 2 | 2 tasks | 3 files |
+| Phase 05 P02 | 3 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,10 @@ Recent decisions affecting current work:
 - [Phase 04-02]: Stub BranchSection/CommitLog created to satisfy persistent linter auto-imports
 - [Phase 04]: window.confirm for stash drop confirmation (lightweight, no custom modal)
 - [Phase 04]: ConflictSection auto-hides with 2s success message; error banner dismissable not blocking
+- [Phase 05]: marked for markdown rendering (lightweight, sync parse)
+- [Phase 05]: Module-level shiki highlighter cache with lazy language loading
+- [Phase 05]: NoteNode standalone (not file-backed), markdownContent in data
+- [Phase 05]: Only terminal nodes get restored:true on deserialization
 
 ### Pending Todos
 
@@ -146,6 +151,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T14:51:24.019Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-ssh-content-tiles/05-CONTEXT.md
+Last session: 2026-03-18T15:12:03.199Z
+Stopped at: Completed 05-02-PLAN.md
+Resume file: None
