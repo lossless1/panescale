@@ -6,6 +6,8 @@ import { StatusSection } from "./StatusSection";
 import { DiffViewer } from "./DiffViewer";
 import { BranchSection } from "./BranchSection";
 import { CommitLog } from "./CommitLog";
+import { StashSection } from "./StashSection";
+import { ConflictSection } from "./ConflictSection";
 
 interface SelectedFile {
   path: string;
@@ -18,8 +20,6 @@ export function GitPanel() {
     isRepo,
     entries,
     currentBranch,
-    stashes,
-    conflicts,
     loading,
     error,
     refresh,
@@ -31,17 +31,20 @@ export function GitPanel() {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
+  const [errorDismissed, setErrorDismissed] = useState(false);
 
   useEffect(() => {
     if (!activeProject?.path) return;
     const path = activeProject.path;
 
+    // Full refresh on mount and project change
     refresh(path);
     refreshBranches(path);
     refreshLog(path);
     refreshStashes(path);
     refreshConflicts(path);
 
+    // Lightweight 2-second polling for status only
     intervalRef.current = setInterval(() => {
       refresh(path);
     }, 2000);
@@ -61,6 +64,11 @@ export function GitPanel() {
     }
   }, [entries, selectedFile]);
 
+  // Reset error dismissed state when error changes
+  useEffect(() => {
+    setErrorDismissed(false);
+  }, [error]);
+
   const handleFileClick = (path: string, staged: boolean) => {
     if (selectedFile?.path === path && selectedFile?.staged === staged) {
       setSelectedFile(null);
@@ -71,7 +79,7 @@ export function GitPanel() {
 
   if (!activeProject) {
     return (
-      <div style={sectionStyle}>
+      <div style={centeredStyle}>
         <span style={mutedStyle}>No project open</span>
       </div>
     );
@@ -79,25 +87,15 @@ export function GitPanel() {
 
   if (loading && entries.length === 0) {
     return (
-      <div style={sectionStyle}>
+      <div style={centeredStyle}>
         <span style={mutedStyle}>Loading...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={sectionStyle}>
-        <span style={{ color: "var(--text-error, #f44)", fontSize: 12 }}>
-          {error}
-        </span>
       </div>
     );
   }
 
   if (!isRepo) {
     return (
-      <div style={sectionStyle}>
+      <div style={centeredStyle}>
         <span style={mutedStyle}>Not a git repository</span>
       </div>
     );
@@ -114,15 +112,41 @@ export function GitPanel() {
         fontSize: 12,
       }}
     >
-      {/* Current branch */}
+      {/* Error banner */}
+      {error && !errorDismissed && (
+        <div style={errorBannerStyle}>
+          <span style={{ flex: 1, color: "var(--text-error, #f44)", fontSize: 11 }}>
+            {error}
+          </span>
+          <button
+            onClick={() => setErrorDismissed(true)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--text-secondary)",
+              fontSize: 14,
+              lineHeight: 1,
+              padding: "0 2px",
+            }}
+          >
+            x
+          </button>
+        </div>
+      )}
+
+      {/* Current branch header */}
       {currentBranch && (
-        <div style={{ marginBottom: 8 }}>
-          <span style={mutedStyle}>Branch: </span>
-          <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+        <div style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ fontSize: 14 }}>{"\u2387"}</span>
+          <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: 13 }}>
             {currentBranch}
           </span>
         </div>
       )}
+
+      {/* Conflict section -- top for visibility */}
+      <ConflictSection repoPath={repoPath} />
 
       {/* Commit section */}
       <CommitSection repoPath={repoPath} />
@@ -147,25 +171,16 @@ export function GitPanel() {
       {/* Branches */}
       <BranchSection repoPath={repoPath} />
 
-      {/* Commit log with SVG graph */}
-      <CommitLog repoPath={repoPath} />
-
       {/* Stashes */}
-      <div style={headerStyle}>
-        Stashes ({stashes.length})
-      </div>
+      <StashSection repoPath={repoPath} />
 
-      {/* Conflicts */}
-      {conflicts.length > 0 && (
-        <div style={headerStyle}>
-          Conflicts ({conflicts.length})
-        </div>
-      )}
+      {/* Commit log with SVG graph -- at bottom (longest section) */}
+      <CommitLog repoPath={repoPath} />
     </div>
   );
 }
 
-const sectionStyle: React.CSSProperties = {
+const centeredStyle: React.CSSProperties = {
   flex: 1,
   display: "flex",
   alignItems: "center",
@@ -178,14 +193,13 @@ const mutedStyle: React.CSSProperties = {
   fontSize: 12,
 };
 
-const headerStyle: React.CSSProperties = {
-  fontWeight: 600,
-  fontSize: 11,
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  color: "var(--text-secondary)",
-  marginTop: 12,
-  marginBottom: 4,
-  paddingBottom: 4,
-  borderBottom: "1px solid var(--border)",
+const errorBannerStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "6px 8px",
+  marginBottom: 8,
+  background: "rgba(248, 81, 73, 0.1)",
+  border: "1px solid var(--text-error, #f44)",
+  borderRadius: 4,
 };
