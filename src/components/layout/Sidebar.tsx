@@ -1,4 +1,9 @@
 import { useCallback, useRef, useState, type PointerEvent } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { useProjectStore } from "../../stores/projectStore";
+import { SidebarTabs } from "../sidebar/SidebarTabs";
+import { FileTree } from "../sidebar/FileTree";
+import { ChronologicalFeed } from "../sidebar/ChronologicalFeed";
 
 const DEFAULT_WIDTH = 240;
 const MIN_WIDTH = 180;
@@ -6,9 +11,15 @@ const MAX_WIDTH = 480;
 
 export function Sidebar() {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const [activeTab, setActiveTab] = useState<"files" | "terminals">("files");
   const dragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
+
+  const activeProject = useProjectStore((s) => s.activeProject());
+  const viewMode = useProjectStore((s) => s.viewMode);
+  const setViewMode = useProjectStore((s) => s.setViewMode);
+  const openProject = useProjectStore((s) => s.openProject);
 
   const onPointerDown = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
@@ -23,13 +34,23 @@ export function Sidebar() {
   const onPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (!dragging.current) return;
     const delta = e.clientX - startX.current;
-    const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth.current + delta));
+    const newWidth = Math.min(
+      MAX_WIDTH,
+      Math.max(MIN_WIDTH, startWidth.current + delta),
+    );
     setWidth(newWidth);
   }, []);
 
   const onPointerUp = useCallback(() => {
     dragging.current = false;
   }, []);
+
+  const handleOpenFolder = useCallback(async () => {
+    const selected = await open({ directory: true });
+    if (selected) {
+      openProject(selected);
+    }
+  }, [openProject]);
 
   return (
     <div
@@ -46,18 +67,107 @@ export function Sidebar() {
         overflow: "hidden",
       }}
     >
+      {/* Header */}
       <div
         style={{
-          padding: "12px 16px",
-          fontSize: 11,
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          color: "var(--text-secondary)",
+          padding: "8px 8px 8px 16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0,
         }}
       >
-        Explorer
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            color: "var(--text-secondary)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {activeProject ? activeProject.name : "No Project"}
+        </div>
+        <div style={{ display: "flex", gap: 2 }}>
+          {/* View mode toggle */}
+          <button
+            onClick={() =>
+              setViewMode(viewMode === "tree" ? "feed" : "tree")
+            }
+            title={
+              viewMode === "tree" ? "Chronological feed" : "Tree view"
+            }
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "2px 6px",
+              fontSize: 14,
+              color: "var(--text-secondary)",
+              borderRadius: 3,
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor =
+                "var(--bg-secondary)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor =
+                "transparent";
+            }}
+          >
+            {viewMode === "tree" ? "\u{1F553}" : "\u{1F4C2}"}
+          </button>
+          {/* Open folder button */}
+          <button
+            onClick={handleOpenFolder}
+            title="Open Folder"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "2px 6px",
+              fontSize: 14,
+              color: "var(--text-secondary)",
+              borderRadius: 3,
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor =
+                "var(--bg-secondary)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor =
+                "transparent";
+            }}
+          >
+            +
+          </button>
+        </div>
       </div>
+
+      {/* Tabs */}
+      <SidebarTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Content */}
+      {activeTab === "files" && viewMode === "tree" && <FileTree />}
+      {activeTab === "files" && viewMode === "feed" && <ChronologicalFeed />}
+      {activeTab === "terminals" && (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            color: "var(--text-secondary)",
+          }}
+        >
+          Terminals
+        </div>
+      )}
+
       {/* Resize handle */}
       <div
         onPointerDown={onPointerDown}
