@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, type WheelEvent } from "react";
+import { useState, useCallback, useEffect, useRef, type WheelEvent } from "react";
 import {
   ReactFlow,
+  MiniMap,
   useReactFlow,
   useOnViewportChange,
   type ViewportHelperFunctionOptions,
@@ -15,9 +16,11 @@ import { useCanvasStore } from "../../stores/canvasStore";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useEscapeToCanvas } from "../../hooks/useFocusMode";
 import { magneticSnapPosition } from "../../lib/gridSnap";
+import { findAlignmentGuides, type AlignmentGuide } from "../../lib/alignmentSnap";
 import { extensionToTileType } from "../../lib/ipc";
 import { CanvasBackground } from "./CanvasBackground";
 import { SnapLines } from "./SnapLines";
+import { AlignmentGuides } from "./AlignmentGuides";
 import { TerminalNode } from "./TerminalNode";
 import { NoteNode } from "./NoteNode";
 import { ImageNode } from "./ImageNode";
@@ -94,6 +97,8 @@ function CanvasInner() {
   const reactFlow = useReactFlow();
   const spaceHeldRef = useRef(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [minimapVisible, setMinimapVisible] = useState(false);
+  const [alignGuides, setAlignGuides] = useState<AlignmentGuide[]>([]);
 
   useKeyboardShortcuts();
   useRubberBandEffect();
@@ -146,12 +151,17 @@ function CanvasInner() {
         x: snappedX ? x : null,
         y: snappedY ? y : null,
       });
+
+      // Find alignment guides against other nodes
+      const guides = findAlignmentGuides(node, nodes);
+      setAlignGuides(guides);
     },
-    [onNodesChange, setSnapLines],
+    [onNodesChange, setSnapLines, nodes],
   );
 
   const handleNodeDragStop = useCallback(() => {
     setSnapLines(null);
+    setAlignGuides([]);
   }, [setSnapLines]);
 
   // Cmd/Ctrl+scroll = zoom
@@ -170,11 +180,23 @@ function CanvasInner() {
     [reactFlow],
   );
 
-  // Space key tracking for grab cursor
+  // Space key tracking for grab cursor + minimap toggle
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.code === "Space" && !e.repeat) {
       spaceHeldRef.current = true;
       wrapperRef.current?.classList.add("canvas-grab");
+    }
+    // 'm' key toggles minimap (skip if typing in input/textarea)
+    if (
+      e.key === "m" &&
+      !e.repeat &&
+      !e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey &&
+      document.activeElement?.tagName !== "INPUT" &&
+      document.activeElement?.tagName !== "TEXTAREA"
+    ) {
+      setMinimapVisible((v) => !v);
     }
   }, []);
 
@@ -290,6 +312,27 @@ function CanvasInner() {
       >
         <CanvasBackground />
         <SnapLines snapLines={snapLines} />
+        <AlignmentGuides guides={alignGuides} />
+        {minimapVisible && (
+          <MiniMap
+            position="bottom-right"
+            style={{
+              background: "var(--bg-secondary)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+            }}
+            maskColor="rgba(0, 0, 0, 0.3)"
+            nodeColor={(node) => {
+              const badgeColor = (node.data as Record<string, unknown>)
+                ?.badgeColor as string | undefined;
+              if (badgeColor) return badgeColor;
+              if (node.type === "region") return "transparent";
+              return "var(--accent)";
+            }}
+            pannable
+            zoomable
+          />
+        )}
       </ReactFlow>
     </div>
   );
