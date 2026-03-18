@@ -84,12 +84,13 @@ Plans:
   2. User can write a commit message and commit staged changes, and view inline or side-by-side diffs for changed files
   3. User can see all branches with current branch indicated, create/switch/delete branches, and view commit log with branch topology graph
   4. User can stash changes and manage stashes (apply, pop, drop), and resolve merge conflicts through a dedicated UI
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md — Rust git backend (git2), all IPC wrappers, gitStore, Git sidebar tab
+- [ ] 04-02-PLAN.md — Status panel, file staging/unstaging, inline diff viewer with hunk staging, commit section
+- [ ] 04-03-PLAN.md — Branch management (create/switch/delete), commit log with SVG topology graph
+- [ ] 04-04-PLAN.md — Stash management, merge conflict resolution UI, final GitPanel wiring
 
 ### Phase 5: SSH + Content Tiles
 **Goal**: Users can manage SSH connections and spawn remote terminal tiles on the canvas, and enrich their workspace with markdown notes, images, and file preview cards
@@ -115,5 +116,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Canvas + Terminal Core | 2/5 | In progress | - |
 | 2. Sidebar + Session Persistence | 3/6 | In Progress|  |
 | 3. Terminal Polish + Canvas Refinement | 1/3 | In Progress|  |
-| 4. Git UI | 0/3 | Not started | - |
+| 4. Git UI | 0/4 | Not started | - |
 | 5. SSH + Content Tiles | 0/2 | Not started | - |
