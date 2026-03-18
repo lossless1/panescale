@@ -3,11 +3,14 @@
  * Each theme is a map of CSS custom property names to values.
  */
 
-export type ThemeName = "dark" | "light";
+export type ResolvedTheme = "dark" | "light";
+
+/** @deprecated Use ResolvedTheme instead */
+export type ThemeName = ResolvedTheme;
 
 export type ThemeVariables = Record<string, string>;
 
-export const themes: Record<ThemeName, ThemeVariables> = {
+export const themes: Record<ResolvedTheme, ThemeVariables> = {
   dark: {
     "--bg-primary": "#1a1a2e",
     "--bg-secondary": "#16213e",
