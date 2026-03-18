@@ -66,10 +66,10 @@
 
 ### SSH Connection Manager
 
-- [ ] **SSH-01**: User can save SSH connections with host, user, key file, and port
-- [ ] **SSH-02**: User can organize SSH connections into groups/folders
-- [ ] **SSH-03**: User can spawn a remote terminal tile on the canvas connected via SSH
-- [ ] **SSH-04**: Remote terminal tiles function identically to local terminals (resize, drag, z-index)
+- [x] **SSH-01**: User can save SSH connections with host, user, key file, and port
+- [x] **SSH-02**: User can organize SSH connections into groups/folders
+- [x] **SSH-03**: User can spawn a remote terminal tile on the canvas connected via SSH
+- [x] **SSH-04**: Remote terminal tiles function identically to local terminals (resize, drag, z-index)
 
 ### Content Tiles
 
@@ -178,10 +178,10 @@
 | GIT-07 | Phase 4 | Complete |
 | GIT-08 | Phase 4 | Complete |
 | GIT-09 | Phase 4 | Complete |
-| SSH-01 | Phase 5 | Pending |
-| SSH-02 | Phase 5 | Pending |
-| SSH-03 | Phase 5 | Pending |
-| SSH-04 | Phase 5 | Pending |
+| SSH-01 | Phase 5 | Complete |
+| SSH-02 | Phase 5 | Complete |
+| SSH-03 | Phase 5 | Complete |
+| SSH-04 | Phase 5 | Complete |
 | CONT-01 | Phase 5 | Complete |
 | CONT-02 | Phase 5 | Complete |
 | CONT-03 | Phase 5 | Complete |

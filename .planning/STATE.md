@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-17)
 ## Current Position
 
 Phase: 5 of 5 (SSH & Content Tiles)
-Plan: 2 of 3 in current phase
+Plan: 2 of 3 in current phase (05-01, 05-02 complete)
 Status: In Progress
-Last activity: 2026-03-18 -- Completed Plan 05-02 Content tile upgrades
+Last activity: 2026-03-18 -- Completed Plan 05-01 SSH backend infrastructure
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [█████████░] 90%
 | Phase 04 P03 | 3 | 2 tasks | 5 files |
 | Phase 04 P02 | 3 | 2 tasks | 7 files |
 | Phase 04 P04 | 2 | 2 tasks | 3 files |
+| Phase 05 P01 | 9 | 2 tasks | 8 files |
 | Phase 05 P02 | 3 | 2 tasks | 6 files |
 
 ## Accumulated Context
@@ -129,6 +130,9 @@ Recent decisions affecting current work:
 - [Phase 04-02]: Stub BranchSection/CommitLog created to satisfy persistent linter auto-imports
 - [Phase 04]: window.confirm for stash drop confirmation (lightweight, no custom modal)
 - [Phase 04]: ConflictSection auto-hides with 2s success message; error banner dismissable not blocking
+- [Phase 05-01]: Channel split pattern for russh: ChannelReadHalf for reader task, ChannelWriteHalf for resize/data
+- [Phase 05-01]: Handle.data() for SSH write (takes Bytes), ChannelWriteHalf.window_change() for resize
+- [Phase 05-01]: TOFU host key policy, 10s connection timeout, key-then-password auth cascade
 - [Phase 05]: marked for markdown rendering (lightweight, sync parse)
 - [Phase 05]: Module-level shiki highlighter cache with lazy language loading
 - [Phase 05]: NoteNode standalone (not file-backed), markdownContent in data
@@ -151,6 +155,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T15:12:03.199Z
-Stopped at: Completed 05-02-PLAN.md
-Resume file: None
+Last session: 2026-03-18T15:17:23Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: .planning/phases/05-ssh-content-tiles/05-03-PLAN.md
