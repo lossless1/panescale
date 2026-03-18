@@ -7,6 +7,7 @@ import { ChronologicalFeed } from "../sidebar/ChronologicalFeed";
 import { TerminalList } from "../sidebar/TerminalList";
 import { FuzzySearch } from "../sidebar/FuzzySearch";
 import { GitPanel } from "../sidebar/git/GitPanel";
+import { SshPanel } from "../sidebar/SshPanel";
 
 const DEFAULT_WIDTH = 240;
 const MIN_WIDTH = 180;
@@ -14,7 +15,7 @@ const MAX_WIDTH = 480;
 
 export function Sidebar() {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
-  const [activeTab, setActiveTab] = useState<"files" | "terminals" | "git">("files");
+  const [activeTab, setActiveTab] = useState<"files" | "terminals" | "git" | "ssh">("files");
   const dragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -160,6 +161,7 @@ export function Sidebar() {
       {activeTab === "files" && viewMode === "feed" && <ChronologicalFeed />}
       {activeTab === "terminals" && <TerminalList />}
       {activeTab === "git" && <GitPanel />}
+      {activeTab === "ssh" && <SshPanel />}
 
       {/* Fuzzy search overlay (manages own visibility via Cmd+K) */}
       <FuzzySearch />

@@ -26,6 +26,7 @@ interface CanvasState {
   setBellActive: (id: string, active: boolean) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
+  addSshTerminalNode: (position: { x: number; y: number }, connection: { id: string; host: string; user: string }) => void;
   addNoteNode: (position: { x: number; y: number }) => void;
   addRegion: (position: { x: number; y: number }, size: { width: number; height: number }, name: string, color: string) => void;
   removeNode: (id: string) => void;
@@ -91,6 +92,31 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       maxZIndex: newZIndex,
     }));
     // Immediate save on tile create (PERS-03)
+    forceSave();
+  },
+
+  addSshTerminalNode: (position, connection) => {
+    const newZIndex = get().maxZIndex + 1;
+    const id = crypto.randomUUID();
+    const newNode: Node = {
+      id,
+      type: "terminal",
+      position,
+      data: {
+        cwd: "~",
+        shellType: "ssh",
+        sshConnectionId: connection.id,
+        sshHost: connection.host,
+        sshUser: connection.user,
+      },
+      dragHandle: ".drag-handle",
+      style: { width: 640, height: 480 },
+      zIndex: newZIndex,
+    };
+    set((state) => ({
+      nodes: [...state.nodes, newNode],
+      maxZIndex: newZIndex,
+    }));
     forceSave();
   },
 
