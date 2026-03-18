@@ -125,6 +125,12 @@ None yet.
 - [Research]: xterm.js v5 vs. v6 compatibility with tauri-plugin-pty unresolved -- highest-priority gap for Phase 1
 - [Research]: tauri-plugin-pty 0.1.1 is early-stage -- may need fallback to custom portable-pty commands
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260318-gro | Fix canvas dots visibility, window border rendering, and rename to Panescale | 2026-03-18 | d09111c | [260318-gro-fix-canvas-dots-visibility-window-border](./quick/260318-gro-fix-canvas-dots-visibility-window-border/) |
+
 ## Session Continuity
 
 Last session: 2026-03-18T11:08:57.826Z
