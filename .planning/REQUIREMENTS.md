@@ -10,7 +10,7 @@
 - [x] **CANV-01**: User can pan the canvas via scroll wheel, Space+drag, and middle-click+drag
 - [x] **CANV-02**: User can zoom in/out via Cmd+/-, Ctrl+scroll, and pinch-to-zoom on trackpad
 - [x] **CANV-03**: Canvas displays a dot grid background with minor and major dots for spatial orientation
-- [ ] **CANV-04**: All tile positions and sizes snap to the grid (with modifier key to override)
+- [x] **CANV-04**: All tile positions and sizes snap to the grid (with modifier key to override)
 - [ ] **CANV-05**: User can see a minimap overview for navigating large canvases
 - [ ] **CANV-06**: User sees alignment guides when dragging tiles near other tiles (edge/center snapping)
 - [ ] **CANV-07**: User can create named canvas regions/groups with optional background color to organize tiles
@@ -137,7 +137,7 @@
 | CANV-01 | Phase 1 | Complete |
 | CANV-02 | Phase 1 | Complete |
 | CANV-03 | Phase 1 | Complete |
-| CANV-04 | Phase 2 | Pending |
+| CANV-04 | Phase 2 | Complete |
 | CANV-05 | Phase 3 | Pending |
 | CANV-06 | Phase 3 | Pending |
 | CANV-07 | Phase 3 | Pending |

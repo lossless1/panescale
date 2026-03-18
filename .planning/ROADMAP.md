@@ -54,7 +54,7 @@ Plans:
 Plans:
 - [ ] 02-01-PLAN.md — Install plugins, Rust fs commands, project store, file tree sidebar with expand/collapse
 - [ ] 02-02-PLAN.md — Three-mode theme (System/Dark/Light), terminal color schemes (One Dark + Dracula), rounded corners
-- [ ] 02-03-PLAN.md — Magnetic grid snapping with visual snap line feedback
+- [x] 02-03-PLAN.md — Magnetic grid snapping with visual snap line feedback
 - [ ] 02-04-PLAN.md — File operations context menu, Cmd+K fuzzy search, terminal list sidebar panel
 - [ ] 02-05-PLAN.md — Drag files from sidebar to canvas, auto-typed content tiles (note/image/preview)
 - [ ] 02-06-PLAN.md — Tmux session persistence backend, reattach on restore, orphan cleanup
