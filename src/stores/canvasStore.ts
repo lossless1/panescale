@@ -26,6 +26,7 @@ interface CanvasState {
   setBellActive: (id: string, active: boolean) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
+  addNoteNode: (position: { x: number; y: number }) => void;
   addRegion: (position: { x: number; y: number }, size: { width: number; height: number }, name: string, color: string) => void;
   removeNode: (id: string) => void;
   bringToFront: (id: string) => void;
@@ -108,6 +109,25 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       data: { filePath: fileData.path, fileName: fileData.name },
       dragHandle: '.drag-handle',
       style: sizes[tileType],
+      zIndex: newZIndex,
+    };
+    set((state) => ({
+      nodes: [...state.nodes, newNode],
+      maxZIndex: newZIndex,
+    }));
+    forceSave();
+  },
+
+  addNoteNode: (position) => {
+    const newZIndex = get().maxZIndex + 1;
+    const id = crypto.randomUUID();
+    const newNode: Node = {
+      id,
+      type: "note",
+      position,
+      data: { markdownContent: "", fileName: "Note" },
+      dragHandle: ".drag-handle",
+      style: { width: 300, height: 300 },
       zIndex: newZIndex,
     };
     set((state) => ({

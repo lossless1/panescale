@@ -30,6 +30,10 @@ export function serializeCanvas(state: {
       startupCommand: (n.data as Record<string, unknown>).startupCommand as string | undefined,
       regionName: (n.data as Record<string, unknown>).regionName as string | undefined,
       regionColor: (n.data as Record<string, unknown>).regionColor as string | undefined,
+      // Content tile fields
+      markdownContent: (n.data as Record<string, unknown>).markdownContent as string | undefined,
+      filePath: (n.data as Record<string, unknown>).filePath as string | undefined,
+      fileName: (n.data as Record<string, unknown>).fileName as string | undefined,
     },
   }));
   return {
@@ -51,13 +55,14 @@ export function deserializeCanvas(snapshot: CanvasSnapshot): {
   const nodes: Node[] = snapshot.nodes.map((sn) => {
     const nodeType = sn.type ?? "terminal";
     const isRegion = nodeType === "region";
+    const isTerminal = nodeType === "terminal";
     return {
       id: sn.id,
       type: nodeType,
       position: { x: sn.position.x, y: sn.position.y },
       data: {
         ...sn.data,
-        ...(!isRegion ? { restored: true } : {}),
+        ...(isTerminal ? { restored: true } : {}),
       },
       dragHandle: isRegion ? ".region-drag-handle" : ".drag-handle",
       style: { width: sn.width, height: sn.height },

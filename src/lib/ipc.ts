@@ -132,6 +132,10 @@ export interface SerializedNode {
     startupCommand?: string;
     regionName?: string;
     regionColor?: string;
+    // Content tile fields
+    markdownContent?: string;
+    filePath?: string;
+    fileName?: string;
   };
 }
 
