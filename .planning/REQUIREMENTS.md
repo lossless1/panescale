@@ -46,11 +46,11 @@
 - [x] **SIDE-02**: User can expand/collapse folders in the file tree
 - [x] **SIDE-03**: User can open a folder to set it as the active project
 - [x] **SIDE-04**: User can switch between multiple open projects/workspaces
-- [ ] **SIDE-05**: User can create, rename, and delete files/folders from the sidebar
-- [ ] **SIDE-06**: User can search/filter files with a fuzzy finder (Cmd+K)
+- [x] **SIDE-05**: User can create, rename, and delete files/folders from the sidebar
+- [x] **SIDE-06**: User can search/filter files with a fuzzy finder (Cmd+K)
 - [x] **SIDE-07**: User can drag files from the sidebar onto the canvas to create content tiles
-- [ ] **SIDE-08**: Sidebar shows a list of all open terminal tiles with name and working directory
-- [ ] **SIDE-09**: Clicking a terminal entry in the sidebar pans the canvas to that terminal and focuses it
+- [x] **SIDE-08**: Sidebar shows a list of all open terminal tiles with name and working directory
+- [x] **SIDE-09**: Clicking a terminal entry in the sidebar pans the canvas to that terminal and focuses it
 
 ### Git UI
 
@@ -164,11 +164,11 @@
 | SIDE-02 | Phase 2 | Complete |
 | SIDE-03 | Phase 2 | Complete |
 | SIDE-04 | Phase 2 | Complete |
-| SIDE-05 | Phase 2 | Pending |
-| SIDE-06 | Phase 2 | Pending |
+| SIDE-05 | Phase 2 | Complete |
+| SIDE-06 | Phase 2 | Complete |
 | SIDE-07 | Phase 2 | Complete |
-| SIDE-08 | Phase 2 | Pending |
-| SIDE-09 | Phase 2 | Pending |
+| SIDE-08 | Phase 2 | Complete |
+| SIDE-09 | Phase 2 | Complete |
 | GIT-01 | Phase 4 | Pending |
 | GIT-02 | Phase 4 | Pending |
 | GIT-03 | Phase 4 | Pending |
