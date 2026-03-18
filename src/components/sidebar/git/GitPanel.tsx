@@ -4,6 +4,8 @@ import { useProjectStore } from "../../../stores/projectStore";
 import { CommitSection } from "./CommitSection";
 import { StatusSection } from "./StatusSection";
 import { DiffViewer } from "./DiffViewer";
+import { BranchSection } from "./BranchSection";
+import { CommitLog } from "./CommitLog";
 
 interface SelectedFile {
   path: string;
@@ -15,9 +17,7 @@ export function GitPanel() {
   const {
     isRepo,
     entries,
-    branches,
     currentBranch,
-    commitLog,
     stashes,
     conflicts,
     loading,
@@ -145,14 +145,10 @@ export function GitPanel() {
       )}
 
       {/* Branches */}
-      <div style={headerStyle}>
-        Branches ({branches.length})
-      </div>
+      <BranchSection repoPath={repoPath} />
 
-      {/* Log */}
-      <div style={headerStyle}>
-        Log ({commitLog.length})
-      </div>
+      {/* Commit log with SVG graph */}
+      <CommitLog repoPath={repoPath} />
 
       {/* Stashes */}
       <div style={headerStyle}>
