@@ -54,15 +54,15 @@
 
 ### Git UI
 
-- [ ] **GIT-01**: Sidebar shows git status panel with staged, unstaged, and untracked files
-- [ ] **GIT-02**: User can stage and unstage individual files from the git panel
-- [ ] **GIT-03**: User can write a commit message and commit staged changes
-- [ ] **GIT-04**: User can view diffs for changed files (inline or side-by-side)
-- [ ] **GIT-05**: User can see a list of branches and the current branch indicator
-- [ ] **GIT-06**: User can create, switch, and delete branches
-- [ ] **GIT-07**: User can view commit log with branch topology graph
-- [ ] **GIT-08**: User can stash changes and manage stashes (apply, pop, drop)
-- [ ] **GIT-09**: User can resolve merge conflicts through a dedicated UI
+- [x] **GIT-01**: Sidebar shows git status panel with staged, unstaged, and untracked files
+- [x] **GIT-02**: User can stage and unstage individual files from the git panel
+- [x] **GIT-03**: User can write a commit message and commit staged changes
+- [x] **GIT-04**: User can view diffs for changed files (inline or side-by-side)
+- [x] **GIT-05**: User can see a list of branches and the current branch indicator
+- [x] **GIT-06**: User can create, switch, and delete branches
+- [x] **GIT-07**: User can view commit log with branch topology graph
+- [x] **GIT-08**: User can stash changes and manage stashes (apply, pop, drop)
+- [x] **GIT-09**: User can resolve merge conflicts through a dedicated UI
 
 ### SSH Connection Manager
 
@@ -169,15 +169,15 @@
 | SIDE-07 | Phase 2 | Complete |
 | SIDE-08 | Phase 2 | Complete |
 | SIDE-09 | Phase 2 | Complete |
-| GIT-01 | Phase 4 | Pending |
-| GIT-02 | Phase 4 | Pending |
-| GIT-03 | Phase 4 | Pending |
-| GIT-04 | Phase 4 | Pending |
-| GIT-05 | Phase 4 | Pending |
-| GIT-06 | Phase 4 | Pending |
-| GIT-07 | Phase 4 | Pending |
-| GIT-08 | Phase 4 | Pending |
-| GIT-09 | Phase 4 | Pending |
+| GIT-01 | Phase 4 | Complete |
+| GIT-02 | Phase 4 | Complete |
+| GIT-03 | Phase 4 | Complete |
+| GIT-04 | Phase 4 | Complete |
+| GIT-05 | Phase 4 | Complete |
+| GIT-06 | Phase 4 | Complete |
+| GIT-07 | Phase 4 | Complete |
+| GIT-08 | Phase 4 | Complete |
+| GIT-09 | Phase 4 | Complete |
 | SSH-01 | Phase 5 | Pending |
 | SSH-02 | Phase 5 | Pending |
 | SSH-03 | Phase 5 | Pending |
