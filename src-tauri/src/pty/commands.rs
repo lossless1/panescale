@@ -1,7 +1,7 @@
 use tauri::ipc::Channel;
 
 use super::manager::{PtyEvent, PtyManager};
-use crate::platform::tmux::TmuxBridge;
+use crate::platform::tmux::{InstallProgress, TmuxBridge};
 
 /// Spawn a new PTY session. Returns the session ID.
 ///
@@ -86,4 +86,12 @@ pub async fn pty_tmux_list_sessions() -> Result<Vec<String>, String> {
 #[tauri::command]
 pub async fn pty_tmux_cleanup(active_ids: Vec<String>) -> Result<usize, String> {
     TmuxBridge::cleanup_orphans(&active_ids)
+}
+
+/// Ensure tmux is installed, auto-installing via brew (macOS) or apt/pacman (Linux) if missing.
+/// Streams progress events to the provided channel.
+/// Returns true if tmux was already installed, false if it was just installed.
+#[tauri::command]
+pub async fn pty_ensure_tmux(on_progress: Channel<InstallProgress>) -> Result<bool, String> {
+    TmuxBridge::ensure_installed(&on_progress)
 }

@@ -1,4 +1,12 @@
 use std::process::Command;
+use tauri::ipc::Channel;
+
+/// Progress events streamed during tmux auto-installation.
+#[derive(Clone, serde::Serialize)]
+pub struct InstallProgress {
+    pub stage: String,
+    pub message: String,
+}
 
 pub struct TmuxBridge;
 
@@ -100,6 +108,97 @@ impl TmuxBridge {
     /// Extract tile ID from session name
     pub fn tile_id_from_session(session_name: &str) -> Option<&str> {
         session_name.strip_prefix(SESSION_PREFIX)
+    }
+
+    /// Ensure tmux is installed, auto-installing if missing.
+    /// Streams progress events to the provided Channel.
+    /// Returns Ok(true) if tmux was already installed.
+    /// Returns Ok(false) if tmux was just installed successfully.
+    /// Returns Err if installation failed.
+    pub fn ensure_installed(progress: &Channel<InstallProgress>) -> Result<bool, String> {
+        if Self::is_available() {
+            let _ = progress.send(InstallProgress {
+                stage: "done".into(),
+                message: "tmux is available".into(),
+            });
+            return Ok(true);
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            Self::install_via_brew(progress)
+        }
+        #[cfg(target_os = "linux")]
+        {
+            Self::install_via_linux(progress)
+        }
+        #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+        {
+            let _ = progress;
+            Err("Auto-install not supported on this platform".into())
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    fn install_via_brew(progress: &Channel<InstallProgress>) -> Result<bool, String> {
+        if Command::new("brew").arg("--version").output().is_err() {
+            return Err(
+                "Homebrew not found. Install Homebrew first: https://brew.sh".into(),
+            );
+        }
+        let _ = progress.send(InstallProgress {
+            stage: "installing".into(),
+            message: "Installing tmux via Homebrew...".into(),
+        });
+        let output = Command::new("brew")
+            .args(["install", "tmux"])
+            .output()
+            .map_err(|e| format!("brew install failed: {}", e))?;
+        if !output.status.success() {
+            return Err(format!(
+                "brew install tmux failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+        let _ = progress.send(InstallProgress {
+            stage: "done".into(),
+            message: "tmux installed successfully".into(),
+        });
+        Ok(false)
+    }
+
+    #[cfg(target_os = "linux")]
+    fn install_via_linux(progress: &Channel<InstallProgress>) -> Result<bool, String> {
+        let (pkg_manager, args) =
+            if Command::new("apt-get").arg("--version").output().is_ok() {
+                ("apt-get", vec!["install", "-y", "tmux"])
+            } else if Command::new("pacman").arg("--version").output().is_ok() {
+                ("pacman", vec!["-S", "--noconfirm", "tmux"])
+            } else {
+                return Err(
+                    "No supported package manager found (tried apt-get, pacman)".into(),
+                );
+            };
+        let _ = progress.send(InstallProgress {
+            stage: "installing".into(),
+            message: format!("Installing tmux via {}...", pkg_manager),
+        });
+        let output = Command::new(pkg_manager)
+            .args(&args)
+            .output()
+            .map_err(|e| format!("{} install failed: {}", pkg_manager, e))?;
+        if !output.status.success() {
+            return Err(format!(
+                "{} install tmux failed: {}",
+                pkg_manager,
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+        let _ = progress.send(InstallProgress {
+            stage: "done".into(),
+            message: "tmux installed successfully".into(),
+        });
+        Ok(false)
     }
 
     /// Clean up orphaned sessions (sessions with no matching tile ID in the given set)

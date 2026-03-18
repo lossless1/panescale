@@ -19,6 +19,7 @@ pub fn run() {
             pty::commands::pty_tmux_available,
             pty::commands::pty_tmux_list_sessions,
             pty::commands::pty_tmux_cleanup,
+            pty::commands::pty_ensure_tmux,
             state::state_save,
             state::state_load,
             fs::commands::fs_read_dir,

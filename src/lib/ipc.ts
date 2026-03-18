@@ -56,6 +56,19 @@ export async function ptyTmuxCleanup(activeIds: string[]): Promise<number> {
   return invoke<number>("pty_tmux_cleanup", { activeIds });
 }
 
+export interface TmuxInstallProgress {
+  stage: "detecting" | "installing" | "done" | "error";
+  message: string;
+}
+
+export async function ptyEnsureTmux(
+  onProgress: (event: TmuxInstallProgress) => void,
+): Promise<boolean> {
+  const channel = new Channel<TmuxInstallProgress>();
+  channel.onmessage = onProgress;
+  return invoke<boolean>("pty_ensure_tmux", { onProgress: channel });
+}
+
 // --- File System ---
 
 export interface FileEntry {

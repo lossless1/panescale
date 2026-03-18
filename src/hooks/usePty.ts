@@ -8,6 +8,7 @@ import {
   ptyKill,
   ptyReattach,
   ptyTmuxAvailable,
+  ptyEnsureTmux,
 } from "../lib/ipc";
 import type { PtyEvent } from "../lib/ipc";
 
@@ -37,6 +38,35 @@ async function isTmuxAvailable(): Promise<boolean> {
     tmuxAvailableCache = false;
   }
   return tmuxAvailableCache;
+}
+
+/**
+ * Module-level flag: whether we've run the ensure-tmux check this session.
+ * Only runs once per app launch, before the first fresh spawn.
+ */
+let tmuxEnsured = false;
+
+/**
+ * Ensure tmux is installed before first spawn.
+ * If tmux is missing, auto-installs via brew (macOS) or apt/pacman (Linux).
+ * Logs progress to console; proceeds with non-persistent terminals on failure.
+ */
+async function ensureTmuxOnce(): Promise<void> {
+  if (tmuxEnsured) return;
+  tmuxEnsured = true;
+  try {
+    await ptyEnsureTmux((progress) => {
+      if (progress.stage === "installing") {
+        console.info(`[tmux] ${progress.message}`);
+      } else if (progress.stage === "error") {
+        console.warn(`[tmux] Install failed: ${progress.message}`);
+      }
+    });
+    // Refresh availability cache after install
+    tmuxAvailableCache = null;
+  } catch (err) {
+    console.warn("[tmux] ensure_installed failed, proceeding without persistence:", err);
+  }
 }
 
 export function usePty(): UsePtyReturn {
@@ -77,6 +107,9 @@ export function usePty(): UsePtyReturn {
         return ptyIdRef.current ?? "";
       }
       spawnLock.current = true;
+
+      // Ensure tmux is installed before first fresh spawn
+      await ensureTmuxOnce();
 
       const channel = createChannel(term);
       const id = await ptySpawn(cwd, cols, rows, channel);
