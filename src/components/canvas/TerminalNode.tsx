@@ -8,8 +8,8 @@ import "@xterm/xterm/css/xterm.css";
 import { usePty } from "../../hooks/usePty";
 import { useFocusModeStore } from "../../hooks/useFocusMode";
 import { useCanvasStore } from "../../stores/canvasStore";
-import { useThemeStore } from "../../stores/themeStore";
 import { useSettingsStore } from "../../stores/settingsStore";
+import { terminalSchemes } from "../../lib/terminalSchemes";
 import { modKeyCode } from "../../lib/platform";
 import { TerminalTitleBar } from "./TerminalTitleBar";
 
@@ -18,22 +18,6 @@ type TerminalNodeData = {
   shellType: string;
   restored?: boolean;
 };
-
-/**
- * Build an xterm ITheme from CSS custom properties.
- */
-function buildXtermTheme(): Record<string, string> {
-  const style = getComputedStyle(document.documentElement);
-  const get = (v: string) => style.getPropertyValue(v).trim();
-
-  return {
-    background: get("--bg-terminal") || "#0d0d1a",
-    foreground: get("--text-primary") || "#e0e0e0",
-    cursor: get("--accent") || "#6366f1",
-    cursorAccent: get("--bg-terminal") || "#0d0d1a",
-    selectionBackground: get("--focus-glow") || "rgba(99, 102, 241, 0.4)",
-  };
-}
 
 const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: NodeProps) {
   const { cwd, shellType } = data as TerminalNodeData;
@@ -47,10 +31,10 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   const enterTerminalMode = useFocusModeStore((s) => s.enterTerminalMode);
   const bringToFront = useCanvasStore((s) => s.bringToFront);
   const removeNode = useCanvasStore((s) => s.removeNode);
-  const theme = useThemeStore((s) => s.theme);
   const fontFamily = useSettingsStore((s) => s.fontFamily);
   const fontSize = useSettingsStore((s) => s.fontSize);
   const scrollback = useSettingsStore((s) => s.scrollback);
+  const colorScheme = useSettingsStore((s) => s.colorScheme);
 
   const isFocused = activeTerminalId === id;
 
@@ -64,7 +48,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       fontSize,
       scrollback,
       cursorBlink: true,
-      theme: buildXtermTheme(),
+      theme: terminalSchemes[colorScheme],
       allowProposedApi: true,
     });
 
@@ -102,12 +86,12 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update theme when it changes
+  // Update terminal color scheme when it changes
   useEffect(() => {
     if (termRef.current) {
-      termRef.current.options.theme = buildXtermTheme();
+      termRef.current.options.theme = terminalSchemes[colorScheme];
     }
-  }, [theme]);
+  }, [colorScheme]);
 
   // Focus/blur terminal based on focus mode
   useEffect(() => {
