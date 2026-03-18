@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-18T10:48:01.317Z"
-last_activity: 2026-03-18 -- Completed Plan 03-01 Terminal search, URLs, title, scrollback
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-03-18T10:55:09.116Z"
+last_activity: 2026-03-18 -- Completed Plan 03-02 Terminal rename, badges, bell, startup commands
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 14
-  completed_plans: 13
-  percent: 86
+  completed_plans: 14
+  percent: 93
 ---
 
 # Project State
@@ -58,6 +58,7 @@ Progress: [█████████░] 93%
 | Phase 02 P04 | 5 | 2 tasks | 12 files |
 | Phase 03 P01 | 2 | 1 tasks | 5 files |
 | Phase 03 P02 | 4 | 2 tasks | 7 files |
+| Phase 03 P03 | 5 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Web Audio API for bell chime instead of audio file (no asset dependency)
 - [Phase 03]: window.prompt for startup command input (rare action, simple UX)
 - [Phase 03]: bellActiveNodes as transient Set state, not persisted
+- [Phase 03]: MiniMap toggled via 'm' key with input/textarea guard
+- [Phase 03]: Region group drag uses ref tracking initial positions on dragStart
+- [Phase 03]: Type-preserved serialization: SerializedNode carries node type for regions
 
 ### Pending Todos
 
@@ -123,6 +127,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T10:48:01.315Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-03-18T10:55:09.114Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
