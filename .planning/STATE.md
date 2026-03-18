@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-18T14:29:54Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-03-18T14:37:15.453Z"
 last_activity: 2026-03-18 -- Completed Plan 04-01 Git backend + IPC + store
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 18
-  completed_plans: 15
+  completed_plans: 16
   percent: 83
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-17)
 ## Current Position
 
 Phase: 4 of 5 (Git UI)
-Plan: 1 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-03-18 -- Completed Plan 04-01 Git backend + IPC + store
+Last activity: 2026-03-18 -- Completed Plan 04-03 Branch management & commit log
 
-Progress: [████████░░] 83%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [████████░░] 83%
 | Phase 03 P02 | 4 | 2 tasks | 7 files |
 | Phase 03 P03 | 5 | 2 tasks | 7 files |
 | Phase 04 P01 | 7 | 2 tasks | 10 files |
+| Phase 04 P03 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,7 @@ Recent decisions affecting current work:
 - [Phase 04-01]: Patch API for diff collection to avoid Rust borrow checker issues with Diff::foreach
 - [Phase 04-01]: git2::build::CheckoutBuilder used directly (not re-exported at crate root)
 - [Phase 04-01]: No persist middleware for gitStore -- git state always fetched fresh
+- [Phase 04]: Lane assignment: first parent stays in column, merge parents get new lanes; Bezier curves for cross-column merges
 
 ### Pending Todos
 
@@ -137,6 +139,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T14:29:54Z
-Stopped at: Completed 04-01-PLAN.md
-Resume file: .planning/phases/04-git-ui/04-02-PLAN.md
+Last session: 2026-03-18T14:37:15.451Z
+Stopped at: Completed 04-03-PLAN.md
+Resume file: None
