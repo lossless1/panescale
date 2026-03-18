@@ -1,4 +1,4 @@
-import { useCallback, useRef, type WheelEvent } from "react";
+import { useCallback, useEffect, useRef, type WheelEvent } from "react";
 import {
   ReactFlow,
   useReactFlow,
@@ -88,6 +88,8 @@ function CanvasInner() {
   const bringToFront = useCanvasStore((s) => s.bringToFront);
   const snapLines = useCanvasStore((s) => s.snapLines);
   const setSnapLines = useCanvasStore((s) => s.setSnapLines);
+  const panToNodeId = useCanvasStore((s) => s.panToNodeId);
+  const setPanToNode = useCanvasStore((s) => s.setPanToNode);
 
   const reactFlow = useReactFlow();
   const spaceHeldRef = useRef(false);
@@ -96,6 +98,23 @@ function CanvasInner() {
   useKeyboardShortcuts();
   useRubberBandEffect();
   useEscapeToCanvas();
+
+  // Pan to a node when panToNodeId is set (triggered by sidebar TerminalList)
+  useEffect(() => {
+    if (!panToNodeId) return;
+    const node = nodes.find((n) => n.id === panToNodeId);
+    if (node) {
+      const nodeWidth = (node.style?.width as number) ?? 640;
+      const nodeHeight = (node.style?.height as number) ?? 480;
+      reactFlow.setCenter(
+        node.position.x + nodeWidth / 2,
+        node.position.y + nodeHeight / 2,
+        { zoom: 1, duration: 300 },
+      );
+      bringToFront(node.id);
+    }
+    setPanToNode(null);
+  }, [panToNodeId, nodes, reactFlow, bringToFront, setPanToNode]);
 
   // Magnetic snap on drag: snap node position to grid within threshold
   const handleNodeDrag = useCallback(

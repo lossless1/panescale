@@ -19,6 +19,7 @@ interface CanvasState {
   maxZIndex: number;
   hydrated: boolean;
   snapLines: SnapLinePositions | null;
+  panToNodeId: string | null;
   onNodesChange: (changes: NodeChange[]) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
@@ -26,6 +27,7 @@ interface CanvasState {
   bringToFront: (id: string) => void;
   setViewport: (viewport: Viewport) => void;
   setSnapLines: (snapLines: SnapLinePositions | null) => void;
+  setPanToNode: (id: string | null) => void;
   loadFromDisk: () => Promise<void>;
 }
 
@@ -35,6 +37,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   maxZIndex: 0,
   hydrated: false,
   snapLines: null,
+  panToNodeId: null,
 
   onNodesChange: (changes: NodeChange[]) => {
     set((state) => ({
@@ -110,6 +113,10 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   setSnapLines: (snapLines) => {
     set({ snapLines });
+  },
+
+  setPanToNode: (id) => {
+    set({ panToNodeId: id });
   },
 
   loadFromDisk: async () => {

@@ -4,6 +4,8 @@ import { useProjectStore } from "../../stores/projectStore";
 import { SidebarTabs } from "../sidebar/SidebarTabs";
 import { FileTree } from "../sidebar/FileTree";
 import { ChronologicalFeed } from "../sidebar/ChronologicalFeed";
+import { TerminalList } from "../sidebar/TerminalList";
+import { FuzzySearch } from "../sidebar/FuzzySearch";
 
 const DEFAULT_WIDTH = 240;
 const MIN_WIDTH = 180;
@@ -153,20 +155,10 @@ export function Sidebar() {
       {/* Content */}
       {activeTab === "files" && viewMode === "tree" && <FileTree />}
       {activeTab === "files" && viewMode === "feed" && <ChronologicalFeed />}
-      {activeTab === "terminals" && (
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 13,
-            color: "var(--text-secondary)",
-          }}
-        >
-          Terminals
-        </div>
-      )}
+      {activeTab === "terminals" && <TerminalList />}
+
+      {/* Fuzzy search overlay (manages own visibility via Cmd+K) */}
+      <FuzzySearch />
 
       {/* Resize handle */}
       <div
