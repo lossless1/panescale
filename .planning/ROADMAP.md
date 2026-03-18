@@ -68,11 +68,12 @@ Plans:
   2. User can rename terminals, configure scrollback buffer size, assign color badges/labels, set startup commands, and receive notification sounds when processes complete
   3. User can see a minimap overview for navigating large canvases, and sees alignment guides when dragging tiles near other tiles
   4. User can create named canvas regions with optional background color to visually group related tiles
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — Terminal search (SearchAddon), clickable URLs (WebLinksAddon), process title in title bar, scrollback config
+- [ ] 03-02-PLAN.md — Terminal rename, color badges, startup commands, bell notification with chime and sidebar pulse
+- [ ] 03-03-PLAN.md — Minimap toggle, alignment guides on drag, canvas regions with group drag and persistence
 
 ### Phase 4: Git UI
 **Goal**: Users can perform their full daily git workflow without leaving the app -- status, staging, committing, branching, diffing, log browsing, stashing, and conflict resolution
@@ -113,6 +114,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Canvas + Terminal Core | 2/5 | In progress | - |
 | 2. Sidebar + Session Persistence | 3/6 | In Progress|  |
-| 3. Terminal Polish + Canvas Refinement | 0/2 | Not started | - |
+| 3. Terminal Polish + Canvas Refinement | 0/3 | Not started | - |
 | 4. Git UI | 0/3 | Not started | - |
 | 5. SSH + Content Tiles | 0/2 | Not started | - |
