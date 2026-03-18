@@ -1,6 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGitStore } from "../../../stores/gitStore";
 import { useProjectStore } from "../../../stores/projectStore";
+import { CommitSection } from "./CommitSection";
+import { StatusSection } from "./StatusSection";
+import { DiffViewer } from "./DiffViewer";
+
+interface SelectedFile {
+  path: string;
+  staged: boolean;
+}
 
 export function GitPanel() {
   const activeProject = useProjectStore((s) => s.activeProject());
@@ -22,6 +30,7 @@ export function GitPanel() {
   } = useGitStore();
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
 
   useEffect(() => {
     if (!activeProject?.path) return;
@@ -44,6 +53,21 @@ export function GitPanel() {
       }
     };
   }, [activeProject?.path, refresh, refreshBranches, refreshLog, refreshStashes, refreshConflicts]);
+
+  // Clear selected file if it disappears from entries
+  useEffect(() => {
+    if (selectedFile && !entries.some((e) => e.path === selectedFile.path)) {
+      setSelectedFile(null);
+    }
+  }, [entries, selectedFile]);
+
+  const handleFileClick = (path: string, staged: boolean) => {
+    if (selectedFile?.path === path && selectedFile?.staged === staged) {
+      setSelectedFile(null);
+    } else {
+      setSelectedFile({ path, staged });
+    }
+  };
 
   if (!activeProject) {
     return (
@@ -79,15 +103,7 @@ export function GitPanel() {
     );
   }
 
-  const staged = entries.filter((e) => e.status.startsWith("staged_"));
-  const unstaged = entries.filter(
-    (e) =>
-      e.status === "modified" ||
-      e.status === "deleted" ||
-      e.status === "renamed",
-  );
-  const untracked = entries.filter((e) => e.status === "untracked");
-  const conflicted = entries.filter((e) => e.status === "conflicted");
+  const repoPath = activeProject.path;
 
   return (
     <div
@@ -100,7 +116,7 @@ export function GitPanel() {
     >
       {/* Current branch */}
       {currentBranch && (
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 8 }}>
           <span style={mutedStyle}>Branch: </span>
           <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
             {currentBranch}
@@ -108,36 +124,24 @@ export function GitPanel() {
         </div>
       )}
 
-      {/* Status */}
-      <div style={headerStyle}>
-        Status ({entries.length})
-      </div>
-      {staged.length > 0 && (
-        <div style={{ marginBottom: 4 }}>
-          <span style={mutedStyle}>Staged: {staged.length}</span>
-        </div>
-      )}
-      {unstaged.length > 0 && (
-        <div style={{ marginBottom: 4 }}>
-          <span style={mutedStyle}>Unstaged: {unstaged.length}</span>
-        </div>
-      )}
-      {untracked.length > 0 && (
-        <div style={{ marginBottom: 4 }}>
-          <span style={mutedStyle}>Untracked: {untracked.length}</span>
-        </div>
-      )}
-      {conflicted.length > 0 && (
-        <div style={{ marginBottom: 4 }}>
-          <span style={{ color: "var(--text-error, #f44)" }}>
-            Conflicts: {conflicted.length}
-          </span>
-        </div>
-      )}
-      {entries.length === 0 && (
-        <div style={{ marginBottom: 4 }}>
-          <span style={mutedStyle}>Working tree clean</span>
-        </div>
+      {/* Commit section */}
+      <CommitSection repoPath={repoPath} />
+
+      {/* Status section */}
+      <StatusSection
+        repoPath={repoPath}
+        onFileClick={handleFileClick}
+        selectedFile={selectedFile?.path ?? null}
+      />
+
+      {/* Diff viewer */}
+      {selectedFile && (
+        <DiffViewer
+          repoPath={repoPath}
+          filePath={selectedFile.path}
+          staged={selectedFile.staged}
+          onClose={() => setSelectedFile(null)}
+        />
       )}
 
       {/* Branches */}
