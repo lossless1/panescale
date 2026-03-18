@@ -67,6 +67,8 @@ export function Sidebar() {
         position: "relative",
         flexShrink: 0,
         overflow: "hidden",
+        userSelect: "none",
+        WebkitUserSelect: "none",
       }}
     >
       {/* Header */}
