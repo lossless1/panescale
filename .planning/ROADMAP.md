@@ -119,3 +119,23 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 3. Terminal Polish + Canvas Refinement | 1/3 | In Progress|  |
 | 4. Git UI | 3/4 | In Progress|  |
 | 5. SSH + Content Tiles | 0/3 | Not started | - |
+
+### Phase 6: File tile interactions and app icon
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 5
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 6 to break down)
+
+### Phase 7: Release process with GitHub CI/CD
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 7 to break down)

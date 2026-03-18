@@ -141,6 +141,11 @@ Recent decisions affecting current work:
 - [Phase 05]: Dual-hook unconditional call (usePty + useSsh) dispatched by sshConnectionId
 - [Phase 05]: Restored SSH terminals prompt for reconnect instead of auto-connecting
 
+### Roadmap Evolution
+
+- Phase 6 added: File tile interactions (double-click to open terminal in file's directory) and app icon design
+- Phase 7 added: Release process with GitHub CI/CD (builds, signing, auto-update)
+
 ### Pending Todos
 
 None yet.
