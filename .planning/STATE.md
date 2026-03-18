@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-18T15:59:48.958Z"
-last_activity: 2026-03-18 -- Completed Plan 05-01 SSH backend infrastructure
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-03-18T16:23:20.716Z"
+last_activity: 2026-03-18 -- Completed Plan 06-01 double-click content tiles to open terminal
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 21
-  completed_plans: 21
-  percent: 93
+  total_plans: 23
+  completed_plans: 22
+  percent: 96
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-17)
 
 **Core value:** Users can visually organize and interact with multiple terminal sessions on an infinite canvas, with layout and session state persisting across restarts via tmux.
-**Current focus:** Phase 5: SSH & Content Tiles
+**Current focus:** Phase 6: File Tile Interactions & App Icon
 
 ## Current Position
 
-Phase: 5 of 5 (SSH & Content Tiles)
-Plan: 2 of 3 in current phase (05-01, 05-02 complete)
+Phase: 6 of 7 (File Tile Interactions & App Icon)
+Plan: 1 of 2 in current phase (06-01 complete)
 Status: In Progress
-Last activity: 2026-03-18 -- Completed Plan 05-01 SSH backend infrastructure
+Last activity: 2026-03-18 -- Completed Plan 06-01 double-click content tiles to open terminal
 
-Progress: [█████████░] 93%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [█████████░] 93%
 | Phase 05 P01 | 9 | 2 tasks | 8 files |
 | Phase 05 P02 | 3 | 2 tasks | 6 files |
 | Phase 05 P03 | 4 | 2 tasks | 10 files |
+| Phase 06 P01 | 1 | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,7 @@ Recent decisions affecting current work:
 - [Phase 05]: Only terminal nodes get restored:true on deserialization
 - [Phase 05]: Dual-hook unconditional call (usePty + useSsh) dispatched by sshConnectionId
 - [Phase 05]: Restored SSH terminals prompt for reconnect instead of auto-connecting
+- [Phase 06]: getState() inside useCallback for non-reactive store access in content tile terminal hook
 
 ### Roadmap Evolution
 
@@ -163,6 +165,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T15:59:48.955Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-file-tile-interactions-and-app-icon/06-CONTEXT.md
+Last session: 2026-03-18T16:23:20.714Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
