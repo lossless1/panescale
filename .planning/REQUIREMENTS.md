@@ -28,11 +28,11 @@
 - [x] **TERM-09**: User can search within terminal output (find text)
 - [x] **TERM-10**: Terminal detects and makes URLs clickable (opens in system browser)
 - [x] **TERM-11**: Terminal title bar shows the currently running process name
-- [ ] **TERM-12**: User can rename terminal tiles and assign color badges/labels for identification
-- [ ] **TERM-13**: User can configure startup commands per terminal that auto-run on restore
+- [x] **TERM-12**: User can rename terminal tiles and assign color badges/labels for identification
+- [x] **TERM-13**: User can configure startup commands per terminal that auto-run on restore
 - [x] **TERM-14**: User can configure terminal font, font size, and color scheme
 - [x] **TERM-15**: Terminal supports the user's default shell (bash, zsh, fish, PowerShell)
-- [ ] **TERM-16**: Terminal plays a notification sound when a long-running process completes and the terminal is waiting for user input
+- [x] **TERM-16**: Terminal plays a notification sound when a long-running process completes and the terminal is waiting for user input
 
 ### Session Persistence
 
@@ -152,11 +152,11 @@
 | TERM-09 | Phase 3 | Complete |
 | TERM-10 | Phase 3 | Complete |
 | TERM-11 | Phase 3 | Complete |
-| TERM-12 | Phase 3 | Pending |
-| TERM-13 | Phase 3 | Pending |
+| TERM-12 | Phase 3 | Complete |
+| TERM-13 | Phase 3 | Complete |
 | TERM-14 | Phase 1 | Complete |
 | TERM-15 | Phase 1 | Complete |
-| TERM-16 | Phase 3 | Pending |
+| TERM-16 | Phase 3 | Complete |
 | PERS-01 | Phase 1 | Complete |
 | PERS-02 | Phase 2 | Complete |
 | PERS-03 | Phase 1 | Complete |
