@@ -6,15 +6,23 @@ import { Canvas } from "./components/canvas/Canvas";
 import { useCanvasStore } from "./stores/canvasStore";
 import { initPersistence, forceSave } from "./lib/persistence";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { ptyTmuxCleanup } from "./lib/ipc";
 
 function App() {
   const hydrated = useCanvasStore((s) => s.hydrated);
   const loadFromDisk = useCanvasStore((s) => s.loadFromDisk);
 
   useEffect(() => {
-    // Restore persisted canvas state, then start auto-save
+    // Restore persisted canvas state, then start auto-save and clean up orphaned tmux sessions
     loadFromDisk().then(() => {
       initPersistence();
+
+      // Clean up orphaned tmux sessions (from crashed app instances)
+      const { nodes } = useCanvasStore.getState();
+      const activeNodeIds = nodes.map((n) => n.id);
+      ptyTmuxCleanup(activeNodeIds).catch((err) => {
+        console.warn("Failed to clean up orphaned tmux sessions:", err);
+      });
     });
 
     // Force save on window close

@@ -32,6 +32,30 @@ export async function ptyKill(ptyId: string): Promise<void> {
   return invoke("pty_kill", { ptyId });
 }
 
+// --- Tmux Session Persistence ---
+
+export async function ptyReattach(
+  ptyId: string,
+  sessionName: string,
+  cols: number,
+  rows: number,
+  onEvent: Channel<PtyEvent>,
+): Promise<void> {
+  return invoke("pty_reattach", { ptyId, sessionName, cols, rows, onEvent });
+}
+
+export async function ptyTmuxAvailable(): Promise<boolean> {
+  return invoke<boolean>("pty_tmux_available");
+}
+
+export async function ptyTmuxListSessions(): Promise<string[]> {
+  return invoke<string[]>("pty_tmux_list_sessions");
+}
+
+export async function ptyTmuxCleanup(activeIds: string[]): Promise<number> {
+  return invoke<number>("pty_tmux_cleanup", { activeIds });
+}
+
 // --- File System ---
 
 export interface FileEntry {

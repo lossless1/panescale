@@ -1,6 +1,7 @@
 use tauri::ipc::Channel;
 
 use super::manager::{PtyEvent, PtyManager};
+use crate::platform::tmux::TmuxBridge;
 
 /// Spawn a new PTY session. Returns the session ID.
 ///
@@ -50,4 +51,39 @@ pub async fn pty_kill(
     state: tauri::State<'_, PtyManager>,
 ) -> Result<(), String> {
     state.kill(&pty_id).map_err(|e| e.to_string())
+}
+
+/// Reattach to an existing tmux session (used on app restart for session persistence).
+#[tauri::command]
+pub async fn pty_reattach(
+    pty_id: String,
+    session_name: String,
+    cols: u16,
+    rows: u16,
+    on_event: Channel<PtyEvent>,
+    state: tauri::State<'_, PtyManager>,
+) -> Result<(), String> {
+    state
+        .reattach(pty_id, session_name, cols, rows, on_event)
+        .map_err(|e| e.to_string())
+}
+
+/// Check if tmux is available on this system.
+#[tauri::command]
+pub async fn pty_tmux_available(
+    state: tauri::State<'_, PtyManager>,
+) -> Result<bool, String> {
+    Ok(state.is_tmux_available())
+}
+
+/// List all excalicode-managed tmux sessions.
+#[tauri::command]
+pub async fn pty_tmux_list_sessions() -> Result<Vec<String>, String> {
+    TmuxBridge::list_sessions()
+}
+
+/// Clean up orphaned tmux sessions not in the given active tile ID list.
+#[tauri::command]
+pub async fn pty_tmux_cleanup(active_ids: Vec<String>) -> Result<usize, String> {
+    TmuxBridge::cleanup_orphans(&active_ids)
 }
