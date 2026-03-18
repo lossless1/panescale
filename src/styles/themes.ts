@@ -1,5 +1,5 @@
 /**
- * Theme definitions for Excalicode.
+ * Theme definitions for Panescale.
  * Each theme is a map of CSS custom property names to values.
  */
 

@@ -1,5 +1,5 @@
 [package]
-name = "excalicode"
+name = "panescale"
 version = "0.1.0"
 edition = "2021"
 description = "Spatial terminal workspace"

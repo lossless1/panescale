@@ -15,7 +15,7 @@ function resolveTheme(pref: ThemePreference): ResolvedTheme {
 
 function loadPersistedPreference(): ThemePreference {
   try {
-    const stored = localStorage.getItem("excalicode-theme-pref");
+    const stored = localStorage.getItem("panescale-theme-pref");
     if (stored === "system" || stored === "dark" || stored === "light") {
       return stored;
     }
@@ -27,7 +27,7 @@ function loadPersistedPreference(): ThemePreference {
 
 function persistPreference(pref: ThemePreference): void {
   try {
-    localStorage.setItem("excalicode-theme-pref", pref);
+    localStorage.setItem("panescale-theme-pref", pref);
   } catch {
     // ignore
   }

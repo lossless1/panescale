@@ -93,7 +93,7 @@ export function TitleBar() {
           pointerEvents: "none",
         }}
       >
-        Excalicode
+        Panescale
       </span>
       <div
         style={{

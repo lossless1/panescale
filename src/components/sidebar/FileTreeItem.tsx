@@ -30,7 +30,7 @@ export function FileTreeItem({
           ? '.' + entry.name.split('.').pop()
           : '';
         e.dataTransfer.setData(
-          'application/excalicode-file',
+          'application/panescale-file',
           JSON.stringify({
             path: entry.path,
             name: entry.name,

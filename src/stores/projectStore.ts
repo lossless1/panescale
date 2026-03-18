@@ -74,7 +74,7 @@ export const useProjectStore = create<ProjectState>()(
       },
     }),
     {
-      name: "excalicode-projects",
+      name: "panescale-projects",
       partialize: (state) => ({
         projects: state.projects,
         activeProjectIndex: state.activeProjectIndex,

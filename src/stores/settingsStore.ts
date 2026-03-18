@@ -27,7 +27,7 @@ export const useSettingsStore = create<SettingsState>()(
       setColorScheme: (colorScheme) => set({ colorScheme }),
     }),
     {
-      name: "excalicode-settings",
+      name: "panescale-settings",
     },
   ),
 );

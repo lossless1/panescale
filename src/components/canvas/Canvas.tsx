@@ -369,7 +369,7 @@ function CanvasInner() {
 
   const handleDragOver = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
-      if (e.dataTransfer.types.includes('application/excalicode-file')) {
+      if (e.dataTransfer.types.includes('application/panescale-file')) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'copy';
       }
@@ -379,7 +379,7 @@ function CanvasInner() {
 
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
-      const raw = e.dataTransfer.getData('application/excalicode-file');
+      const raw = e.dataTransfer.getData('application/panescale-file');
       if (!raw) return;
       e.preventDefault();
       const fileData = JSON.parse(raw) as { path: string; name: string; ext: string };
