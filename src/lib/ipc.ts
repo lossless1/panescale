@@ -154,3 +154,206 @@ export async function stateLoad(): Promise<CanvasSnapshot | null> {
     return null;
   }
 }
+
+// --- Git ---
+
+export interface GitStatusEntry {
+  path: string;
+  status:
+    | "staged_new"
+    | "staged_modified"
+    | "staged_deleted"
+    | "staged_renamed"
+    | "modified"
+    | "deleted"
+    | "renamed"
+    | "untracked"
+    | "conflicted";
+}
+
+export interface DiffLine {
+  origin: string;
+  content: string;
+  old_lineno: number | null;
+  new_lineno: number | null;
+}
+
+export interface DiffHunk {
+  header: string;
+  old_start: number;
+  new_start: number;
+  old_lines: number;
+  new_lines: number;
+  lines: DiffLine[];
+}
+
+export interface GitFileDiff {
+  path: string;
+  hunks: DiffHunk[];
+}
+
+export interface GitBranch {
+  name: string;
+  is_current: boolean;
+  is_remote: boolean;
+}
+
+export interface GitCommitInfo {
+  oid: string;
+  short_oid: string;
+  message: string;
+  author: string;
+  author_email: string;
+  timestamp: number;
+  parent_oids: string[];
+  files_changed: string[];
+}
+
+export interface GitStashEntry {
+  index: number;
+  message: string;
+  oid: string;
+}
+
+export interface GitConflictEntry {
+  path: string;
+  has_ours: boolean;
+  has_theirs: boolean;
+  has_ancestor: boolean;
+}
+
+export async function gitIsRepo(repoPath: string): Promise<boolean> {
+  return invoke<boolean>("git_is_repo", { repoPath });
+}
+
+export async function gitStatus(repoPath: string): Promise<GitStatusEntry[]> {
+  return invoke<GitStatusEntry[]>("git_status", { repoPath });
+}
+
+export async function gitStageFile(
+  repoPath: string,
+  filePath: string,
+): Promise<void> {
+  return invoke("git_stage_file", { repoPath, filePath });
+}
+
+export async function gitUnstageFile(
+  repoPath: string,
+  filePath: string,
+): Promise<void> {
+  return invoke("git_unstage_file", { repoPath, filePath });
+}
+
+export async function gitCommit(
+  repoPath: string,
+  message: string,
+): Promise<string> {
+  return invoke<string>("git_commit", { repoPath, message });
+}
+
+export async function gitDiffFile(
+  repoPath: string,
+  filePath: string,
+  staged: boolean,
+): Promise<GitFileDiff> {
+  return invoke<GitFileDiff>("git_diff_file", { repoPath, filePath, staged });
+}
+
+export async function gitStageHunk(
+  repoPath: string,
+  filePath: string,
+  hunkIndex: number,
+): Promise<void> {
+  return invoke("git_stage_hunk", { repoPath, filePath, hunkIndex });
+}
+
+export async function gitUnstageHunk(
+  repoPath: string,
+  filePath: string,
+  hunkIndex: number,
+): Promise<void> {
+  return invoke("git_unstage_hunk", { repoPath, filePath, hunkIndex });
+}
+
+export async function gitBranches(
+  repoPath: string,
+): Promise<GitBranch[]> {
+  return invoke<GitBranch[]>("git_branches", { repoPath });
+}
+
+export async function gitCreateBranch(
+  repoPath: string,
+  name: string,
+): Promise<void> {
+  return invoke("git_create_branch", { repoPath, name });
+}
+
+export async function gitSwitchBranch(
+  repoPath: string,
+  name: string,
+): Promise<void> {
+  return invoke("git_switch_branch", { repoPath, name });
+}
+
+export async function gitDeleteBranch(
+  repoPath: string,
+  name: string,
+): Promise<void> {
+  return invoke("git_delete_branch", { repoPath, name });
+}
+
+export async function gitLog(
+  repoPath: string,
+  limit: number,
+  skip: number,
+): Promise<GitCommitInfo[]> {
+  return invoke<GitCommitInfo[]>("git_log", { repoPath, limit, skip });
+}
+
+export async function gitStashSave(
+  repoPath: string,
+  message: string,
+): Promise<void> {
+  return invoke("git_stash_save", { repoPath, message });
+}
+
+export async function gitStashList(
+  repoPath: string,
+): Promise<GitStashEntry[]> {
+  return invoke<GitStashEntry[]>("git_stash_list", { repoPath });
+}
+
+export async function gitStashApply(
+  repoPath: string,
+  index: number,
+): Promise<void> {
+  return invoke("git_stash_apply", { repoPath, index });
+}
+
+export async function gitStashPop(
+  repoPath: string,
+  index: number,
+): Promise<void> {
+  return invoke("git_stash_pop", { repoPath, index });
+}
+
+export async function gitStashDrop(
+  repoPath: string,
+  index: number,
+): Promise<void> {
+  return invoke("git_stash_drop", { repoPath, index });
+}
+
+export async function gitConflicts(
+  repoPath: string,
+): Promise<GitConflictEntry[]> {
+  return invoke<GitConflictEntry[]>("git_conflicts", { repoPath });
+}
+
+export async function gitResolveConflict(
+  repoPath: string,
+  filePath: string,
+  resolution: string,
+): Promise<void> {
+  return invoke("git_resolve_conflict", { repoPath, filePath, resolution });
+}
