@@ -16,14 +16,19 @@ import { modKeyCode } from "../../lib/platform";
 import { magneticSnapSize } from "../../lib/gridSnap";
 import { TerminalTitleBar } from "./TerminalTitleBar";
 
+import { playBellChime } from "../../lib/audio";
+
 type TerminalNodeData = {
   cwd: string;
   shellType: string;
   restored?: boolean;
+  customName?: string;
+  badgeColor?: string;
+  startupCommand?: string;
 };
 
 const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: NodeProps) {
-  const { cwd, shellType } = data as TerminalNodeData;
+  const { cwd, shellType, customName, badgeColor, startupCommand } = data as TerminalNodeData;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -41,6 +46,8 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   const removeNode = useCanvasStore((s) => s.removeNode);
   const onNodesChange = useCanvasStore((s) => s.onNodesChange);
   const setSnapLines = useCanvasStore((s) => s.setSnapLines);
+  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const setBellActive = useCanvasStore((s) => s.setBellActive);
   const fontFamily = useSettingsStore((s) => s.fontFamily);
   const fontSize = useSettingsStore((s) => s.fontSize);
   const scrollback = useSettingsStore((s) => s.scrollback);
@@ -84,6 +91,15 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       setProcessTitle(title);
     });
 
+    // Bell notification: chime + sidebar pulse when terminal is not focused
+    term.onBell(() => {
+      if (useFocusModeStore.getState().activeTerminalId !== id) {
+        setBellActive(id, true);
+        playBellChime();
+        setTimeout(() => setBellActive(id, false), 5000);
+      }
+    });
+
     // Try WebGL renderer, fall back to DOM
     try {
       const webglAddon = new WebglAddon();
@@ -100,8 +116,15 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     termRef.current = term;
     fitAddonRef.current = fitAddon;
 
-    // Spawn PTY
-    pty.spawn(cwd, term.cols, term.rows, term);
+    // Spawn PTY, then run startup command if set on fresh spawn
+    pty.spawn(cwd, term.cols, term.rows, term).then(() => {
+      const cmd = (data as TerminalNodeData).startupCommand;
+      if (cmd && !(data as TerminalNodeData).restored) {
+        setTimeout(() => {
+          pty.write(cmd + "\n");
+        }, 300);
+      }
+    });
 
     return () => {
       pty.kill();
@@ -200,6 +223,22 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     [pty],
   );
 
+  // Context menu on terminal body for setting startup command
+  const handleTerminalContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const value = window.prompt(
+        "Startup command (runs on restore):",
+        startupCommand || "",
+      );
+      if (value !== null) {
+        updateNodeData(id, { startupCommand: value.trim() || undefined });
+      }
+    },
+    [id, startupCommand, updateNodeData],
+  );
+
   // Scroll handler: shift+scroll = pan canvas, regular scroll = terminal scrollback
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (e.shiftKey) {
@@ -293,7 +332,11 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           cwd={cwd}
           shellType={shellType}
           processTitle={processTitle}
+          customName={customName}
+          badgeColor={badgeColor}
           onClose={handleClose}
+          onRename={(name) => updateNodeData(id, { customName: name || undefined })}
+          onBadgeColorChange={(color) => updateNodeData(id, { badgeColor: color })}
         />
         {searchOpen && (
           <div className="nodrag nowheel nopan" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", background: "var(--bg-titlebar)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
@@ -325,6 +368,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           onClick={handleTerminalClick}
           onKeyDown={handleKeyDown}
           onWheel={handleWheel}
+          onContextMenu={handleTerminalContextMenu}
           style={{
             flex: 1,
             padding: 4,
