@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { type NodeProps, NodeResizer } from "@xyflow/react";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { type Highlighter, createHighlighter } from "shiki";
+import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
 
 type FilePreviewNodeData = {
   filePath: string;
@@ -88,8 +89,9 @@ async function getHighlighter(lang: string): Promise<Highlighter> {
   return hl;
 }
 
-function FilePreviewNodeInner({ data, selected }: NodeProps) {
+function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
   const { filePath, fileName } = data as unknown as FilePreviewNodeData;
+  const openTerminal = useOpenTerminalFromTile(id);
   const [content, setContent] = useState<string>("");
   const [highlightedHtml, setHighlightedHtml] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -183,6 +185,8 @@ function FilePreviewNodeInner({ data, selected }: NodeProps) {
       >
         <div
           className="drag-handle"
+          onDoubleClick={() => openTerminal(filePath)}
+          title="Double-click to open terminal here"
           style={{
             height: 32,
             display: "flex",

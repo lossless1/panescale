@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { type NodeProps, NodeResizer } from "@xyflow/react";
 import { marked } from "marked";
 import { useCanvasStore } from "../../stores/canvasStore";
+import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
 
 type NoteNodeData = {
   markdownContent: string;
@@ -12,6 +13,7 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
   const { markdownContent = "", isPreview = false } =
     data as unknown as NoteNodeData;
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const openTerminal = useOpenTerminalFromTile(id);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [renderedHtml, setRenderedHtml] = useState("");
 
@@ -69,6 +71,8 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
       >
         <div
           className="drag-handle"
+          onDoubleClick={() => openTerminal(undefined)}
+          title="Double-click to open terminal here"
           style={{
             height: 32,
             display: "flex",

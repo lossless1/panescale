@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import { type NodeProps, NodeResizer } from "@xyflow/react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { useCanvasStore } from "../../stores/canvasStore";
+import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
 
 type ImageNodeData = {
   filePath: string;
@@ -11,6 +12,7 @@ type ImageNodeData = {
 function ImageNodeInner({ id, data, selected }: NodeProps) {
   const { filePath, fileName } = data as unknown as ImageNodeData;
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const openTerminal = useOpenTerminalFromTile(id);
   const [isDragOver, setIsDragOver] = useState(false);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
@@ -87,6 +89,8 @@ function ImageNodeInner({ id, data, selected }: NodeProps) {
       >
         <div
           className="drag-handle"
+          onDoubleClick={() => openTerminal(filePath)}
+          title="Double-click to open terminal here"
           style={{
             height: 32,
             display: "flex",
