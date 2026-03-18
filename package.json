@@ -23,8 +23,10 @@
     "@xterm/addon-webgl": "^0.19.0",
     "@xterm/xterm": "^5.5.0",
     "@xyflow/react": "^12.10.1",
+    "marked": "^17.0.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "shiki": "^4.0.2",
     "tailwindcss": "^4.2.1",
     "zustand": "^5.0.12"
   },
