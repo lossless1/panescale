@@ -100,16 +100,17 @@ Plans:
   1. User can save SSH connections (host, user, key, port), organize them into groups, and connect to spawn a remote terminal tile on the canvas
   2. Remote terminal tiles behave identically to local terminals (drag, resize, z-index, close)
   3. User can create markdown note tiles with rich text editing, place images on the canvas, and open files from the sidebar as syntax-highlighted read-only preview tiles
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — SSH Rust backend (russh), IPC wrappers, sshStore with connection/group CRUD
+- [ ] 05-02-PLAN.md — Content tile upgrades: NoteNode markdown editor, ImageNode filesystem DnD, FilePreviewNode shiki highlighting, persistence
+- [ ] 05-03-PLAN.md — SSH sidebar panel, useSsh hook, TerminalNode SSH extension, SSH terminal persistence
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -117,4 +118,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Sidebar + Session Persistence | 3/6 | In Progress|  |
 | 3. Terminal Polish + Canvas Refinement | 1/3 | In Progress|  |
 | 4. Git UI | 3/4 | In Progress|  |
-| 5. SSH + Content Tiles | 0/2 | Not started | - |
+| 5. SSH + Content Tiles | 0/3 | Not started | - |
