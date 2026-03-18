@@ -24,6 +24,9 @@ export function serializeCanvas(state: {
     data: {
       cwd: (n.data as Record<string, unknown>).cwd as string,
       shellType: (n.data as Record<string, unknown>).shellType as string,
+      customName: (n.data as Record<string, unknown>).customName as string | undefined,
+      badgeColor: (n.data as Record<string, unknown>).badgeColor as string | undefined,
+      startupCommand: (n.data as Record<string, unknown>).startupCommand as string | undefined,
     },
   }));
   return {
@@ -50,6 +53,9 @@ export function deserializeCanvas(snapshot: CanvasSnapshot): {
       cwd: sn.data.cwd,
       shellType: sn.data.shellType,
       restored: true,
+      customName: sn.data.customName,
+      badgeColor: sn.data.badgeColor,
+      startupCommand: sn.data.startupCommand,
     },
     dragHandle: ".drag-handle",
     style: { width: sn.width, height: sn.height },

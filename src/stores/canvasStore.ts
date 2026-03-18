@@ -20,7 +20,10 @@ interface CanvasState {
   hydrated: boolean;
   snapLines: SnapLinePositions | null;
   panToNodeId: string | null;
+  bellActiveNodes: Set<string>;
   onNodesChange: (changes: NodeChange[]) => void;
+  updateNodeData: (id: string, dataUpdate: Record<string, unknown>) => void;
+  setBellActive: (id: string, active: boolean) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
   removeNode: (id: string) => void;
@@ -38,6 +41,30 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   hydrated: false,
   snapLines: null,
   panToNodeId: null,
+  bellActiveNodes: new Set<string>(),
+
+  updateNodeData: (id, dataUpdate) => {
+    set((state) => ({
+      nodes: state.nodes.map((n) =>
+        n.id === id
+          ? { ...n, data: { ...(n.data as Record<string, unknown>), ...dataUpdate } }
+          : n,
+      ),
+    }));
+    forceSave();
+  },
+
+  setBellActive: (id, active) => {
+    set((state) => {
+      const next = new Set(state.bellActiveNodes);
+      if (active) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return { bellActiveNodes: next };
+    });
+  },
 
   onNodesChange: (changes: NodeChange[]) => {
     set((state) => ({

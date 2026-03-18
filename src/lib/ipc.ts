@@ -126,6 +126,9 @@ export interface SerializedNode {
   data: {
     cwd: string;
     shellType: string;
+    customName?: string;
+    badgeColor?: string;
+    startupCommand?: string;
   };
 }
 
