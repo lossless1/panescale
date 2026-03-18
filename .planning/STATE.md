@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-03-18T08:43:10Z"
-last_activity: 2026-03-18 -- Completed Plan 02-03 Magnetic grid snap with visual snap lines
+stopped_at: Completed 02-06-PLAN.md
+last_updated: "2026-03-18T08:46:49.528Z"
+last_activity: 2026-03-18 -- Completed Plan 02-06 Tmux session persistence with auto-install
 progress:
   total_phases: 5
   completed_phases: 1
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-17)
 ## Current Position
 
 Phase: 2 of 5 (Sidebar + Session Persistence)
-Plan: 3 of 6 in current phase
+Plan: 6 of 6 in current phase
 Status: In Progress
-Last activity: 2026-03-18 -- Completed Plan 02-03 Magnetic grid snap with visual snap lines
+Last activity: 2026-03-18 -- Completed Plan 02-06 Tmux session persistence with auto-install
 
 Progress: [█████████░░░░░░░░░░░] 45%
 
@@ -53,6 +53,7 @@ Progress: [█████████░░░░░░░░░░░] 45%
 *Updated after each plan completion*
 | Phase 02 P01 | 4 | 2 tasks | 14 files |
 | Phase 02 P03 | 4 | 2 tasks | 5 files |
+| Phase 02 P06 | 6 | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Recent decisions affecting current work:
 - [02-03]: Resize snap wired through NodeResizer onResize in TerminalNode (React Flow v12 has no onNodeResize at ReactFlow level)
 - [02-03]: snapLines state in canvasStore for cross-component communication between resize and overlay rendering
 - [02-03]: D3 drag event sourceEvent used for Cmd/Ctrl detection during resize
+- [Phase 02-06]: env_remove(TMUX) on all tmux commands to prevent nested session errors
+- [Phase 02-06]: Reattach verifies session_exists before attempting to attach
+- [Phase 02-06]: ensureTmuxOnce runs before first fresh spawn, graceful degradation on failure
 
 ### Pending Todos
 
@@ -102,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T08:43:10Z
-Stopped at: Completed 02-03-PLAN.md
-Resume file: .planning/phases/02-sidebar-session-persistence/02-03-SUMMARY.md
+Last session: 2026-03-18T08:46:49.526Z
+Stopped at: Completed 02-06-PLAN.md
+Resume file: None
