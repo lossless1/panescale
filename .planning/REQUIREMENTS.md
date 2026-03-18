@@ -48,7 +48,7 @@
 - [x] **SIDE-04**: User can switch between multiple open projects/workspaces
 - [ ] **SIDE-05**: User can create, rename, and delete files/folders from the sidebar
 - [ ] **SIDE-06**: User can search/filter files with a fuzzy finder (Cmd+K)
-- [ ] **SIDE-07**: User can drag files from the sidebar onto the canvas to create content tiles
+- [x] **SIDE-07**: User can drag files from the sidebar onto the canvas to create content tiles
 - [ ] **SIDE-08**: Sidebar shows a list of all open terminal tiles with name and working directory
 - [ ] **SIDE-09**: Clicking a terminal entry in the sidebar pans the canvas to that terminal and focuses it
 
@@ -166,7 +166,7 @@
 | SIDE-04 | Phase 2 | Complete |
 | SIDE-05 | Phase 2 | Pending |
 | SIDE-06 | Phase 2 | Pending |
-| SIDE-07 | Phase 2 | Pending |
+| SIDE-07 | Phase 2 | Complete |
 | SIDE-08 | Phase 2 | Pending |
 | SIDE-09 | Phase 2 | Pending |
 | GIT-01 | Phase 4 | Pending |
