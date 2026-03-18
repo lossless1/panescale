@@ -17,6 +17,8 @@ interface TerminalTitleBarProps {
   processTitle?: string;
   customName?: string;
   badgeColor?: string;
+  sshHost?: string;
+  sshUser?: string;
   onClose: () => void;
   onMinimize?: () => void;
   onRename?: (name: string) => void;
@@ -34,11 +36,14 @@ export const TerminalTitleBar = React.memo(function TerminalTitleBar({
   processTitle,
   customName,
   badgeColor,
+  sshHost,
+  sshUser,
   onClose,
   onMinimize,
   onRename,
   onBadgeColorChange,
 }: TerminalTitleBarProps) {
+  const isSsh = !!sshHost;
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -95,15 +100,18 @@ export const TerminalTitleBar = React.memo(function TerminalTitleBar({
     [onBadgeColorChange],
   );
 
+  const sshLabel = isSsh ? `${sshUser ?? "user"}@${sshHost}` : "";
   const displayText = customName
     ? customName
-    : processTitle
-      ? processTitle
-      : truncateCwd(cwd);
+    : isSsh
+      ? sshLabel
+      : processTitle
+        ? processTitle
+        : truncateCwd(cwd);
 
   const titleHint = customName
-    ? `${customName} - ${cwd}`
-    : cwd;
+    ? isSsh ? `${customName} - ${sshLabel}` : `${customName} - ${cwd}`
+    : isSsh ? sshLabel : cwd;
 
   return (
     <div
@@ -125,9 +133,25 @@ export const TerminalTitleBar = React.memo(function TerminalTitleBar({
       }}
       onContextMenu={handleContextMenu}
     >
-      {/* Left: badge color dot + shell type */}
+      {/* Left: SSH badge / badge color dot + shell type */}
       <span style={{ fontWeight: 600, minWidth: 40, display: "flex", alignItems: "center", gap: 4 }}>
-        {badgeColor && (
+        {isSsh && (
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: 700,
+              color: "#fff",
+              backgroundColor: "#06b6d4",
+              borderRadius: 3,
+              padding: "1px 4px",
+              letterSpacing: "0.05em",
+              flexShrink: 0,
+            }}
+          >
+            SSH
+          </span>
+        )}
+        {badgeColor && !isSsh && (
           <span
             style={{
               width: 10,

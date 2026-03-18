@@ -34,6 +34,10 @@ export function serializeCanvas(state: {
       markdownContent: (n.data as Record<string, unknown>).markdownContent as string | undefined,
       filePath: (n.data as Record<string, unknown>).filePath as string | undefined,
       fileName: (n.data as Record<string, unknown>).fileName as string | undefined,
+      // SSH fields
+      sshConnectionId: (n.data as Record<string, unknown>).sshConnectionId as string | undefined,
+      sshHost: (n.data as Record<string, unknown>).sshHost as string | undefined,
+      sshUser: (n.data as Record<string, unknown>).sshUser as string | undefined,
     },
   }));
   return {

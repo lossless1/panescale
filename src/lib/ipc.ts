@@ -136,6 +136,10 @@ export interface SerializedNode {
     markdownContent?: string;
     filePath?: string;
     fileName?: string;
+    // SSH fields
+    sshConnectionId?: string;
+    sshHost?: string;
+    sshUser?: string;
   };
 }
 

@@ -8,6 +8,7 @@ import { WebLinksAddon } from "@xterm/addon-web-links";
 import "@xterm/xterm/css/xterm.css";
 
 import { usePty } from "../../hooks/usePty";
+import { useSsh } from "../../hooks/useSsh";
 import { useFocusModeStore } from "../../hooks/useFocusMode";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useSettingsStore } from "../../stores/settingsStore";
@@ -25,16 +26,22 @@ type TerminalNodeData = {
   customName?: string;
   badgeColor?: string;
   startupCommand?: string;
+  // SSH extensions
+  sshConnectionId?: string;
+  sshHost?: string;
+  sshUser?: string;
 };
 
 const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: NodeProps) {
-  const { cwd, shellType, customName, badgeColor, startupCommand } = data as TerminalNodeData;
+  const { cwd, shellType, customName, badgeColor, startupCommand, sshConnectionId, sshHost, sshUser } = data as TerminalNodeData;
+  const isSsh = !!sshConnectionId;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const searchAddonRef = useRef<SearchAddon | null>(null);
   const pty = usePty();
+  const ssh = useSsh();
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -116,18 +123,70 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     termRef.current = term;
     fitAddonRef.current = fitAddon;
 
-    // Spawn PTY, then run startup command if set on fresh spawn
-    pty.spawn(cwd, term.cols, term.rows, term).then(() => {
-      const cmd = (data as TerminalNodeData).startupCommand;
-      if (cmd && !(data as TerminalNodeData).restored) {
-        setTimeout(() => {
-          pty.write(cmd + "\n");
-        }, 300);
+    // Spawn PTY or connect SSH
+    const nodeData = data as TerminalNodeData;
+    if (nodeData.sshConnectionId) {
+      // SSH terminal
+      if (nodeData.restored) {
+        // Restored SSH terminal: show reconnect prompt instead of auto-connecting
+        const userHost = `${nodeData.sshUser ?? "user"}@${nodeData.sshHost ?? "host"}`;
+        term.write(`\r\nSSH session disconnected. Press Enter to reconnect to ${userHost}...\r\n`);
+        const disposable = term.onData(() => {
+          disposable.dispose();
+          ssh
+            .connect(nodeData.sshConnectionId!, null, term.cols, term.rows, term)
+            .catch((err: unknown) => {
+              const errMsg = err instanceof Error ? err.message : String(err);
+              // If password required, prompt and retry
+              if (errMsg.toLowerCase().includes("password")) {
+                const pw = window.prompt(`Enter password for ${userHost}:`);
+                if (pw) {
+                  ssh.connect(nodeData.sshConnectionId!, pw, term.cols, term.rows, term).catch((e2: unknown) => {
+                    term.write(`\r\nSSH reconnect failed: ${e2 instanceof Error ? e2.message : String(e2)}\r\n`);
+                  });
+                }
+              } else {
+                term.write(`\r\nSSH reconnect failed: ${errMsg}\r\n`);
+              }
+            });
+        });
+      } else {
+        // Fresh SSH terminal
+        ssh
+          .connect(nodeData.sshConnectionId, null, term.cols, term.rows, term)
+          .catch((err: unknown) => {
+            const errMsg = err instanceof Error ? err.message : String(err);
+            if (errMsg.toLowerCase().includes("password")) {
+              const userHost = `${nodeData.sshUser ?? "user"}@${nodeData.sshHost ?? "host"}`;
+              const pw = window.prompt(`Enter password for ${userHost}:`);
+              if (pw) {
+                ssh.connect(nodeData.sshConnectionId!, pw, term.cols, term.rows, term).catch((e2: unknown) => {
+                  term.write(`\r\nSSH connect failed: ${e2 instanceof Error ? e2.message : String(e2)}\r\n`);
+                });
+              }
+            } else {
+              term.write(`\r\nSSH connect failed: ${errMsg}\r\n`);
+            }
+          });
       }
-    });
+    } else {
+      // Local PTY terminal
+      pty.spawn(cwd, term.cols, term.rows, term).then(() => {
+        const cmd = nodeData.startupCommand;
+        if (cmd && !nodeData.restored) {
+          setTimeout(() => {
+            pty.write(cmd + "\n");
+          }, 300);
+        }
+      });
+    }
 
     return () => {
-      pty.kill();
+      if (nodeData.sshConnectionId) {
+        ssh.disconnect();
+      } else {
+        pty.kill();
+      }
       term.dispose();
       termRef.current = null;
       fitAddonRef.current = null;
@@ -162,7 +221,8 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       if (fitAddonRef.current && termRef.current) {
         try {
           fitAddonRef.current.fit();
-          pty.resize(termRef.current.cols, termRef.current.rows);
+          const resizeFn = isSsh ? ssh.resize : pty.resize;
+          resizeFn(termRef.current.cols, termRef.current.rows);
         } catch {
           // Terminal may not be fully initialized yet
         }
@@ -185,9 +245,13 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
 
   // Handle close
   const handleClose = useCallback(() => {
-    pty.kill();
+    if (isSsh) {
+      ssh.disconnect();
+    } else {
+      pty.kill();
+    }
     removeNode(id);
-  }, [id, pty, removeNode]);
+  }, [id, isSsh, pty, ssh, removeNode]);
 
   // Copy/paste keyboard handler
   const handleKeyDown = useCallback(
@@ -214,13 +278,17 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         e.preventDefault();
         e.stopPropagation();
         navigator.clipboard.readText().then((text) => {
-          if (text && pty.isAlive) {
-            pty.write(text);
+          if (text) {
+            if (isSsh && ssh.isAlive) {
+              ssh.write(text);
+            } else if (!isSsh && pty.isAlive) {
+              pty.write(text);
+            }
           }
         });
       }
     },
-    [pty],
+    [isSsh, pty, ssh],
   );
 
   // Context menu on terminal body for setting startup command
@@ -256,7 +324,8 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       if (fitAddonRef.current && termRef.current) {
         try {
           fitAddonRef.current.fit();
-          pty.resize(termRef.current.cols, termRef.current.rows);
+          const resizeFn = isSsh ? ssh.resize : pty.resize;
+          resizeFn(termRef.current.cols, termRef.current.rows);
         } catch {
           // ignore
         }
@@ -334,6 +403,8 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           processTitle={processTitle}
           customName={customName}
           badgeColor={badgeColor}
+          sshHost={sshHost}
+          sshUser={sshUser}
           onClose={handleClose}
           onRename={(name) => updateNodeData(id, { customName: name || undefined })}
           onBadgeColorChange={(color) => updateNodeData(id, { badgeColor: color })}
