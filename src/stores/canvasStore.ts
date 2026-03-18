@@ -8,16 +8,23 @@ import {
 import { stateLoad } from "../lib/ipc";
 import { deserializeCanvas, forceSave } from "../lib/persistence";
 
+export interface SnapLinePositions {
+  x: number | null;
+  y: number | null;
+}
+
 interface CanvasState {
   nodes: Node[];
   viewport: Viewport;
   maxZIndex: number;
   hydrated: boolean;
+  snapLines: SnapLinePositions | null;
   onNodesChange: (changes: NodeChange[]) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   removeNode: (id: string) => void;
   bringToFront: (id: string) => void;
   setViewport: (viewport: Viewport) => void;
+  setSnapLines: (snapLines: SnapLinePositions | null) => void;
   loadFromDisk: () => Promise<void>;
 }
 
@@ -26,6 +33,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   viewport: { x: 0, y: 0, zoom: 1 },
   maxZIndex: 0,
   hydrated: false,
+  snapLines: null,
 
   onNodesChange: (changes: NodeChange[]) => {
     set((state) => ({
@@ -73,6 +81,10 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   setViewport: (viewport) => {
     set({ viewport });
+  },
+
+  setSnapLines: (snapLines) => {
+    set({ snapLines });
   },
 
   loadFromDisk: async () => {

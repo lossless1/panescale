@@ -7,13 +7,16 @@ import {
   type Viewport,
   type NodeTypes,
   type Node,
+  type NodeChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useEscapeToCanvas } from "../../hooks/useFocusMode";
+import { magneticSnapPosition } from "../../lib/gridSnap";
 import { CanvasBackground } from "./CanvasBackground";
+import { SnapLines } from "./SnapLines";
 import { TerminalNode } from "./TerminalNode";
 
 const MIN_ZOOM = 0.1;
@@ -75,6 +78,8 @@ function CanvasInner() {
   const setViewport = useCanvasStore((s) => s.setViewport);
   const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
   const bringToFront = useCanvasStore((s) => s.bringToFront);
+  const snapLines = useCanvasStore((s) => s.snapLines);
+  const setSnapLines = useCanvasStore((s) => s.setSnapLines);
 
   const reactFlow = useReactFlow();
   const spaceHeldRef = useRef(false);
@@ -83,6 +88,44 @@ function CanvasInner() {
   useKeyboardShortcuts();
   useRubberBandEffect();
   useEscapeToCanvas();
+
+  // Magnetic snap on drag: snap node position to grid within threshold
+  const handleNodeDrag = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      // Cmd/Ctrl held: free positioning, no snap
+      if (event.ctrlKey || event.metaKey) {
+        setSnapLines(null);
+        return;
+      }
+
+      const { x, y, snappedX, snappedY } = magneticSnapPosition(
+        node.position.x,
+        node.position.y,
+      );
+
+      if (snappedX || snappedY) {
+        const changes: NodeChange[] = [
+          {
+            type: "position",
+            id: node.id,
+            position: { x, y },
+            dragging: true,
+          },
+        ];
+        onNodesChange(changes);
+      }
+
+      setSnapLines({
+        x: snappedX ? x : null,
+        y: snappedY ? y : null,
+      });
+    },
+    [onNodesChange, setSnapLines],
+  );
+
+  const handleNodeDragStop = useCallback(() => {
+    setSnapLines(null);
+  }, [setSnapLines]);
 
   // Cmd/Ctrl+scroll = zoom
   const handleWheel = useCallback(
@@ -189,9 +232,12 @@ function CanvasInner() {
         onPaneClick={undefined}
         onDoubleClick={handlePaneDoubleClick}
         onNodeClick={handleNodeClick}
+        onNodeDrag={handleNodeDrag}
+        onNodeDragStop={handleNodeDragStop}
         proOptions={{ hideAttribution: true }}
       >
         <CanvasBackground />
+        <SnapLines snapLines={snapLines} />
       </ReactFlow>
     </div>
   );

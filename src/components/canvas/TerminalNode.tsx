@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback } from "react";
-import { type NodeProps, NodeResizer } from "@xyflow/react";
+import { type NodeProps, type NodeChange, NodeResizer } from "@xyflow/react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
@@ -11,6 +11,7 @@ import { useCanvasStore } from "../../stores/canvasStore";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { terminalSchemes } from "../../lib/terminalSchemes";
 import { modKeyCode } from "../../lib/platform";
+import { magneticSnapSize } from "../../lib/gridSnap";
 import { TerminalTitleBar } from "./TerminalTitleBar";
 
 type TerminalNodeData = {
@@ -31,6 +32,8 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   const enterTerminalMode = useFocusModeStore((s) => s.enterTerminalMode);
   const bringToFront = useCanvasStore((s) => s.bringToFront);
   const removeNode = useCanvasStore((s) => s.removeNode);
+  const onNodesChange = useCanvasStore((s) => s.onNodesChange);
+  const setSnapLines = useCanvasStore((s) => s.setSnapLines);
   const fontFamily = useSettingsStore((s) => s.fontFamily);
   const fontSize = useSettingsStore((s) => s.fontSize);
   const scrollback = useSettingsStore((s) => s.scrollback);
@@ -178,18 +181,58 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     e.stopPropagation();
   }, []);
 
-  // Handle resize from NodeResizer
-  const handleResize = useCallback(() => {
-    if (fitAddonRef.current && termRef.current) {
-      try {
-        fitAddonRef.current.fit();
-        pty.resize(termRef.current.cols, termRef.current.rows);
-      } catch {
-        // ignore
+  // Handle resize from NodeResizer with magnetic snap
+  const handleResize = useCallback(
+    (event: unknown, params: { x: number; y: number; width: number; height: number }) => {
+      // Fit terminal to new size
+      if (fitAddonRef.current && termRef.current) {
+        try {
+          fitAddonRef.current.fit();
+          pty.resize(termRef.current.cols, termRef.current.rows);
+        } catch {
+          // ignore
+        }
       }
-    }
+
+      // Check modifier key from the D3 drag event's sourceEvent
+      const d3Event = event as { sourceEvent?: MouseEvent };
+      const sourceEvent = d3Event?.sourceEvent;
+      if (sourceEvent?.ctrlKey || sourceEvent?.metaKey) {
+        setSnapLines(null);
+        return;
+      }
+
+      // Snap width (right edge = x + width) and height (bottom edge = y + height)
+      const { size: snappedWidth, snapped: snappedW } = magneticSnapSize(params.x, params.width);
+      const { size: snappedHeight, snapped: snappedH } = magneticSnapSize(params.y, params.height);
+
+      if (snappedW || snappedH) {
+        const changes: NodeChange[] = [
+          {
+            type: "dimensions",
+            id,
+            dimensions: {
+              width: snappedW ? snappedWidth : params.width,
+              height: snappedH ? snappedHeight : params.height,
+            },
+            resizing: true,
+          },
+        ];
+        onNodesChange(changes);
+      }
+
+      setSnapLines({
+        x: snappedW ? params.x + snappedWidth : null,
+        y: snappedH ? params.y + snappedHeight : null,
+      });
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    [id, onNodesChange, setSnapLines],
+  );
+
+  const handleResizeEnd = useCallback(() => {
+    setSnapLines(null);
+  }, [setSnapLines]);
 
   return (
     <>
@@ -198,6 +241,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         minHeight={200}
         isVisible={selected}
         onResize={handleResize}
+        onResizeEnd={handleResizeEnd}
         lineStyle={{ borderColor: "var(--accent)" }}
         handleStyle={{ backgroundColor: "var(--accent)", width: 8, height: 8 }}
       />
