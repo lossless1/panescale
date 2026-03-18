@@ -49,12 +49,15 @@ Plans:
   3. Terminal sessions persist across app restarts -- closing and reopening the app reconnects to running terminal sessions with scrollback intact
   4. App detects system theme preference on launch, and user has access to terminal color schemes (Dracula, Solarized, One Dark, etc.)
   5. Tile positions and sizes snap to the grid, with a modifier key to override snapping
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — Install plugins, Rust fs commands, project store, file tree sidebar with expand/collapse
+- [ ] 02-02-PLAN.md — Three-mode theme (System/Dark/Light), terminal color schemes (One Dark + Dracula), rounded corners
+- [ ] 02-03-PLAN.md — Magnetic grid snapping with visual snap line feedback
+- [ ] 02-04-PLAN.md — File operations context menu, Cmd+K fuzzy search, terminal list sidebar panel
+- [ ] 02-05-PLAN.md — Drag files from sidebar to canvas, auto-typed content tiles (note/image/preview)
+- [ ] 02-06-PLAN.md — Tmux session persistence backend, reattach on restore, orphan cleanup
 
 ### Phase 3: Terminal Polish + Canvas Refinement
 **Goal**: Terminal tiles gain power-user features (search, clickable URLs, process indicators, labels) and the canvas gains navigation and organizational tools
@@ -109,7 +112,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Canvas + Terminal Core | 2/5 | In progress | - |
-| 2. Sidebar + Session Persistence | 0/3 | Not started | - |
+| 2. Sidebar + Session Persistence | 0/6 | Not started | - |
 | 3. Terminal Polish + Canvas Refinement | 0/2 | Not started | - |
 | 4. Git UI | 0/3 | Not started | - |
 | 5. SSH + Content Tiles | 0/2 | Not started | - |
