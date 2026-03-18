@@ -22,12 +22,12 @@
 - [x] **TERM-03**: User can drag terminal tiles by the title bar to reposition on canvas
 - [x] **TERM-04**: User can resize terminal tiles using 8 resize handles (4 edges, 4 corners)
 - [x] **TERM-05**: User can select text and copy/paste in terminal tiles
-- [ ] **TERM-06**: Terminal tiles have configurable scrollback buffer
+- [x] **TERM-06**: Terminal tiles have configurable scrollback buffer
 - [x] **TERM-07**: Clicking a terminal tile brings it to front (z-index layering)
 - [x] **TERM-08**: User can close a terminal tile via the title bar
-- [ ] **TERM-09**: User can search within terminal output (find text)
-- [ ] **TERM-10**: Terminal detects and makes URLs clickable (opens in system browser)
-- [ ] **TERM-11**: Terminal title bar shows the currently running process name
+- [x] **TERM-09**: User can search within terminal output (find text)
+- [x] **TERM-10**: Terminal detects and makes URLs clickable (opens in system browser)
+- [x] **TERM-11**: Terminal title bar shows the currently running process name
 - [ ] **TERM-12**: User can rename terminal tiles and assign color badges/labels for identification
 - [ ] **TERM-13**: User can configure startup commands per terminal that auto-run on restore
 - [x] **TERM-14**: User can configure terminal font, font size, and color scheme
@@ -146,12 +146,12 @@
 | TERM-03 | Phase 1 | Complete |
 | TERM-04 | Phase 1 | Complete |
 | TERM-05 | Phase 1 | Complete |
-| TERM-06 | Phase 3 | Pending |
+| TERM-06 | Phase 3 | Complete |
 | TERM-07 | Phase 1 | Complete |
 | TERM-08 | Phase 1 | Complete |
-| TERM-09 | Phase 3 | Pending |
-| TERM-10 | Phase 3 | Pending |
-| TERM-11 | Phase 3 | Pending |
+| TERM-09 | Phase 3 | Complete |
+| TERM-10 | Phase 3 | Complete |
+| TERM-11 | Phase 3 | Complete |
 | TERM-12 | Phase 3 | Pending |
 | TERM-13 | Phase 3 | Pending |
 | TERM-14 | Phase 1 | Complete |

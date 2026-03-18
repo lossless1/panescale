@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-18T10:19:24.576Z"
-last_activity: 2026-03-18 -- Completed Plan 02-06 Tmux session persistence with auto-install
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-18T10:42:36.037Z"
+last_activity: 2026-03-18 -- Completed Plan 03-01 Terminal search, URLs, title, scrollback
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 11
-  percent: 45
+  total_plans: 14
+  completed_plans: 12
+  percent: 86
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-17)
 
 **Core value:** Users can visually organize and interact with multiple terminal sessions on an infinite canvas, with layout and session state persisting across restarts via tmux.
-**Current focus:** Phase 2: Sidebar + Session Persistence
+**Current focus:** Phase 3: Terminal Polish + Canvas Refinement
 
 ## Current Position
 
-Phase: 2 of 5 (Sidebar + Session Persistence)
-Plan: 6 of 6 in current phase
+Phase: 3 of 5 (Terminal Polish + Canvas Refinement)
+Plan: 1 of 3 in current phase
 Status: In Progress
-Last activity: 2026-03-18 -- Completed Plan 02-06 Tmux session persistence with auto-install
+Last activity: 2026-03-18 -- Completed Plan 03-01 Terminal search, URLs, title, scrollback
 
-Progress: [█████████░░░░░░░░░░░] 45%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [█████████░░░░░░░░░░░] 45%
 | Phase 02 P06 | 6 | 3 tasks | 8 files |
 | Phase 02 P05 | 3 | 1 tasks | 7 files |
 | Phase 02 P04 | 5 | 2 tasks | 12 files |
+| Phase 03 P01 | 2 | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,12 @@ Recent decisions affecting current work:
 - [Phase 02-05]: Stub content tiles are read-only; convertFileSrc for images, readTextFile for text content
 - [Phase 02-04]: panToNodeId store pattern for sidebar-to-canvas navigation (avoids ReactFlowProvider boundary)
 - [Phase 02-04]: Cross-filesystem move fallback via copy-then-delete in fs_move Rust command
+- [03-01]: Search bar rendered as inline overlay above terminal container, not as a modal
+- [03-01]: WebLinksAddon opens URLs via window.open to system browser
+- [03-01]: Process title displayed bold alongside cwd in title bar
+- [03-01]: Scrollback default raised from 1000 to 5000 for power users
+- [Phase 03]: Search bar rendered as inline overlay above terminal container
+- [Phase 03]: WebLinksAddon opens URLs via window.open to system browser
 
 ### Pending Todos
 
@@ -112,6 +119,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T10:19:24.574Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-terminal-polish-canvas-refinement/03-CONTEXT.md
+Last session: 2026-03-18T10:42:30.970Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

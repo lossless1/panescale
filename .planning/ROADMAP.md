@@ -114,6 +114,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Canvas + Terminal Core | 2/5 | In progress | - |
 | 2. Sidebar + Session Persistence | 3/6 | In Progress|  |
-| 3. Terminal Polish + Canvas Refinement | 0/3 | Not started | - |
+| 3. Terminal Polish + Canvas Refinement | 1/3 | In Progress|  |
 | 4. Git UI | 0/3 | Not started | - |
 | 5. SSH + Content Tiles | 0/2 | Not started | - |
