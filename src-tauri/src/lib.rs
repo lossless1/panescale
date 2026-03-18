@@ -2,6 +2,7 @@ mod fs;
 mod git;
 mod platform;
 mod pty;
+mod ssh;
 mod state;
 
 pub fn run() {
@@ -11,6 +12,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .manage(pty::PtyManager::new())
+        .manage(ssh::SshManager::new())
         .invoke_handler(tauri::generate_handler![
             pty::commands::pty_spawn,
             pty::commands::pty_write,
@@ -49,6 +51,12 @@ pub fn run() {
             git::commands::git_stash_drop,
             git::commands::git_conflicts,
             git::commands::git_resolve_conflict,
+            ssh::commands::ssh_connect,
+            ssh::commands::ssh_write,
+            ssh::commands::ssh_resize,
+            ssh::commands::ssh_disconnect,
+            ssh::commands::ssh_save_connections,
+            ssh::commands::ssh_load_connections,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
