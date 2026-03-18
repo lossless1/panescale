@@ -18,7 +18,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       fontFamily: "JetBrains Mono, Menlo, Monaco, monospace",
       fontSize: 14,
-      scrollback: 1000,
+      scrollback: 5000,
       colorScheme: "one-dark" as TerminalSchemeName,
 
       setFontFamily: (fontFamily) => set({ fontFamily }),

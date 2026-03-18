@@ -3,6 +3,7 @@ import React from "react";
 interface TerminalTitleBarProps {
   cwd: string;
   shellType: string;
+  processTitle?: string;
   onClose: () => void;
   onMinimize?: () => void;
 }
@@ -15,6 +16,7 @@ function truncateCwd(cwd: string, maxLen = 40): string {
 export const TerminalTitleBar = React.memo(function TerminalTitleBar({
   cwd,
   shellType,
+  processTitle,
   onClose,
   onMinimize,
 }: TerminalTitleBarProps) {
@@ -51,7 +53,14 @@ export const TerminalTitleBar = React.memo(function TerminalTitleBar({
         }}
         title={cwd}
       >
-        {truncateCwd(cwd)}
+        {processTitle ? (
+          <>
+            <strong>{processTitle}</strong>
+            <span style={{ color: "var(--text-secondary)" }}>{" - "}{truncateCwd(cwd)}</span>
+          </>
+        ) : (
+          truncateCwd(cwd)
+        )}
       </span>
 
       {/* Right: buttons */}

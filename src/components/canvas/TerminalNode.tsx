@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback, useState } from "react";
 import { type NodeProps, type NodeChange, NodeResizer } from "@xyflow/react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
+import { SearchAddon } from "@xterm/addon-search";
+import { WebLinksAddon } from "@xterm/addon-web-links";
 import "@xterm/xterm/css/xterm.css";
 
 import { usePty } from "../../hooks/usePty";
@@ -26,7 +28,12 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const searchAddonRef = useRef<SearchAddon | null>(null);
   const pty = usePty();
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [processTitle, setProcessTitle] = useState("");
 
   const activeTerminalId = useFocusModeStore((s) => s.activeTerminalId);
   const enterTerminalMode = useFocusModeStore((s) => s.enterTerminalMode);
@@ -60,6 +67,23 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
 
     term.open(el);
 
+    // Search addon
+    const searchAddon = new SearchAddon();
+    term.loadAddon(searchAddon);
+    searchAddonRef.current = searchAddon;
+
+    // Clickable URLs
+    const webLinksAddon = new WebLinksAddon((event, uri) => {
+      event.preventDefault();
+      window.open(uri, "_blank");
+    });
+    term.loadAddon(webLinksAddon);
+
+    // Track process title from escape sequences
+    term.onTitleChange((title) => {
+      setProcessTitle(title);
+    });
+
     // Try WebGL renderer, fall back to DOM
     try {
       const webglAddon = new WebglAddon();
@@ -84,6 +108,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       term.dispose();
       termRef.current = null;
       fitAddonRef.current = null;
+      searchAddonRef.current = null;
     };
     // Only run on mount/unmount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,7 +175,11 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       const term = termRef.current;
       if (!term) return;
 
-      if (e.key === "c" || e.key === "C") {
+      if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        e.stopPropagation();
+        setSearchOpen(true);
+      } else if (e.key === "c" || e.key === "C") {
         const selection = term.getSelection();
         if (selection) {
           e.preventDefault();
@@ -263,8 +292,32 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         <TerminalTitleBar
           cwd={cwd}
           shellType={shellType}
+          processTitle={processTitle}
           onClose={handleClose}
         />
+        {searchOpen && (
+          <div className="nodrag nowheel nopan" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 8px", background: "var(--bg-titlebar)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+            <input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); searchAddonRef.current?.findNext(e.target.value); }}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); searchAddonRef.current?.clearDecorations(); }
+                else if (e.key === "Enter" && e.shiftKey) { searchAddonRef.current?.findPrevious(searchQuery); }
+                else if (e.key === "Enter") { searchAddonRef.current?.findNext(searchQuery); }
+              }}
+              placeholder="Search..."
+              style={{ flex: 1, background: "var(--bg-primary)", color: "var(--text-primary)", border: "1px solid var(--border)", borderRadius: 4, padding: "2px 6px", fontSize: 12, outline: "none" }}
+            />
+            <button
+              onClick={() => { setSearchOpen(false); setSearchQuery(""); searchAddonRef.current?.clearDecorations(); }}
+              style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: 12, padding: "0 4px" }}
+            >
+              &#x2715;
+            </button>
+          </div>
+        )}
         {/* Terminal container - nodrag/nowheel/nopan prevent canvas interactions */}
         <div
           ref={containerRef}
