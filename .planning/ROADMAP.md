@@ -122,13 +122,14 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 ### Phase 6: File tile interactions and app icon
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Double-click content tiles to open a terminal in the file's parent directory, and design a gradient abstract app icon for Panescale
+**Requirements**: TILE-DBLCLICK, APP-ICON
 **Depends on:** Phase 5
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 6 to break down)
+- [ ] 06-01-PLAN.md — Double-click content tile title bars to spawn terminal in file's directory
+- [ ] 06-02-PLAN.md — Gradient abstract app icon design and export to all Tauri-required sizes
 
 ### Phase 7: Release process with GitHub CI/CD
 
