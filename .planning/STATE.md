@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-03-18T15:12:03.201Z"
-last_activity: 2026-03-18 -- Completed Plan 05-02 Content tile upgrades
+stopped_at: Completed 05-03-PLAN.md (FINAL PLAN - PROJECT COMPLETE)
+last_updated: "2026-03-18T15:24:57.664Z"
+last_activity: 2026-03-18 -- Completed Plan 05-01 SSH backend infrastructure
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 21
-  completed_plans: 19
-  percent: 90
+  completed_plans: 21
+  percent: 93
 ---
 
 # Project State
@@ -65,6 +65,7 @@ Progress: [█████████░] 93%
 | Phase 04 P04 | 2 | 2 tasks | 3 files |
 | Phase 05 P01 | 9 | 2 tasks | 8 files |
 | Phase 05 P02 | 3 | 2 tasks | 6 files |
+| Phase 05 P03 | 4 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Module-level shiki highlighter cache with lazy language loading
 - [Phase 05]: NoteNode standalone (not file-backed), markdownContent in data
 - [Phase 05]: Only terminal nodes get restored:true on deserialization
+- [Phase 05]: Dual-hook unconditional call (usePty + useSsh) dispatched by sshConnectionId
+- [Phase 05]: Restored SSH terminals prompt for reconnect instead of auto-connecting
 
 ### Pending Todos
 
@@ -155,6 +158,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T15:17:23Z
-Stopped at: Completed 05-01-PLAN.md
-Resume file: .planning/phases/05-ssh-content-tiles/05-03-PLAN.md
+Last session: 2026-03-18T15:24:57.662Z
+Stopped at: Completed 05-03-PLAN.md (FINAL PLAN - PROJECT COMPLETE)
+Resume file: None
