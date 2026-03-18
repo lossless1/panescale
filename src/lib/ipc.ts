@@ -32,6 +32,21 @@ export async function ptyKill(ptyId: string): Promise<void> {
   return invoke("pty_kill", { ptyId });
 }
 
+// --- File System ---
+
+export interface FileEntry {
+  name: string;
+  path: string;
+  is_dir: boolean;
+  size: number;
+  modified_ms: number;
+  created_ms: number;
+}
+
+export async function fsReadDir(path: string): Promise<FileEntry[]> {
+  return invoke<FileEntry[]>("fs_read_dir", { path });
+}
+
 // --- State Persistence ---
 
 export interface SerializedNode {

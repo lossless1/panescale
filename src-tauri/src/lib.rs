@@ -1,3 +1,4 @@
+mod fs;
 mod platform;
 mod pty;
 mod state;
@@ -6,6 +7,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
         .manage(pty::PtyManager::new())
         .invoke_handler(tauri::generate_handler![
             pty::commands::pty_spawn,
@@ -14,6 +17,7 @@ pub fn run() {
             pty::commands::pty_kill,
             state::state_save,
             state::state_load,
+            fs::commands::fs_read_dir,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
