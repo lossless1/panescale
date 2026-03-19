@@ -89,13 +89,13 @@ export function Sidebar() {
             fontWeight: 600,
             textTransform: "uppercase",
             letterSpacing: "0.05em",
-            color: "var(--text-secondary)",
+            color: "var(--text-primary)",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
           }}
         >
-          {activeProject ? activeProject.name : "No Project"}
+          {activeProject ? activeProject.name : "NO PROJECT"}
         </div>
         <div style={{ display: "flex", gap: 2 }}>
           {/* View mode toggle */}
