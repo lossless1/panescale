@@ -399,6 +399,9 @@ function CanvasInner() {
       style={{ width: "100%", height: "100%" }}
     >
       <style>{`
+        .react-flow__pane {
+          cursor: default !important;
+        }
         .canvas-grab .react-flow__pane {
           cursor: grab !important;
         }
