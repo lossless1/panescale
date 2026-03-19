@@ -3,6 +3,7 @@ import { type NodeProps, NodeResizer } from "@xyflow/react";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { type Highlighter, createHighlighter } from "shiki";
 import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
+import { useProjectStore } from "../../stores/projectStore";
 
 type FilePreviewNodeData = {
   filePath: string;
@@ -89,9 +90,32 @@ async function getHighlighter(lang: string): Promise<Highlighter> {
   return hl;
 }
 
+/** File icon for tile header */
+function tileFileIcon(name: string): { icon: string; color: string } {
+  const ext = name.includes(".") ? name.split(".").pop()?.toLowerCase() : "";
+  switch (ext) {
+    case "ts": case "tsx": return { icon: "TS", color: "#3178c6" };
+    case "js": case "jsx": return { icon: "JS", color: "#f0db4f" };
+    case "json": return { icon: "{}", color: "#a0a0a0" };
+    case "md": case "mdx": return { icon: "M", color: "#519aba" };
+    case "css": case "scss": return { icon: "#", color: "#563d7c" };
+    case "html": return { icon: "<>", color: "#e34c26" };
+    case "rs": return { icon: "Rs", color: "#dea584" };
+    case "toml": return { icon: "T", color: "#9c4221" };
+    case "yml": case "yaml": return { icon: "Y", color: "#cb171e" };
+    default: return { icon: "\u2022", color: "#888" };
+  }
+}
+
 function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
   const { filePath, fileName } = data as unknown as FilePreviewNodeData;
   const openTerminal = useOpenTerminalFromTile(id);
+  const activeProject = useProjectStore((s) => s.activeProject());
+
+  // Compute relative path from project root
+  const relativePath = activeProject?.path && filePath.startsWith(activeProject.path)
+    ? filePath.slice(activeProject.path.length + 1)
+    : fileName;
   const [content, setContent] = useState<string>("");
   const [highlightedHtml, setHighlightedHtml] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -201,12 +225,25 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
             flexShrink: 0,
           }}
         >
-          <span style={{ fontWeight: 600 }}>{fileName}</span>
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: tileFileIcon(fileName).color,
+              marginRight: 6,
+              minWidth: 16,
+              textAlign: "center",
+            }}
+          >
+            {tileFileIcon(fileName).icon}
+          </span>
+          <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{relativePath}</span>
           <span
             style={{
               marginLeft: 8,
               opacity: 0.5,
               fontSize: 11,
+              flexShrink: 0,
             }}
           >
             {detectLanguage(fileName)}

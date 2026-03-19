@@ -4,7 +4,6 @@ import {
   MiniMap,
   useReactFlow,
   useOnViewportChange,
-  type ViewportHelperFunctionOptions,
   type Viewport,
   type NodeTypes,
   type Node,
@@ -13,6 +12,8 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { useCanvasStore } from "../../stores/canvasStore";
+import { useProjectStore } from "../../stores/projectStore";
+import { useFileDragStore } from "../../stores/fileDragStore";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useEscapeToCanvas } from "../../hooks/useFocusMode";
 import { magneticSnapPosition } from "../../lib/gridSnap";
@@ -29,6 +30,7 @@ import { RegionNode } from "./RegionNode";
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 2.0;
+const ZOOM_STEP = 0.1; // Snap zoom in 10% increments (aligned to grid dot spacing)
 const RUBBER_BAND_DURATION = 150;
 
 const REGION_COLORS = ["#3b82f6", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4"];
@@ -93,6 +95,7 @@ function CanvasInner() {
   const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
   const addContentNode = useCanvasStore((s) => s.addContentNode);
   const addRegion = useCanvasStore((s) => s.addRegion);
+  const projectPath = useProjectStore((s) => s.projects[s.activeProjectIndex]?.path ?? null);
   const bringToFront = useCanvasStore((s) => s.bringToFront);
   const snapLines = useCanvasStore((s) => s.snapLines);
   const setSnapLines = useCanvasStore((s) => s.setSnapLines);
@@ -227,17 +230,17 @@ function CanvasInner() {
     regionDragRef.current = null;
   }, [setSnapLines]);
 
-  // Cmd/Ctrl+scroll = zoom
+  // Cmd/Ctrl+scroll = stepped zoom (snap to ZOOM_STEP increments)
   const handleWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const opts: ViewportHelperFunctionOptions = { duration: 50 };
-        if (e.deltaY < 0) {
-          reactFlow.zoomIn(opts);
-        } else {
-          reactFlow.zoomOut(opts);
-        }
+        const currentZoom = reactFlow.getZoom();
+        const direction = e.deltaY < 0 ? 1 : -1;
+        // Snap to next step boundary
+        const nextZoom = Math.round((currentZoom + direction * ZOOM_STEP) / ZOOM_STEP) * ZOOM_STEP;
+        const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, nextZoom));
+        reactFlow.zoomTo(clamped, { duration: 50 });
       }
     },
     [reactFlow],
@@ -309,7 +312,7 @@ function CanvasInner() {
         x: event.clientX,
         y: event.clientY,
       });
-      const cwd = "~"; // Default cwd; PTY backend resolves home directory
+      const cwd = projectPath ?? "~";
       addTerminalNode(position, cwd);
     },
     [reactFlow, addTerminalNode],
@@ -342,9 +345,9 @@ function CanvasInner() {
       x: contextMenu.x,
       y: contextMenu.y,
     });
-    addTerminalNode(position, "~");
+    addTerminalNode(position, projectPath ?? "~");
     setContextMenu(null);
-  }, [contextMenu, reactFlow, addTerminalNode]);
+  }, [contextMenu, reactFlow, addTerminalNode, projectPath]);
 
   const handleGroupAsRegion = useCallback(() => {
     const selectedNodes = nodes.filter((n) => n.selected && n.type !== "region");
@@ -388,35 +391,29 @@ function CanvasInner() {
     };
   }, [contextMenu]);
 
-  const handleDragOver = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      if (e.dataTransfer.types.includes('application/panescale-file')) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-      }
-    },
-    [],
-  );
+  // Custom file drag: listen for mouseup on the canvas wrapper while a file is being dragged
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      const raw = e.dataTransfer.getData('application/panescale-file');
-      if (!raw) return;
-      e.preventDefault();
-      const fileData = JSON.parse(raw) as { path: string; name: string; ext: string };
+    function onMouseUp(e: MouseEvent) {
+      const { dragging, endDrag } = useFileDragStore.getState();
+      if (!dragging) return;
+      // File was dropped on the canvas
       const position = reactFlow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
-      const tileType = extensionToTileType(fileData.ext);
-      addContentNode(position, tileType, fileData);
-    },
-    [reactFlow, addContentNode],
-  );
+      const tileType = extensionToTileType(dragging.ext);
+      addContentNode(position, tileType, dragging);
+      endDrag();
+    }
+
+    el.addEventListener("mouseup", onMouseUp);
+    return () => el.removeEventListener("mouseup", onMouseUp);
+  }, [reactFlow, addContentNode]);
 
   return (
     <div
       ref={handleWrapperRef}
       onWheel={handleWheel}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
       style={{ width: "100%", height: "100%" }}
     >
       <style>{`
@@ -440,6 +437,7 @@ function CanvasInner() {
         panOnDrag={[0, 1]}
         zoomOnScroll={false}
         zoomOnPinch={true}
+        zoomOnDoubleClick={false}
         selectionOnDrag={false}
         fitView={false}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}

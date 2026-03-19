@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { ResolvedTheme } from "../styles/themes";
+import { defaultSchemeForTheme } from "../lib/terminalSchemes";
 
 export type ThemePreference = "system" | "dark" | "light";
 
@@ -83,5 +84,15 @@ mediaQuery.addEventListener("change", () => {
   if (preference === "system") {
     const resolved = getSystemTheme();
     useThemeStore.setState({ resolvedTheme: resolved, theme: resolved });
+  }
+});
+
+// Auto-switch terminal color scheme when app theme changes
+useThemeStore.subscribe((state, prevState) => {
+  if (state.resolvedTheme !== prevState.resolvedTheme) {
+    // Lazy import to avoid circular dependency
+    import("./settingsStore").then(({ useSettingsStore }) => {
+      useSettingsStore.getState().setColorScheme(defaultSchemeForTheme(state.resolvedTheme));
+    });
   }
 });

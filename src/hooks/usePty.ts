@@ -6,67 +6,16 @@ import {
   ptyWrite,
   ptyResize,
   ptyKill,
-  ptyReattach,
-  ptyTmuxAvailable,
-  ptyEnsureTmux,
 } from "../lib/ipc";
 import type { PtyEvent } from "../lib/ipc";
 
 interface UsePtyReturn {
   spawn: (cwd: string, cols: number, rows: number, term: Terminal) => Promise<string>;
-  reattach: (
-    nodeId: string,
-    cols: number,
-    rows: number,
-    term: Terminal,
-  ) => Promise<boolean>;
   write: (data: string) => void;
   resize: (cols: number, rows: number) => void;
   kill: () => void;
   ptyId: string | null;
   isAlive: boolean;
-}
-
-/** Module-level cache for tmux availability (checked once per session). */
-let tmuxAvailableCache: boolean | null = null;
-
-async function isTmuxAvailable(): Promise<boolean> {
-  if (tmuxAvailableCache !== null) return tmuxAvailableCache;
-  try {
-    tmuxAvailableCache = await ptyTmuxAvailable();
-  } catch {
-    tmuxAvailableCache = false;
-  }
-  return tmuxAvailableCache;
-}
-
-/**
- * Module-level flag: whether we've run the ensure-tmux check this session.
- * Only runs once per app launch, before the first fresh spawn.
- */
-let tmuxEnsured = false;
-
-/**
- * Ensure tmux is installed before first spawn.
- * If tmux is missing, auto-installs via brew (macOS) or apt/pacman (Linux).
- * Logs progress to console; proceeds with non-persistent terminals on failure.
- */
-async function ensureTmuxOnce(): Promise<void> {
-  if (tmuxEnsured) return;
-  tmuxEnsured = true;
-  try {
-    await ptyEnsureTmux((progress) => {
-      if (progress.stage === "installing") {
-        console.info(`[tmux] ${progress.message}`);
-      } else if (progress.stage === "error") {
-        console.warn(`[tmux] Install failed: ${progress.message}`);
-      }
-    });
-    // Refresh availability cache after install
-    tmuxAvailableCache = null;
-  } catch (err) {
-    console.warn("[tmux] ensure_installed failed, proceeding without persistence:", err);
-  }
 }
 
 export function usePty(): UsePtyReturn {
@@ -108,9 +57,6 @@ export function usePty(): UsePtyReturn {
       }
       spawnLock.current = true;
 
-      // Ensure tmux is installed before first fresh spawn
-      await ensureTmuxOnce();
-
       const channel = createChannel(term);
       const id = await ptySpawn(cwd, cols, rows, channel);
       ptyIdRef.current = id;
@@ -119,45 +65,6 @@ export function usePty(): UsePtyReturn {
 
       wireInput(term);
       return id;
-    },
-    [createChannel, wireInput],
-  );
-
-  /**
-   * Attempt to reattach to an existing tmux session for a restored node.
-   * Returns true if reattach succeeded, false if caller should fall back to spawn.
-   */
-  const reattach = useCallback(
-    async (
-      nodeId: string,
-      cols: number,
-      rows: number,
-      term: Terminal,
-    ): Promise<boolean> => {
-      if (spawnLock.current) return false;
-      spawnLock.current = true;
-
-      const tmuxOk = await isTmuxAvailable();
-      if (!tmuxOk) {
-        spawnLock.current = false;
-        return false;
-      }
-
-      const sessionName = `exc-${nodeId}`;
-      const channel = createChannel(term);
-
-      try {
-        await ptyReattach(nodeId, sessionName, cols, rows, channel);
-        ptyIdRef.current = nodeId;
-        isAliveRef.current = true;
-        renderRef.current += 1;
-        wireInput(term);
-        return true;
-      } catch {
-        // Session doesn't exist or reattach failed -- caller should fall back to spawn
-        spawnLock.current = false;
-        return false;
-      }
     },
     [createChannel, wireInput],
   );
@@ -197,7 +104,6 @@ export function usePty(): UsePtyReturn {
 
   return {
     spawn,
-    reattach,
     write,
     resize,
     kill,

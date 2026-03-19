@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useRef, useCallback, useState, Component, type ErrorInfo, type ReactNode } from "react";
 import { type NodeProps, type NodeChange, NodeResizer } from "@xyflow/react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl";
+import { CanvasAddon } from "@xterm/addon-canvas";
 import { SearchAddon } from "@xterm/addon-search";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import "@xterm/xterm/css/xterm.css";
@@ -18,6 +18,7 @@ import { magneticSnapSize } from "../../lib/gridSnap";
 import { TerminalTitleBar } from "./TerminalTitleBar";
 
 import { playBellChime } from "../../lib/audio";
+import { registerTerminal, unregisterTerminal } from "../../lib/terminalBufferRegistry";
 
 type TerminalNodeData = {
   cwd: string;
@@ -26,6 +27,7 @@ type TerminalNodeData = {
   customName?: string;
   badgeColor?: string;
   startupCommand?: string;
+  savedBuffer?: string;
   // SSH extensions
   sshConnectionId?: string;
   sshHost?: string;
@@ -107,18 +109,17 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       }
     });
 
-    // Try WebGL renderer, fall back to DOM
-    // Use requestAnimationFrame to ensure the terminal DOM is fully ready
+    // Use Canvas renderer (faster than DOM, avoids WebGL disposal crashes)
+    let canvasAddon: CanvasAddon | null = null;
+    let disposed = false;
     const rafId = requestAnimationFrame(() => {
-      if (!termRef.current || termRef.current !== term) return;
+      if (disposed || !termRef.current || termRef.current !== term) return;
       try {
-        const webglAddon = new WebglAddon();
-        webglAddon.onContextLoss(() => {
-          webglAddon.dispose();
-        });
-        term.loadAddon(webglAddon);
+        canvasAddon = new CanvasAddon();
+        term.loadAddon(canvasAddon);
       } catch {
-        // WebGL not available, DOM renderer is fine
+        // Canvas not available, DOM renderer is fine
+        canvasAddon = null;
       }
     });
 
@@ -126,9 +127,15 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
 
     termRef.current = term;
     fitAddonRef.current = fitAddon;
+    registerTerminal(id, term);
+
+    // Replay saved buffer content on restore (before spawning new shell)
+    const nodeData = data as TerminalNodeData;
+    if (nodeData.restored && nodeData.savedBuffer) {
+      term.write(nodeData.savedBuffer + "\r\n");
+    }
 
     // Spawn PTY or connect SSH
-    const nodeData = data as TerminalNodeData;
     if (nodeData.sshConnectionId) {
       // SSH terminal
       if (nodeData.restored) {
@@ -186,12 +193,19 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     }
 
     return () => {
+      disposed = true;
       if (nodeData.sshConnectionId) {
         ssh.disconnect();
       } else {
         pty.kill();
       }
       cancelAnimationFrame(rafId);
+      // Dispose canvas addon before terminal to avoid render-after-dispose errors
+      if (canvasAddon) {
+        try { canvasAddon.dispose(); } catch { /* already disposed */ }
+        canvasAddon = null;
+      }
+      unregisterTerminal(id);
       term.dispose();
       termRef.current = null;
       fitAddonRef.current = null;
@@ -248,15 +262,10 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     }
   }, [id, enterTerminalMode, bringToFront]);
 
-  // Handle close
+  // Handle close — just remove the node; cleanup effect handles PTY/SSH + terminal disposal
   const handleClose = useCallback(() => {
-    if (isSsh) {
-      ssh.disconnect();
-    } else {
-      pty.kill();
-    }
     removeNode(id);
-  }, [id, isSsh, pty, ssh, removeNode]);
+  }, [id, removeNode]);
 
   // Copy/paste keyboard handler
   const handleKeyDown = useCallback(
@@ -456,4 +465,74 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   );
 };
 
-export const TerminalNode = React.memo(TerminalNodeInner);
+class TerminalErrorBoundary extends Component<
+  { children: ReactNode; onClose: () => void },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Terminal crashed:", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+            background: "var(--bg-terminal)",
+            borderRadius: 8,
+            border: "1px solid var(--border)",
+            color: "var(--text-secondary)",
+            fontSize: 13,
+            padding: 20,
+          }}
+        >
+          <div style={{ color: "var(--text-primary)", fontWeight: 600 }}>Terminal crashed</div>
+          <div style={{ textAlign: "center", maxWidth: 280, lineHeight: 1.4 }}>
+            {this.state.error.message}
+          </div>
+          <button
+            onClick={this.props.onClose}
+            style={{
+              background: "var(--bg-secondary)",
+              border: "1px solid var(--border)",
+              borderRadius: 6,
+              color: "var(--text-primary)",
+              padding: "6px 16px",
+              cursor: "pointer",
+              fontSize: 12,
+            }}
+          >
+            Close
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const TerminalNodeWithBoundary = function TerminalNodeWithBoundary(props: NodeProps) {
+  const removeNode = useCanvasStore((s) => s.removeNode);
+  const handleClose = useCallback(() => removeNode(props.id), [props.id, removeNode]);
+
+  return (
+    <TerminalErrorBoundary onClose={handleClose}>
+      <TerminalNodeInner {...props} />
+    </TerminalErrorBoundary>
+  );
+};
+
+export const TerminalNode = React.memo(TerminalNodeWithBoundary);

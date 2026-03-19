@@ -1,16 +1,19 @@
 import { useState } from "react";
+import { modKey } from "../../lib/platform";
+
+const mod = modKey();
 
 const HOTKEYS = [
   { key: "Double-click canvas", action: "Spawn terminal" },
-  { key: "Cmd/Ctrl + K", action: "Fuzzy file search" },
-  { key: "Cmd/Ctrl + F", action: "Search in terminal" },
-  { key: "Cmd/Ctrl + =/-", action: "Zoom in/out" },
-  { key: "Cmd/Ctrl + 0", action: "Fit all tiles" },
+  { key: `${mod} + P`, action: "Fuzzy file search" },
+  { key: `${mod} + F`, action: "Search in terminal" },
+  { key: `${mod} + =/-`, action: "Zoom in/out" },
+  { key: `${mod} + 0`, action: "Fit all tiles" },
   { key: "M", action: "Toggle minimap" },
   { key: "Escape", action: "Exit terminal focus" },
   { key: "Space + drag", action: "Pan canvas" },
   { key: "Shift + scroll", action: "Pan over terminal" },
-  { key: "Cmd/Ctrl + Enter", action: "Git commit" },
+  { key: `${mod} + Enter`, action: "Git commit" },
 ];
 
 export function TitleBar() {

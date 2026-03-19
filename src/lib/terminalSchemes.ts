@@ -1,13 +1,13 @@
 import type { ITheme } from "@xterm/xterm";
 
-export type TerminalSchemeName = "one-dark" | "dracula";
+export type TerminalSchemeName = "one-dark" | "dracula" | "light";
 
 export const terminalSchemes: Record<TerminalSchemeName, ITheme> = {
   "one-dark": {
-    background: "#282C34",
+    background: "#000000",
     foreground: "#ABB2BF",
     cursor: "#528BFF",
-    cursorAccent: "#282C34",
+    cursorAccent: "#000000",
     selectionBackground: "rgba(82, 139, 255, 0.3)",
     selectionForeground: undefined,
     black: "#1E2127",
@@ -28,10 +28,10 @@ export const terminalSchemes: Record<TerminalSchemeName, ITheme> = {
     brightWhite: "#FFFFFF",
   },
   dracula: {
-    background: "#282A36",
+    background: "#000000",
     foreground: "#F8F8F2",
     cursor: "#F8F8F2",
-    cursorAccent: "#282A36",
+    cursorAccent: "#000000",
     selectionBackground: "#44475A",
     selectionForeground: undefined,
     black: "#21222C",
@@ -51,4 +51,33 @@ export const terminalSchemes: Record<TerminalSchemeName, ITheme> = {
     brightCyan: "#A4FFFF",
     brightWhite: "#FFFFFF",
   },
+  light: {
+    background: "#ffffff",
+    foreground: "#383a42",
+    cursor: "#526eff",
+    cursorAccent: "#ffffff",
+    selectionBackground: "rgba(82, 110, 255, 0.2)",
+    selectionForeground: undefined,
+    black: "#383a42",
+    red: "#e45649",
+    green: "#50a14f",
+    yellow: "#c18401",
+    blue: "#4078f2",
+    magenta: "#a626a4",
+    cyan: "#0184bc",
+    white: "#fafafa",
+    brightBlack: "#a0a1a7",
+    brightRed: "#e45649",
+    brightGreen: "#50a14f",
+    brightYellow: "#c18401",
+    brightBlue: "#4078f2",
+    brightMagenta: "#a626a4",
+    brightCyan: "#0184bc",
+    brightWhite: "#ffffff",
+  },
 };
+
+/** Map app theme to default terminal scheme */
+export function defaultSchemeForTheme(appTheme: "dark" | "light"): TerminalSchemeName {
+  return appTheme === "light" ? "light" : "one-dark";
+}

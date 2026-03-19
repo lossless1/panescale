@@ -2,6 +2,10 @@ import { useEffect } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { modKeyCode } from "../lib/platform";
 
+const MIN_ZOOM = 0.1;
+const MAX_ZOOM = 2.0;
+const ZOOM_STEP = 0.1;
+
 /**
  * Global keyboard shortcut handler for canvas zoom controls.
  * Captures Cmd/Ctrl +/- for zoom in/out and Cmd/Ctrl+0 for fit view.
@@ -17,16 +21,22 @@ export function useKeyboardShortcuts() {
 
       switch (e.key) {
         case "=":
-        case "+":
+        case "+": {
           e.preventDefault();
           e.stopPropagation();
-          reactFlow.zoomIn({ duration: 200 });
+          const currentZoom = reactFlow.getZoom();
+          const nextZoom = Math.min(MAX_ZOOM, Math.round((currentZoom + ZOOM_STEP) / ZOOM_STEP) * ZOOM_STEP);
+          reactFlow.zoomTo(nextZoom, { duration: 200 });
           break;
-        case "-":
+        }
+        case "-": {
           e.preventDefault();
           e.stopPropagation();
-          reactFlow.zoomOut({ duration: 200 });
+          const currentZoom = reactFlow.getZoom();
+          const nextZoom = Math.max(MIN_ZOOM, Math.round((currentZoom - ZOOM_STEP) / ZOOM_STEP) * ZOOM_STEP);
+          reactFlow.zoomTo(nextZoom, { duration: 200 });
           break;
+        }
         case "0":
           e.preventDefault();
           e.stopPropagation();

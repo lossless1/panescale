@@ -32,7 +32,8 @@ pub struct PtyManager {
 
 impl PtyManager {
     pub fn new() -> Self {
-        let tmux_available = cfg!(unix) && TmuxBridge::is_available();
+        // tmux disabled — using direct PTY spawn for simpler terminal lifecycle
+        let tmux_available = false;
         Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),
             tmux_available,
@@ -61,6 +62,18 @@ impl PtyManager {
         channel: Channel<PtyEvent>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let shell = detect_default_shell();
+
+        // Resolve ~ to home directory
+        let cwd = if cwd == "~" || cwd.starts_with("~/") {
+            if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) {
+                let home = home.to_string_lossy().to_string();
+                if cwd == "~" { home } else { cwd.replacen("~", &home, 1) }
+            } else {
+                cwd
+            }
+        } else {
+            cwd
+        };
 
         let pty_system = native_pty_system();
         let pair = pty_system.openpty(PtySize {

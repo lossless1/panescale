@@ -1,3 +1,4 @@
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useCanvasStore } from "../../stores/canvasStore";
 
 /** Truncate a path to its last 2 segments for display. */
@@ -20,6 +21,60 @@ export function TerminalList() {
   const bringToFront = useCanvasStore((s) => s.bringToFront);
   const bellActiveNodes = useCanvasStore((s) => s.bellActiveNodes);
   const setBellActive = useCanvasStore((s) => s.setBellActive);
+  const removeNode = useCanvasStore((s) => s.removeNode);
+  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+  const [renaming, setRenaming] = useState<{ nodeId: string; x: number; y: number } | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const ctxRef = useRef<HTMLDivElement>(null);
+  const renameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!ctxMenu) return;
+    function close(e: MouseEvent) {
+      if (ctxRef.current && !ctxRef.current.contains(e.target as Node)) setCtxMenu(null);
+    }
+    function esc(e: KeyboardEvent) {
+      if (e.key === "Escape") setCtxMenu(null);
+    }
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [ctxMenu]);
+
+  // Focus rename input when it opens
+  useEffect(() => {
+    if (renaming && renameRef.current) {
+      renameRef.current.focus();
+      renameRef.current.select();
+    }
+  }, [renaming]);
+
+  const handleRename = useCallback(() => {
+    if (!ctxMenu) return;
+    // Get current name for the input
+    const node = nodes.find((n) => n.id === ctxMenu.nodeId);
+    const currentName = (node?.data as Record<string, unknown>)?.customName as string || "";
+    setRenameValue(currentName);
+    setRenaming({ nodeId: ctxMenu.nodeId, x: ctxMenu.x, y: ctxMenu.y });
+    setCtxMenu(null);
+  }, [ctxMenu, nodes]);
+
+  const submitRename = useCallback(() => {
+    if (!renaming) return;
+    updateNodeData(renaming.nodeId, { customName: renameValue.trim() || undefined });
+    setRenaming(null);
+  }, [renaming, renameValue, updateNodeData]);
+
+  const handleClose = useCallback(() => {
+    if (!ctxMenu) return;
+    removeNode(ctxMenu.nodeId);
+    setCtxMenu(null);
+  }, [ctxMenu, removeNode]);
 
   const terminalNodes = nodes.filter((n) => n.type === "terminal");
 
@@ -61,6 +116,10 @@ export function TerminalList() {
               }
               setPanToNode(node.id);
               bringToFront(node.id);
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id });
             }}
             style={{
               display: "flex",
@@ -144,6 +203,91 @@ export function TerminalList() {
           </div>
         );
       })}
+      {ctxMenu && (
+        <div
+          ref={ctxRef}
+          style={{
+            position: "fixed",
+            left: ctxMenu.x,
+            top: ctxMenu.y,
+            zIndex: 9999,
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border)",
+            borderRadius: 6,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            padding: "4px 0",
+            minWidth: 140,
+          }}
+        >
+          {[
+            { label: "Rename", action: handleRename },
+            { label: "Close", action: handleClose },
+          ].map((item) => (
+            <div
+              key={item.label}
+              onClick={item.action}
+              style={{
+                padding: "6px 12px",
+                fontSize: 13,
+                cursor: "pointer",
+                userSelect: "none",
+                borderRadius: 3,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = "var(--accent)";
+                (e.currentTarget as HTMLElement).style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+              }}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
+      )}
+      {renaming && (
+        <div
+          style={{
+            position: "fixed",
+            left: renaming.x,
+            top: renaming.y,
+            zIndex: 9999,
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border)",
+            borderRadius: 6,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            padding: "8px",
+            minWidth: 160,
+          }}
+        >
+          <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 4 }}>
+            Rename terminal:
+          </div>
+          <input
+            ref={renameRef}
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submitRename();
+              if (e.key === "Escape") setRenaming(null);
+            }}
+            onBlur={() => setRenaming(null)}
+            style={{
+              width: "100%",
+              padding: "4px 6px",
+              fontSize: 13,
+              background: "var(--bg-primary)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+              borderRadius: 3,
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -149,10 +149,10 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         <div style={rowStyle}>
           <label style={labelStyle}>Terminal Color Scheme</label>
           <div style={{ display: "flex", gap: 6 }}>
-            {(["one-dark", "dracula"] as TerminalSchemeName[]).map((scheme) => (
+            {(["one-dark", "dracula", "light"] as TerminalSchemeName[]).map((scheme) => (
               <SegmentButton
                 key={scheme}
-                label={scheme === "one-dark" ? "One Dark" : "Dracula"}
+                label={scheme === "one-dark" ? "One Dark" : scheme === "dracula" ? "Dracula" : "Light"}
                 active={colorScheme === scheme}
                 onClick={() => setColorScheme(scheme)}
               />

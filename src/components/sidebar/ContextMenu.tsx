@@ -17,6 +17,7 @@ interface ContextMenuProps {
   parentPath: string;
   onClose: () => void;
   onRefresh: () => void;
+  onOpenInTerminal?: (path: string) => void;
 }
 
 type MenuMode = "menu" | "new-file" | "new-folder" | "rename" | "confirm-delete";
@@ -28,6 +29,7 @@ export function ContextMenu({
   parentPath,
   onClose,
   onRefresh,
+  onOpenInTerminal,
 }: ContextMenuProps) {
   const [mode, setMode] = useState<MenuMode>("menu");
   const [inputValue, setInputValue] = useState("");
@@ -135,17 +137,36 @@ export function ContextMenu({
     borderRadius: 3,
   };
 
-  // Build menu items based on entry type
-  const menuItems: { label: string; action: () => void }[] = [];
+  const handleCopyPath = useCallback(() => {
+    if (!entry) return;
+    navigator.clipboard.writeText(entry.path);
+    onClose();
+  }, [entry, onClose]);
 
-  if (!entry || entry.is_dir) {
-    menuItems.push({ label: "New File", action: handleNewFile });
-    menuItems.push({ label: "New Folder", action: handleNewFolder });
-  }
+  const handleOpenInTerminal = useCallback(() => {
+    const dirPath = entry?.is_dir ? entry.path : parentPath;
+    onOpenInTerminal?.(dirPath);
+    onClose();
+  }, [entry, parentPath, onOpenInTerminal, onClose]);
+
+  // Build menu items based on entry type
+  type MenuItem = { label: string; action: () => void } | "separator";
+  const menuItems: MenuItem[] = [];
+
   if (entry) {
     menuItems.push({ label: "Rename", action: handleRename });
-    menuItems.push({ label: "Move to...", action: handleMoveTo });
     menuItems.push({ label: "Delete", action: handleDelete });
+    menuItems.push("separator");
+    menuItems.push({ label: "Copy Filepath", action: handleCopyPath });
+    menuItems.push({ label: "Open in Terminal", action: handleOpenInTerminal });
+  }
+  if (!entry || entry.is_dir) {
+    if (menuItems.length > 0) menuItems.push("separator");
+    menuItems.push({ label: "New File", action: handleNewFile });
+    menuItems.push({ label: "New Folder", action: handleNewFolder });
+    if (entry) {
+      menuItems.push({ label: "Move to...", action: handleMoveTo });
+    }
   }
 
   return (
@@ -165,26 +186,37 @@ export function ContextMenu({
       }}
     >
       {mode === "menu" &&
-        menuItems.map((item) => (
-          <div
-            key={item.label}
-            onClick={item.action}
-            style={menuItemStyle}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                "var(--accent)";
-              (e.currentTarget as HTMLElement).style.color = "#fff";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                "transparent";
-              (e.currentTarget as HTMLElement).style.color =
-                "var(--text-primary)";
-            }}
-          >
-            {item.label}
-          </div>
-        ))}
+        menuItems.map((item, i) =>
+          item === "separator" ? (
+            <div
+              key={`sep-${i}`}
+              style={{
+                height: 1,
+                backgroundColor: "var(--border)",
+                margin: "4px 8px",
+              }}
+            />
+          ) : (
+            <div
+              key={item.label}
+              onClick={item.action}
+              style={menuItemStyle}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor =
+                  "var(--accent)";
+                (e.currentTarget as HTMLElement).style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor =
+                  "transparent";
+                (e.currentTarget as HTMLElement).style.color =
+                  "var(--text-primary)";
+              }}
+            >
+              {item.label}
+            </div>
+          ),
+        )}
 
       {(mode === "new-file" || mode === "new-folder" || mode === "rename") && (
         <div style={{ padding: "6px 8px" }}>

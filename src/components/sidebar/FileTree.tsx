@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useProjectStore } from "../../stores/projectStore";
+import { useCanvasStore } from "../../stores/canvasStore";
 import { fsReadDir, type FileEntry } from "../../lib/ipc";
 import { FileTreeItem } from "./FileTreeItem";
 import { ContextMenu } from "./ContextMenu";
@@ -10,6 +11,16 @@ export function FileTree() {
   const projects = useProjectStore((s) => s.projects);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
   const openProject = useProjectStore((s) => s.openProject);
+  const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
+
+  const handleOpenInTerminal = useCallback(
+    (dirPath: string) => {
+      // Spawn a new terminal tile at center of current viewport
+      const position = { x: 100, y: 100 };
+      addTerminalNode(position, dirPath);
+    },
+    [addTerminalNode],
+  );
 
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
   const [dirContents, setDirContents] = useState<Map<string, FileEntry[]>>(
@@ -203,6 +214,7 @@ export function FileTree() {
               refreshDir(contextMenu.entry.path);
             }
           }}
+          onOpenInTerminal={handleOpenInTerminal}
         />
       )}
     </div>

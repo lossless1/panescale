@@ -54,7 +54,7 @@ jobs:
           releaseBody: ''
           releaseDraft: true
           prerelease: false
-          includeUpdaterJson: true
+          includeUpdaterJson: false
           args: --target universal-apple-darwin
 
   build-linux:
@@ -95,7 +95,7 @@ jobs:
           releaseBody: ''
           releaseDraft: true
           prerelease: false
-          includeUpdaterJson: true
+          includeUpdaterJson: false
 
   build-windows:
     runs-on: windows-latest
@@ -132,7 +132,7 @@ jobs:
           releaseBody: ''
           releaseDraft: true
           prerelease: false
-          includeUpdaterJson: true
+          includeUpdaterJson: false
 
   publish:
     runs-on: ubuntu-latest

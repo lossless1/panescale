@@ -48,6 +48,12 @@ impl TmuxBridge {
                 String::from_utf8_lossy(&output.stderr)
             ));
         }
+
+        // Hide tmux status bar — the app provides its own title bar
+        let _ = Command::new("tmux")
+            .args(["set-option", "-t", &session_name, "status", "off"])
+            .output();
+
         Ok(session_name)
     }
 

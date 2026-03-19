@@ -136,6 +136,8 @@ export interface SerializedNode {
     markdownContent?: string;
     filePath?: string;
     fileName?: string;
+    // Terminal scrollback persistence
+    savedBuffer?: string;
     // SSH fields
     sshConnectionId?: string;
     sshHost?: string;

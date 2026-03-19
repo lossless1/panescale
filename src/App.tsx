@@ -6,24 +6,17 @@ import { Canvas } from "./components/canvas/Canvas";
 import { useCanvasStore } from "./stores/canvasStore";
 import { initPersistence, forceSave } from "./lib/persistence";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ptyTmuxCleanup } from "./lib/ipc";
-import { UpdateChecker } from "./components/UpdateChecker";
+// import { UpdateChecker } from "./components/UpdateChecker"; // Disabled until updater signing keys are configured
+import { FileDragOverlay } from "./components/FileDragOverlay";
 
 function App() {
   const hydrated = useCanvasStore((s) => s.hydrated);
   const loadFromDisk = useCanvasStore((s) => s.loadFromDisk);
 
   useEffect(() => {
-    // Restore persisted canvas state, then start auto-save and clean up orphaned tmux sessions
+    // Restore persisted canvas state, then start auto-save
     loadFromDisk().then(() => {
       initPersistence();
-
-      // Clean up orphaned tmux sessions (from crashed app instances)
-      const { nodes } = useCanvasStore.getState();
-      const activeNodeIds = nodes.map((n) => n.id);
-      ptyTmuxCleanup(activeNodeIds).catch((err) => {
-        console.warn("Failed to clean up orphaned tmux sessions:", err);
-      });
     });
 
     // Force save on window close
@@ -59,7 +52,8 @@ function App() {
 
   return (
     <ThemeProvider>
-      <UpdateChecker />
+      {/* <UpdateChecker /> */}
+      <FileDragOverlay />
       <AppShell>
         <ReactFlowProvider>
           <Canvas />

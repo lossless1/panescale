@@ -16,7 +16,7 @@ export const themes: Record<ResolvedTheme, ThemeVariables> = {
     "--bg-secondary": "#16213e",
     "--bg-titlebar": "#0f0f23",
     "--bg-sidebar": "#12122a",
-    "--bg-terminal": "#0d0d1a",
+    "--bg-terminal": "#000000",
     "--text-primary": "#e0e0e0",
     "--text-secondary": "#8888aa",
     "--border": "#2a2a4a",
@@ -30,7 +30,7 @@ export const themes: Record<ResolvedTheme, ThemeVariables> = {
     "--bg-secondary": "#f5f5f7",
     "--bg-titlebar": "#e8e8ec",
     "--bg-sidebar": "#f0f0f4",
-    "--bg-terminal": "#1e1e2e", // terminal stays dark
+    "--bg-terminal": "#ffffff",
     "--text-primary": "#1a1a2e",
     "--text-secondary": "#666688",
     "--border": "#d0d0e0",

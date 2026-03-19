@@ -1,5 +1,6 @@
 import { useCanvasStore } from "../stores/canvasStore";
 import { stateSave, type CanvasSnapshot, type SerializedNode } from "./ipc";
+import { captureAllBuffers } from "./terminalBufferRegistry";
 import type { Node } from "@xyflow/react";
 
 const DEBOUNCE_MS = 500;
@@ -15,6 +16,9 @@ export function serializeCanvas(state: {
   viewport: { x: number; y: number; zoom: number };
   maxZIndex: number;
 }): CanvasSnapshot {
+  // Capture terminal scrollback buffers before serializing
+  const buffers = captureAllBuffers();
+
   const nodes: SerializedNode[] = state.nodes.map((n) => ({
     id: n.id,
     type: n.type ?? "terminal",
@@ -34,6 +38,8 @@ export function serializeCanvas(state: {
       markdownContent: (n.data as Record<string, unknown>).markdownContent as string | undefined,
       filePath: (n.data as Record<string, unknown>).filePath as string | undefined,
       fileName: (n.data as Record<string, unknown>).fileName as string | undefined,
+      // Scrollback buffer for terminal persistence
+      savedBuffer: buffers.get(n.id),
       // SSH fields
       sshConnectionId: (n.data as Record<string, unknown>).sshConnectionId as string | undefined,
       sshHost: (n.data as Record<string, unknown>).sshHost as string | undefined,

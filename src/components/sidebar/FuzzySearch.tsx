@@ -19,10 +19,10 @@ export function FuzzySearch({ onNavigateToFile }: FuzzySearchProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const activeProject = useProjectStore((s) => s.activeProject());
 
-  // Register Cmd+K global shortcut
+  // Register Cmd+P global shortcut
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if ((e.metaKey || e.ctrlKey) && e.key === "p") {
         e.preventDefault();
         setOpen((prev) => !prev);
       }
