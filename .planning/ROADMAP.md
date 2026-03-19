@@ -133,10 +133,11 @@ Plans:
 
 ### Phase 7: Release process with GitHub CI/CD
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** GitHub Actions CI/CD for building Panescale on all three platforms (macOS universal, Linux, Windows), publishing GitHub Releases with auto-generated notes, and Tauri updater for version detection
+**Requirements**: UPDATER-CONFIG, UPDATER-UI, CI-WORKFLOW, GITHUB-RELEASE, PLATFORM-BUILDS
 **Depends on:** Phase 6
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 7 to break down)
+- [ ] 07-01-PLAN.md — Tauri updater plugin setup (Rust, config, capabilities, frontend update check UI)
+- [ ] 07-02-PLAN.md — GitHub Actions release workflow for tag-triggered multi-platform builds and GitHub Releases
