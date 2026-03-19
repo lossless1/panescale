@@ -108,15 +108,19 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     });
 
     // Try WebGL renderer, fall back to DOM
-    try {
-      const webglAddon = new WebglAddon();
-      webglAddon.onContextLoss(() => {
-        webglAddon.dispose();
-      });
-      term.loadAddon(webglAddon);
-    } catch {
-      // WebGL not available, DOM renderer is fine
-    }
+    // Use requestAnimationFrame to ensure the terminal DOM is fully ready
+    const rafId = requestAnimationFrame(() => {
+      if (!termRef.current || termRef.current !== term) return;
+      try {
+        const webglAddon = new WebglAddon();
+        webglAddon.onContextLoss(() => {
+          webglAddon.dispose();
+        });
+        term.loadAddon(webglAddon);
+      } catch {
+        // WebGL not available, DOM renderer is fine
+      }
+    });
 
     fitAddon.fit();
 
@@ -187,6 +191,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       } else {
         pty.kill();
       }
+      cancelAnimationFrame(rafId);
       term.dispose();
       termRef.current = null;
       fitAddonRef.current = null;
