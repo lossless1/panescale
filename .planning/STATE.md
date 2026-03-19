@@ -178,9 +178,10 @@ None yet.
 | 260319-l0s | Intercept MD link clicks in NoteNode to spawn WebView iframe tiles | 2026-03-19 | 653ca83 | [260319-l0s-intercept-md-link-clicks-to-spawn-webvie](./quick/260319-l0s-intercept-md-link-clicks-to-spawn-webvie/) |
 | 260319-l62 | Auto-edit text files, preview MD, skip binary files on canvas | 2026-03-19 | 71aecf8 | [260319-l62-auto-edit-text-files-preview-md-skip-bin](./quick/260319-l62-auto-edit-text-files-preview-md-skip-bin/) |
 | 260319-lc5 | Shared shiki highlighter module with theme-aware file preview | 2026-03-19 | 7abfb4d | [260319-lc5-add-shiki-syntax-highlighting-to-filepre](./quick/260319-lc5-add-shiki-syntax-highlighting-to-filepre/) |
+| 260319-mjb | CodeMirror 6 syntax-highlighted editor replacing plain textarea in FilePreviewNode | 2026-03-19 | 3e8a4a9 | [260319-mjb-replace-plain-textarea-with-syntax-highl](./quick/260319-mjb-replace-plain-textarea-with-syntax-highl/) |
 
 ## Session Continuity
 
-Last session: 2026-03-19T14:25:51Z
-Stopped at: Completed quick task 260319-lc5
+Last session: 2026-03-19T15:17:19Z
+Stopped at: Completed quick task 260319-mjb
 Resume file: None
