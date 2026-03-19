@@ -173,9 +173,10 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260318-gro | Fix canvas dots visibility, window border rendering, and rename to Panescale | 2026-03-18 | d09111c | [260318-gro-fix-canvas-dots-visibility-window-border](./quick/260318-gro-fix-canvas-dots-visibility-window-border/) |
+| 260319-hbw | Native macOS window buttons, settings modal, canvas cursor fix | 2026-03-19 | 97df580 | [260319-hbw-native-macos-window-buttons-settings-mod](./quick/260319-hbw-native-macos-window-buttons-settings-mod/) |
 
 ## Session Continuity
 
-Last session: 2026-03-19T10:20:20Z
-Stopped at: Completed 07-02-PLAN.md -- All phases complete
+Last session: 2026-03-19T11:34:23Z
+Stopped at: Completed quick task 260319-hbw
 Resume file: None
