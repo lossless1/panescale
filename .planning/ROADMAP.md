@@ -139,5 +139,5 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 07-01-PLAN.md — Tauri updater plugin setup (Rust, config, capabilities, frontend update check UI)
-- [ ] 07-02-PLAN.md — GitHub Actions release workflow for tag-triggered multi-platform builds and GitHub Releases
+- [x] 07-01-PLAN.md — Tauri updater plugin setup (Rust, config, capabilities, frontend update check UI)
+- [x] 07-02-PLAN.md — GitHub Actions release workflow for tag-triggered multi-platform builds and GitHub Releases
