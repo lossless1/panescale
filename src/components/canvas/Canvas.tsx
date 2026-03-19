@@ -404,6 +404,7 @@ function CanvasInner() {
       // File was dropped on the canvas
       const position = reactFlow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
       const tileType = extensionToTileType(dragging.ext);
+      if (!tileType) { endDrag(); return; } // Binary files are silently ignored
       addContentNode(position, tileType, dragging);
       endDrag();
     }

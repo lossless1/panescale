@@ -73,8 +73,21 @@ export async function ptyEnsureTmux(
 
 export type ContentTileType = 'note' | 'image' | 'file-preview';
 
-export function extensionToTileType(ext: string): ContentTileType {
+const BINARY_EXTENSIONS = new Set([
+  '.zip', '.tar', '.gz', '.tgz', '.bz2', '.xz', '.7z', '.rar',
+  '.exe', '.dll', '.so', '.dylib', '.wasm', '.bin', '.o', '.obj',
+  '.class', '.pyc', '.pyo',
+  '.dmg', '.iso', '.img', '.pkg', '.deb', '.rpm', '.msi', '.app',
+  '.jar', '.war', '.ear',
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+  '.ttf', '.otf', '.woff', '.woff2', '.eot', '.ico',
+  '.mp3', '.mp4', '.avi', '.mov', '.mkv', '.flac', '.wav', '.ogg', '.aac',
+  '.sqlite', '.db',
+]);
+
+export function extensionToTileType(ext: string): ContentTileType | null {
   const lower = ext.toLowerCase();
+  if (BINARY_EXTENSIONS.has(lower)) return null;
   if (lower === '.md' || lower === '.mdx') return 'note';
   if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp'].includes(lower)) return 'image';
   return 'file-preview';
