@@ -28,7 +28,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/volodymyrsaakian/excalicode/releases/latest/download/latest.json"
+        "https://github.com/lossless1/panescale/releases/latest/download/latest.json"
       ],
       "dialog": false,
       "pubkey": ""
