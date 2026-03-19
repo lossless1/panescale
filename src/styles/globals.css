@@ -171,3 +171,17 @@ pre,
   max-width: 100%;
   border-radius: 4px;
 }
+
+/* Shiki syntax highlighting in file preview tiles */
+.shiki-container .shiki {
+  margin: 0;
+  padding: 8px;
+  background: transparent !important; /* Let container handle background */
+  tab-size: 2;
+}
+
+.shiki-container .shiki code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
