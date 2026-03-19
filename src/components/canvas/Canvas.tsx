@@ -104,7 +104,7 @@ function CanvasInner() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [minimapVisible, setMinimapVisible] = useState(false);
   const [alignGuides, setAlignGuides] = useState<AlignmentGuide[]>([]);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; hasSelection: boolean } | null>(null);
 
   // Region group drag: track initial positions of contained nodes when region drag starts
   const regionDragRef = useRef<{
@@ -322,17 +322,29 @@ function CanvasInner() {
     [bringToFront],
   );
 
-  // Context menu for region creation (right-click with 2+ selected nodes)
+  // Context menu on canvas right-click
   const handlePaneContextMenu = useCallback(
     (event: MouseEvent | React.MouseEvent) => {
       event.preventDefault();
       const selectedNodes = nodes.filter((n) => n.selected && n.type !== "region");
-      if (selectedNodes.length >= 2) {
-        setContextMenu({ x: event.clientX, y: event.clientY });
-      }
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        hasSelection: selectedNodes.length >= 2,
+      });
     },
     [nodes],
   );
+
+  const handleContextMenuNewTerminal = useCallback(() => {
+    if (!contextMenu) return;
+    const position = reactFlow.screenToFlowPosition({
+      x: contextMenu.x,
+      y: contextMenu.y,
+    });
+    addTerminalNode(position, "~");
+    setContextMenu(null);
+  }, [contextMenu, reactFlow, addTerminalNode]);
 
   const handleGroupAsRegion = useCallback(() => {
     const selectedNodes = nodes.filter((n) => n.selected && n.type !== "region");
@@ -481,7 +493,7 @@ function CanvasInner() {
           }}
         >
           <button
-            onClick={handleGroupAsRegion}
+            onClick={handleContextMenuNewTerminal}
             style={{
               display: "block",
               width: "100%",
@@ -502,8 +514,34 @@ function CanvasInner() {
               (e.target as HTMLElement).style.color = "var(--text-primary)";
             }}
           >
-            Group as Region
+            New Terminal
           </button>
+          {contextMenu.hasSelection && (
+            <button
+              onClick={handleGroupAsRegion}
+              style={{
+                display: "block",
+                width: "100%",
+                textAlign: "left",
+                background: "none",
+                border: "none",
+                color: "var(--text-primary)",
+                padding: "6px 12px",
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLElement).style.background = "var(--accent)";
+                (e.target as HTMLElement).style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLElement).style.background = "none";
+                (e.target as HTMLElement).style.color = "var(--text-primary)";
+              }}
+            >
+              Group as Region
+            </button>
+          )}
         </div>
       )}
     </div>
