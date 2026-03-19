@@ -5,34 +5,6 @@ mod pty;
 mod ssh;
 mod state;
 
-#[cfg(target_os = "macos")]
-fn apply_macos_window_styling(app: &tauri::App) {
-    use cocoa::appkit::NSWindow;
-    use cocoa::base::id;
-    use objc::runtime::YES;
-    use tauri::Manager;
-
-    if let Some(window) = app.get_webview_window("main") {
-        let ns_window = window.ns_window().unwrap() as id;
-        unsafe {
-            // Set native rounded corners (10px matches macOS native feel)
-            ns_window.setHasShadow_(YES);
-
-            // Make the window background fully transparent so CSS border-radius works
-            let bg_color: id = cocoa::appkit::NSColor::clearColor(cocoa::base::nil);
-            ns_window.setBackgroundColor_(bg_color);
-
-            // Enable full-size content view for seamless title bar integration
-            use cocoa::appkit::NSWindowStyleMask;
-            let mut style_mask = ns_window.styleMask();
-            style_mask |= NSWindowStyleMask::NSFullSizeContentViewWindowMask;
-            ns_window.setStyleMask_(style_mask);
-            ns_window.setTitlebarAppearsTransparent_(YES);
-            ns_window.setTitleVisibility_(cocoa::appkit::NSWindowTitleVisibility::NSWindowTitleHidden);
-        }
-    }
-}
-
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
@@ -42,9 +14,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(pty::PtyManager::new())
         .manage(ssh::SshManager::new())
-        .setup(|app| {
-            #[cfg(target_os = "macos")]
-            apply_macos_window_styling(app);
+        .setup(|_app| {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
