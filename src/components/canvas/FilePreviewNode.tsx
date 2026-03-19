@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { type NodeProps, NodeResizer } from "@xyflow/react";
-import { readTextFile } from "@tauri-apps/plugin-fs";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { type Highlighter, createHighlighter } from "shiki";
 import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
 import { useProjectStore } from "../../stores/projectStore";
@@ -117,10 +117,14 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     ? filePath.slice(activeProject.path.length + 1)
     : fileName;
   const [content, setContent] = useState<string>("");
+  const [editContent, setEditContent] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(true);
   const [highlightedHtml, setHighlightedHtml] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
+
+  const dirty = editContent !== content;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -135,7 +139,10 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     setLoading(true);
     readTextFile(filePath)
       .then((text) => {
-        if (!cancelled) setContent(text);
+        if (!cancelled) {
+          setContent(text);
+          setEditContent(text);
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(String(err));
@@ -145,9 +152,19 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     };
   }, [filePath]);
 
-  // Highlight content with shiki
+  // Save handler
+  const handleSave = useCallback(async () => {
+    try {
+      await writeTextFile(filePath, editContent);
+      setContent(editContent);
+    } catch (err) {
+      console.error("Failed to save file:", err);
+    }
+  }, [filePath, editContent]);
+
+  // Highlight content with shiki (uses editContent so preview reflects current edits)
   useEffect(() => {
-    if (!content) {
+    if (!editContent) {
       setLoading(false);
       return;
     }
@@ -160,7 +177,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
         if (cancelled) return;
         // Use the detected language, fall back to "text" if not loaded
         const effectiveLang = loadedLangs.has(lang) ? lang : "text";
-        const html = hl.codeToHtml(content, {
+        const html = hl.codeToHtml(editContent, {
           lang: effectiveLang,
           theme: "one-dark-pro",
         });
@@ -179,7 +196,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     return () => {
       cancelled = true;
     };
-  }, [content, fileName]);
+  }, [editContent, fileName]);
 
   return (
     <>
@@ -238,6 +255,19 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
             {tileFileIcon(fileName).icon}
           </span>
           <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{relativePath}</span>
+          {dirty && (
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--accent)",
+                marginLeft: 6,
+                flexShrink: 0,
+              }}
+              title="Unsaved changes"
+            />
+          )}
           <span
             style={{
               marginLeft: 8,
@@ -248,6 +278,23 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
           >
             {detectLanguage(fileName)}
           </span>
+          <span style={{ flex: 1 }} />
+          <button
+            className="nodrag"
+            onClick={() => setIsEditing((v) => !v)}
+            style={{
+              background: "none",
+              border: "1px solid var(--border)",
+              color: "var(--text-secondary)",
+              fontSize: 10,
+              padding: "1px 6px",
+              borderRadius: 4,
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            {isEditing ? "Preview" : "Edit"}
+          </button>
         </div>
         <div
           className="nodrag nowheel nopan"
@@ -281,6 +328,35 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
             >
               Loading...
             </div>
+          ) : isEditing ? (
+            <textarea
+              className="nodrag nowheel nopan"
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
+              spellCheck={false}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                resize: "none",
+                padding: 8,
+                background: "transparent",
+                color: "var(--text-primary)",
+                fontSize: 12,
+                lineHeight: 1.5,
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                tabSize: 2,
+                whiteSpace: "pre",
+                overflow: "auto",
+                outline: "none",
+              }}
+            />
           ) : highlightedHtml ? (
             <div
               className="shiki-container"
