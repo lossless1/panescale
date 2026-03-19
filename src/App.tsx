@@ -7,6 +7,7 @@ import { useCanvasStore } from "./stores/canvasStore";
 import { initPersistence, forceSave } from "./lib/persistence";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ptyTmuxCleanup } from "./lib/ipc";
+import { UpdateChecker } from "./components/UpdateChecker";
 
 function App() {
   const hydrated = useCanvasStore((s) => s.hydrated);
@@ -58,6 +59,7 @@ function App() {
 
   return (
     <ThemeProvider>
+      <UpdateChecker />
       <AppShell>
         <ReactFlowProvider>
           <Canvas />
