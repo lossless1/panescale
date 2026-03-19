@@ -2,9 +2,12 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { type NodeProps, NodeResizer } from "@xyflow/react";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
+import { useCanvasStore } from "../../stores/canvasStore";
 import { useProjectStore } from "../../stores/projectStore";
 import { useThemeStore } from "../../stores/themeStore";
 import { getHighlighter, loadedLangs, detectLanguage } from "../../lib/shikiHighlighter";
+import { CodeEditor } from "./CodeEditor";
+import "../../styles/codemirror.css";
 
 type FilePreviewNodeData = {
   filePath: string;
@@ -31,6 +34,7 @@ function tileFileIcon(name: string): { icon: string; color: string } {
 function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
   const { filePath, fileName } = data as unknown as FilePreviewNodeData;
   const openTerminal = useOpenTerminalFromTile(id);
+  const removeNode = useCanvasStore((s) => s.removeNode);
   const activeProject = useProjectStore((s) => s.activeProject());
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
 
@@ -40,7 +44,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     : fileName;
   const [content, setContent] = useState<string>("");
   const [editContent, setEditContent] = useState<string>("");
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [highlightedHtml, setHighlightedHtml] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,12 +88,19 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     }
   }, [filePath, editContent]);
 
+  const handleClose = useCallback(() => {
+    removeNode(id);
+  }, [id, removeNode]);
+
   // Highlight content with shiki (uses editContent so preview reflects current edits)
   useEffect(() => {
     if (!editContent) {
       setLoading(false);
       return;
     }
+
+    // Keep loading true while shiki processes
+    setLoading(true);
 
     let cancelled = false;
     const lang = detectLanguage(fileName);
@@ -108,8 +119,9 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
           setLoading(false);
         }
       })
-      .catch(() => {
+      .catch((err) => {
         if (!cancelled) {
+          console.warn("Shiki highlighting failed:", err);
           setHighlightedHtml("");
           setLoading(false);
         }
@@ -217,6 +229,31 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
           >
             {isEditing ? "Preview" : "Edit"}
           </button>
+          <button
+            className="nodrag"
+            onClick={handleClose}
+            title="Close"
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              fontSize: 14,
+              padding: "0 4px",
+              marginLeft: 4,
+              lineHeight: 1,
+              borderRadius: 3,
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.color = "#ef4444";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.color = "var(--text-secondary)";
+            }}
+          >
+            &#x2715;
+          </button>
         </div>
         <div
           className="nodrag nowheel nopan"
@@ -251,33 +288,12 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
               Loading...
             </div>
           ) : isEditing ? (
-            <textarea
-              className="nodrag nowheel nopan"
+            <CodeEditor
               value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              onKeyDown={(e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key === "s") {
-                  e.preventDefault();
-                  handleSave();
-                }
-              }}
-              spellCheck={false}
-              style={{
-                width: "100%",
-                height: "100%",
-                border: "none",
-                resize: "none",
-                padding: 8,
-                background: "transparent",
-                color: "var(--text-primary)",
-                fontSize: 12,
-                lineHeight: 1.5,
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                tabSize: 2,
-                whiteSpace: "pre",
-                overflow: "auto",
-                outline: "none",
-              }}
+              onChange={setEditContent}
+              onSave={handleSave}
+              language={detectLanguage(fileName)}
+              theme={resolvedTheme === "light" ? "light" : "dark"}
             />
           ) : highlightedHtml ? (
             <div
