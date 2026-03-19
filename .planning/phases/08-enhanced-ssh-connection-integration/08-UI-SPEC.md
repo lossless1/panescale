@@ -32,8 +32,7 @@ Declared values (must be multiples of 4):
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Icon gaps, inline padding, button internal padding |
-| sm | 8px | Compact element spacing, sidebar section padding, button group gaps, dropdown item vertical padding |
-| md-sm | 12px | Dropdown item horizontal padding, badge horizontal padding |
+| sm | 8px | Compact element spacing, sidebar section padding, button group gaps, dropdown item padding (vertical and horizontal), badge horizontal padding |
 | md | 16px | Default element spacing, sidebar header left padding, empty state padding |
 | lg | 24px | Section padding |
 | xl | 32px | Layout gaps |
@@ -119,14 +118,14 @@ SshConnectionForm.tsx remains as-is for manual connection entry (rendered as mod
 - **z-index:** 9999 (matches existing project dropdown pattern).
 - **Dismiss:** Click outside closes dropdown (mousedown listener on document).
 - **Sections (top to bottom):**
-  1. **SSH Config Hosts** -- heading (11px, 600, uppercase, letter-spacing 0.05em, color: var(--text-secondary), padding: 8px 12px). List of host buttons below.
+  1. **SSH Config Hosts** -- heading (11px, 600, uppercase, letter-spacing 0.05em, color: var(--text-secondary), padding: 8px 8px). List of host buttons below.
   2. **Saved Connections** -- same heading style. List of saved connection buttons.
   3. **Divider** -- 1px solid var(--border), margin: 4px 8px.
   4. **Actions** -- "+ New Connection..." and "Edit SSH Config" links.
 
 ### SSH Config Host Item (in dropdown)
 
-- **Layout:** Single row, padding: 8px 12px.
+- **Layout:** Single row, padding: 8px 8px.
 - **Primary text:** host_alias, 12px 600, color: var(--text-primary).
 - **Secondary text:** (hostname or host_alias) in parentheses, 12px 400, color: var(--text-secondary).
 - **Hover:** background: var(--accent), color: #fff. Transition: none (instant, matching existing dropdown pattern).
@@ -134,7 +133,7 @@ SshConnectionForm.tsx remains as-is for manual connection entry (rendered as mod
 
 ### Saved Connection Item (in dropdown)
 
-- **Layout:** Single row, padding: 8px 12px.
+- **Layout:** Single row, padding: 8px 8px.
 - **Primary text:** connection name, 12px 600, color: var(--text-primary).
 - **Secondary text:** `user@host` in parentheses, 12px 400, color: var(--text-secondary).
 - **Hover:** Same as config host item.
