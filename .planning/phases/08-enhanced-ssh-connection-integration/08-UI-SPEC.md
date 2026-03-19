@@ -32,7 +32,8 @@ Declared values (must be multiples of 4):
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Icon gaps, inline padding, button internal padding |
-| sm | 8px | Compact element spacing, sidebar section padding, button group gaps |
+| sm | 8px | Compact element spacing, sidebar section padding, button group gaps, dropdown item vertical padding |
+| md-sm | 12px | Dropdown item horizontal padding, badge horizontal padding |
 | md | 16px | Default element spacing, sidebar header left padding, empty state padding |
 | lg | 24px | Section padding |
 | xl | 32px | Layout gaps |
@@ -56,6 +57,7 @@ Notes:
 - Sidebar text uses 12px body, 11px for button labels and tab labels, 10px for secondary meta (e.g. `user@host:port` under connection name).
 - Heading (13px 600) used for dropdown section headers like "SSH Config Hosts" and "Saved Connections".
 - All sizes match existing sidebar typography observed in SshPanel.tsx, SidebarTabs.tsx, and Sidebar.tsx.
+- Only two weights are used: 400 (regular) and 600 (semibold). No intermediate weights.
 
 ---
 
@@ -117,30 +119,30 @@ SshConnectionForm.tsx remains as-is for manual connection entry (rendered as mod
 - **z-index:** 9999 (matches existing project dropdown pattern).
 - **Dismiss:** Click outside closes dropdown (mousedown listener on document).
 - **Sections (top to bottom):**
-  1. **SSH Config Hosts** -- heading (11px, 600, uppercase, letter-spacing 0.05em, color: var(--text-secondary), padding: 6px 12px). List of host buttons below.
+  1. **SSH Config Hosts** -- heading (11px, 600, uppercase, letter-spacing 0.05em, color: var(--text-secondary), padding: 8px 12px). List of host buttons below.
   2. **Saved Connections** -- same heading style. List of saved connection buttons.
   3. **Divider** -- 1px solid var(--border), margin: 4px 8px.
   4. **Actions** -- "+ New Connection..." and "Edit SSH Config" links.
 
 ### SSH Config Host Item (in dropdown)
 
-- **Layout:** Single row, padding: 6px 12px.
-- **Primary text:** host_alias, 12px 500, color: var(--text-primary).
+- **Layout:** Single row, padding: 8px 12px.
+- **Primary text:** host_alias, 12px 600, color: var(--text-primary).
 - **Secondary text:** (hostname or host_alias) in parentheses, 12px 400, color: var(--text-secondary).
 - **Hover:** background: var(--accent), color: #fff. Transition: none (instant, matching existing dropdown pattern).
 - **Click:** Initiates SSH connection flow. If auth is needed (password), opens SshConnectionForm pre-filled with config host details.
 
 ### Saved Connection Item (in dropdown)
 
-- **Layout:** Single row, padding: 6px 12px.
-- **Primary text:** connection name, 12px 500, color: var(--text-primary).
+- **Layout:** Single row, padding: 8px 12px.
+- **Primary text:** connection name, 12px 600, color: var(--text-primary).
 - **Secondary text:** `user@host` in parentheses, 12px 400, color: var(--text-secondary).
 - **Hover:** Same as config host item.
 - **Click:** Spawns SSH terminal tile on canvas at viewport center.
 
 ### Remote Project Indicator
 
-- **In project dropdown:** Remote projects display as `user@host:path` format. An "SSH" badge (pill) appears after the project name: background var(--accent), color #fff, font-size 9px, font-weight 600, padding 1px 6px, border-radius 8px.
+- **In project dropdown:** Remote projects display as `user@host:path` format. An "SSH" badge (pill) appears after the project name: background var(--accent), color #fff, font-size 9px, font-weight 600, padding 2px 8px, border-radius 8px.
 - **In file tree:** When displaying a remote project, the FileTree area shows a 3px left border in var(--accent) at 40% opacity. A small header bar (padding 4px 8px, font-size 10px, color: var(--text-secondary)) reads "Remote: user@host:path" with a disconnect icon button on the right.
 
 ### Remote File Tree
