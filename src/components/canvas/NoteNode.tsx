@@ -57,6 +57,11 @@ function extractCodeLanguages(markdown: string): string[] {
 // Create a custom marked renderer for syntax-highlighted code blocks
 function createCodeRenderer(highlighter: Highlighter | null, theme: "one-dark-pro" | "github-light"): Renderer {
   const renderer = new Renderer();
+  // Override link renderer to prevent target="_blank" -- links are intercepted by onClick handler
+  renderer.link = ({ href, text }: { href: string; text: string }) => {
+    const escaped = (href ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+    return `<a href="${escaped}">${text}</a>`;
+  };
   renderer.code = ({ text, lang }: { text: string; lang?: string }) => {
     const language = lang || "text";
     if (highlighter && loadedLangs.has(language)) {
@@ -81,6 +86,7 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
     data as unknown as NoteNodeData;
   const isFileBacked = !!filePath;
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const addWebViewNode = useCanvasStore((s) => s.addWebViewNode);
   const activeProject = useProjectStore((s) => s.activeProject());
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const openTerminal = useOpenTerminalFromTile(id);
@@ -166,6 +172,33 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
     updateNodeData(id, { isPreview: !isPreview });
   }, [id, isPreview, updateNodeData]);
 
+  const handlePreviewClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href) return;
+
+      // Only intercept http/https links (not anchors or relative paths)
+      if (!href.startsWith("http://") && !href.startsWith("https://")) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Get the NoteNode's position to place WebView nearby
+      const nodes = useCanvasStore.getState().nodes;
+      const thisNode = nodes.find((n) => n.id === id);
+      const nodeWidth = (thisNode?.style?.width as number) ?? 300;
+      const position = {
+        x: (thisNode?.position.x ?? 0) + nodeWidth + 20,
+        y: thisNode?.position.y ?? 0,
+      };
+
+      addWebViewNode(position, href);
+    },
+    [id, addWebViewNode],
+  );
+
   return (
     <>
       <NodeResizer
@@ -245,6 +278,7 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
             <div
               className="prose note-markdown-preview"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
+              onClick={handlePreviewClick}
               style={{
                 padding: 12,
                 fontSize: 13,
