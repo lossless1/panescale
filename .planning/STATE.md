@@ -175,9 +175,10 @@ None yet.
 | 260318-gro | Fix canvas dots visibility, window border rendering, and rename to Panescale | 2026-03-18 | d09111c | [260318-gro-fix-canvas-dots-visibility-window-border](./quick/260318-gro-fix-canvas-dots-visibility-window-border/) |
 | 260319-hbw | Native macOS window buttons, settings modal, canvas cursor fix | 2026-03-19 | 97df580 | [260319-hbw-native-macos-window-buttons-settings-mod](./quick/260319-hbw-native-macos-window-buttons-settings-mod/) |
 | 260319-kv7 | Enhanced markdown rendering with shiki syntax highlighting and prose styles | 2026-03-19 | 35432d6 | [260319-kv7-use-not-notenode-but-another-md-file-rea](./quick/260319-kv7-use-not-notenode-but-another-md-file-rea/) |
+| 260319-l0s | Intercept MD link clicks in NoteNode to spawn WebView iframe tiles | 2026-03-19 | 653ca83 | [260319-l0s-intercept-md-link-clicks-to-spawn-webvie](./quick/260319-l0s-intercept-md-link-clicks-to-spawn-webvie/) |
 
 ## Session Continuity
 
-Last session: 2026-03-19T14:05:37Z
-Stopped at: Completed quick task 260319-kv7
+Last session: 2026-03-19T14:13:10Z
+Stopped at: Completed quick task 260319-l0s
 Resume file: None
