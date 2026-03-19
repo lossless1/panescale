@@ -7,7 +7,7 @@ interface SidebarTabsProps {
 
 const tabs: { id: TabId; label: string }[] = [
   { id: "files", label: "Files" },
-  { id: "terminals", label: "Terminals" },
+  { id: "terminals", label: "Piles" },
   { id: "git", label: "Git" },
   { id: "ssh", label: "SSH" },
 ];

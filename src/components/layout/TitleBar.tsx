@@ -62,7 +62,7 @@ export function TitleBar() {
               borderRadius: 4,
             }}
           >
-            &#x2328;
+            ?
           </button>
           {showHotkeys && (
             <div
