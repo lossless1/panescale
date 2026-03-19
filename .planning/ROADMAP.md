@@ -141,3 +141,20 @@ Plans:
 Plans:
 - [x] 07-01-PLAN.md — Tauri updater plugin setup (Rust, config, capabilities, frontend update check UI)
 - [x] 07-02-PLAN.md — GitHub Actions release workflow for tag-triggered multi-platform builds and GitHub Releases
+
+### Phase 8: Enhanced SSH Connection Integration
+
+**Goal:** Replace the SSH sidebar tab with a header quick-connect button, add ~/.ssh/config host discovery, and enable remote directory browsing via SSH exec channels in the Files tab
+**Requirements**: SSH-ENH-01, SSH-ENH-02, SSH-ENH-03, SSH-ENH-04, SSH-ENH-05
+**Depends on:** Phase 7
+**Success Criteria** (what must be TRUE):
+  1. SSH tab is removed from sidebar; SSH globe button in header opens a quick-connect dropdown
+  2. Dropdown lists ~/.ssh/config hosts and saved connections for one-click terminal spawning
+  3. Users can browse remote directories in the Files tab after connecting via SSH
+  4. Remote projects are visually distinct (SSH badge, accent left border on file tree)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Rust backend: ssh2-config parsing, exec_command on SshManager, IPC commands and frontend wrappers
+- [ ] 08-02-PLAN.md — Sidebar restructure: remove SSH tab, add SSH header button, SshQuickConnect dropdown, sshStore configHosts
+- [ ] 08-03-PLAN.md — Remote file tree: RemoteFileTree component, projectStore remote fields, sidebar wiring, visual indicators
