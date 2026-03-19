@@ -5,23 +5,6 @@ mod pty;
 mod ssh;
 mod state;
 
-#[cfg(target_os = "macos")]
-fn apply_macos_styling(app: &tauri::App) {
-    use cocoa::appkit::{NSColor, NSWindow};
-    use cocoa::base::{id, nil};
-    use objc::runtime::YES;
-    use tauri::Manager;
-
-    if let Some(window) = app.get_webview_window("main") {
-        let ns_window = window.ns_window().unwrap() as id;
-        unsafe {
-            // Transparent background for CSS border-radius
-            ns_window.setBackgroundColor_(NSColor::clearColor(nil));
-            ns_window.setHasShadow_(YES);
-        }
-    }
-}
-
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
@@ -31,11 +14,6 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(pty::PtyManager::new())
         .manage(ssh::SshManager::new())
-        .setup(|app| {
-            #[cfg(target_os = "macos")]
-            apply_macos_styling(app);
-            Ok(())
-        })
         .invoke_handler(tauri::generate_handler![
             pty::commands::pty_spawn,
             pty::commands::pty_write,

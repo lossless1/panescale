@@ -16,7 +16,6 @@ export function AppShell({ children }: AppShellProps) {
         height: "100%",
         width: "100%",
         overflow: "hidden",
-        borderRadius: 10,
         backgroundColor: "var(--bg-primary)",
         color: "var(--text-primary)",
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
