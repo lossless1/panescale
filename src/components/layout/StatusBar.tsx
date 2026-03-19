@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useThemeStore } from "../../stores/themeStore";
 import { SettingsModal } from "./SettingsModal";
 
 export function StatusBar() {
-  const theme = useThemeStore((s) => s.theme);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -31,8 +29,8 @@ export function StatusBar() {
             border: "none",
             color: "var(--text-secondary)",
             cursor: "pointer",
-            padding: "0 6px",
-            fontSize: 14,
+            padding: "0 4px",
+            fontSize: 18,
             lineHeight: 1,
             display: "flex",
             alignItems: "center",
@@ -40,7 +38,6 @@ export function StatusBar() {
         >
           &#x2699;
         </button>
-        <span>{theme === "dark" ? "Dark" : "Light"}</span>
       </div>
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
