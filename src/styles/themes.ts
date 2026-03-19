@@ -22,8 +22,8 @@ export const themes: Record<ResolvedTheme, ThemeVariables> = {
     "--border": "#2a2a4a",
     "--accent": "#6366f1",
     "--focus-glow": "rgba(99, 102, 241, 0.4)",
-    "--grid-minor": "#1f1f3a",
-    "--grid-major": "#2a2a4a",
+    "--grid-minor": "#2e2e50",
+    "--grid-major": "#3d3d65",
   },
   light: {
     "--bg-primary": "#ffffff",
