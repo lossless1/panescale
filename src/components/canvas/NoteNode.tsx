@@ -1,29 +1,145 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { type NodeProps, NodeResizer } from "@xyflow/react";
-import { marked } from "marked";
+import { marked, Renderer } from "marked";
+import { readTextFile } from "@tauri-apps/plugin-fs";
+import { type Highlighter, createHighlighter } from "shiki";
 import { useCanvasStore } from "../../stores/canvasStore";
+import { useProjectStore } from "../../stores/projectStore";
+import { useThemeStore } from "../../stores/themeStore";
 import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
+
+// Module-level highlighter cache (same pattern as FilePreviewNode)
+let highlighterPromise: Promise<Highlighter> | null = null;
+const loadedLangs = new Set<string>();
+
+// Common languages to preload
+const COMMON_LANGS = ["typescript", "javascript", "python", "rust", "bash", "json", "tsx", "jsx", "go", "html", "css"];
+
+async function getHighlighter(lang: string): Promise<Highlighter> {
+  if (!highlighterPromise) {
+    highlighterPromise = createHighlighter({
+      themes: ["one-dark-pro", "github-light"],
+      langs: COMMON_LANGS,
+    });
+    for (const l of COMMON_LANGS) {
+      loadedLangs.add(l);
+    }
+  }
+
+  const hl = await highlighterPromise;
+
+  // Dynamically load language if not yet loaded
+  if (lang !== "text" && !loadedLangs.has(lang)) {
+    try {
+      await hl.loadLanguage(lang as Parameters<typeof hl.loadLanguage>[0]);
+      loadedLangs.add(lang);
+    } catch {
+      // Language not available, will fall back to text
+    }
+  }
+
+  return hl;
+}
+
+// Extract code block languages from markdown content
+function extractCodeLanguages(markdown: string): string[] {
+  const regex = /```(\w+)/g;
+  const langs: string[] = [];
+  let match;
+  while ((match = regex.exec(markdown)) !== null) {
+    if (match[1] && !langs.includes(match[1])) {
+      langs.push(match[1]);
+    }
+  }
+  return langs;
+}
+
+// Create a custom marked renderer for syntax-highlighted code blocks
+function createCodeRenderer(highlighter: Highlighter | null, theme: "one-dark-pro" | "github-light"): Renderer {
+  const renderer = new Renderer();
+  renderer.code = ({ text, lang }: { text: string; lang?: string }) => {
+    const language = lang || "text";
+    if (highlighter && loadedLangs.has(language)) {
+      return highlighter.codeToHtml(text, { lang: language, theme });
+    }
+    // Fallback to plain code block with HTML escaping
+    const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return `<pre><code class="language-${language}">${escaped}</code></pre>`;
+  };
+  return renderer;
+}
 
 type NoteNodeData = {
   markdownContent: string;
   isPreview: boolean;
+  filePath?: string;
+  fileName?: string;
 };
 
 function NoteNodeInner({ id, data, selected }: NodeProps) {
-  const { markdownContent = "", isPreview = false } =
+  const { markdownContent = "", isPreview = false, filePath, fileName } =
     data as unknown as NoteNodeData;
+  const isFileBacked = !!filePath;
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const activeProject = useProjectStore((s) => s.activeProject());
+  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const openTerminal = useOpenTerminalFromTile(id);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [renderedHtml, setRenderedHtml] = useState("");
+  const [fileLoaded, setFileLoaded] = useState(false);
+  const [highlighter, setHighlighter] = useState<Highlighter | null>(null);
 
-  // Render markdown when in preview mode
+  // Load highlighter on mount
   useEffect(() => {
-    if (isPreview) {
-      const html = marked.parse(markdownContent, { async: false }) as string;
-      setRenderedHtml(html);
-    }
-  }, [isPreview, markdownContent]);
+    let cancelled = false;
+    getHighlighter("text").then((hl) => {
+      if (!cancelled) setHighlighter(hl);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Load file content for file-backed notes
+  useEffect(() => {
+    if (!filePath || fileLoaded) return;
+    readTextFile(filePath)
+      .then((text) => {
+        updateNodeData(id, { markdownContent: text, isPreview: true });
+        setFileLoaded(true);
+      })
+      .catch((err) => {
+        updateNodeData(id, { markdownContent: `Failed to load: ${err}`, isPreview: true });
+        setFileLoaded(true);
+      });
+  }, [filePath, fileLoaded, id, updateNodeData]);
+
+  // Render markdown with syntax highlighting when in preview mode
+  useEffect(() => {
+    if (!isPreview && !(isFileBacked && !fileLoaded)) return;
+
+    let cancelled = false;
+    const shikiTheme = resolvedTheme === "light" ? "github-light" : "one-dark-pro";
+
+    // Extract languages from markdown and ensure they're loaded
+    const langs = extractCodeLanguages(markdownContent);
+    const loadPromises = langs.map((lang) => getHighlighter(lang));
+
+    Promise.all(loadPromises)
+      .then(() => {
+        if (cancelled) return;
+        const renderer = createCodeRenderer(highlighter, shikiTheme);
+        const html = marked.parse(markdownContent, { renderer, async: false }) as string;
+        setRenderedHtml(html);
+      })
+      .catch(() => {
+        // Fallback to plain markdown on error
+        if (!cancelled) {
+          const html = marked.parse(markdownContent, { async: false }) as string;
+          setRenderedHtml(html);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [isPreview, isFileBacked, fileLoaded, markdownContent, highlighter, resolvedTheme]);
 
   // Auto-focus textarea when entering edit mode
   useEffect(() => {
@@ -31,6 +147,13 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
       textareaRef.current.focus();
     }
   }, [isPreview]);
+
+  // Compute display name
+  const displayName = fileName
+    ? (activeProject?.path && filePath?.startsWith(activeProject.path)
+        ? filePath.slice(activeProject.path.length + 1)
+        : fileName)
+    : "Note";
 
   const handleContentChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -88,7 +211,12 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
             flexShrink: 0,
           }}
         >
-          <span style={{ fontWeight: 600 }}>Note</span>
+          <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {isFileBacked && (
+              <span style={{ color: "#519aba", marginRight: 6, fontSize: 10, fontWeight: 700 }}>M</span>
+            )}
+            {displayName}
+          </span>
           <button
             className="nodrag"
             onClick={togglePreview}
@@ -115,13 +243,11 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
         >
           {isPreview ? (
             <div
-              className="note-markdown-preview"
+              className="prose note-markdown-preview"
               dangerouslySetInnerHTML={{ __html: renderedHtml }}
               style={{
                 padding: 12,
                 fontSize: 13,
-                lineHeight: 1.6,
-                color: "var(--text-primary)",
                 wordBreak: "break-word",
               }}
             />
