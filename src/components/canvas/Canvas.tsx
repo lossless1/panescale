@@ -317,7 +317,7 @@ function CanvasInner() {
       const cwd = projectPath ?? "~";
       addTerminalNode(position, cwd);
     },
-    [reactFlow, addTerminalNode],
+    [reactFlow, addTerminalNode, projectPath],
   );
 
   const handleNodeClick = useCallback(
@@ -421,6 +421,9 @@ function CanvasInner() {
     >
       <style>{`
         .react-flow__pane {
+          cursor: default !important;
+        }
+        .react-flow__node {
           cursor: default !important;
         }
         .canvas-grab .react-flow__pane {

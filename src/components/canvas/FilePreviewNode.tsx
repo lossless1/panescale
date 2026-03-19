@@ -5,7 +5,7 @@ import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useProjectStore } from "../../stores/projectStore";
 import { useThemeStore } from "../../stores/themeStore";
-import { getHighlighter, loadedLangs, detectLanguage } from "../../lib/shikiHighlighter";
+import { detectLanguage } from "../../lib/shikiHighlighter";
 import { CodeEditor } from "./CodeEditor";
 import "../../styles/codemirror.css";
 
@@ -44,10 +44,8 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     : fileName;
   const [content, setContent] = useState<string>("");
   const [editContent, setEditContent] = useState<string>("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [highlightedHtml, setHighlightedHtml] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const mountedRef = useRef(true);
 
   const dirty = editContent !== content;
@@ -62,12 +60,13 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
   // Load file content
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    setLoaded(false);
     readTextFile(filePath)
       .then((text) => {
         if (!cancelled) {
           setContent(text);
           setEditContent(text);
+          setLoaded(true);
         }
       })
       .catch((err) => {
@@ -92,45 +91,6 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     removeNode(id);
   }, [id, removeNode]);
 
-  // Highlight content with shiki (uses editContent so preview reflects current edits)
-  useEffect(() => {
-    if (!editContent) {
-      setLoading(false);
-      return;
-    }
-
-    // Keep loading true while shiki processes
-    setLoading(true);
-
-    let cancelled = false;
-    const lang = detectLanguage(fileName);
-
-    getHighlighter(lang)
-      .then((hl) => {
-        if (cancelled) return;
-        // Use the detected language, fall back to "text" if not loaded
-        const effectiveLang = loadedLangs.has(lang) ? lang : "text";
-        const html = hl.codeToHtml(editContent, {
-          lang: effectiveLang,
-          theme: resolvedTheme === "light" ? "github-light" : "one-dark-pro",
-        });
-        if (!cancelled) {
-          setHighlightedHtml(html);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          console.warn("Shiki highlighting failed:", err);
-          setHighlightedHtml("");
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [editContent, fileName, resolvedTheme]);
 
   return (
     <>
@@ -215,22 +175,6 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
           <span style={{ flex: 1 }} />
           <button
             className="nodrag"
-            onClick={() => setIsEditing((v) => !v)}
-            style={{
-              background: "none",
-              border: "1px solid var(--border)",
-              color: "var(--text-secondary)",
-              fontSize: 10,
-              padding: "1px 6px",
-              borderRadius: 4,
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            {isEditing ? "Preview" : "Edit"}
-          </button>
-          <button
-            className="nodrag"
             onClick={handleClose}
             title="Close"
             style={{
@@ -274,7 +218,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
             >
               Failed to load file: {error}
             </span>
-          ) : loading ? (
+          ) : !loaded ? (
             <div
               style={{
                 display: "flex",
@@ -287,7 +231,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
             >
               Loading...
             </div>
-          ) : isEditing ? (
+          ) : (
             <CodeEditor
               value={editContent}
               onChange={setEditContent}
@@ -295,33 +239,6 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
               language={detectLanguage(fileName)}
               theme={resolvedTheme === "light" ? "light" : "dark"}
             />
-          ) : highlightedHtml ? (
-            <div
-              className="shiki-container"
-              dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-              style={{
-                fontSize: 12,
-                lineHeight: 1.5,
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                overflow: "auto",
-                height: "100%",
-              }}
-            />
-          ) : (
-            <pre
-              style={{
-                margin: 0,
-                fontSize: 12,
-                lineHeight: 1.5,
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                color: "var(--text-primary)",
-                whiteSpace: "pre",
-                tabSize: 2,
-                padding: 8,
-              }}
-            >
-              <code>{content}</code>
-            </pre>
           )}
         </div>
       </div>
