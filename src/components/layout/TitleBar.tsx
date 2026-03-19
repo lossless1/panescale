@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const HOTKEYS = [
   { key: "Double-click canvas", action: "Spawn terminal" },
@@ -13,35 +14,70 @@ const HOTKEYS = [
   { key: "Cmd/Ctrl + Enter", action: "Git commit" },
 ];
 
+function TrafficLight({
+  color,
+  onClick,
+}: {
+  color: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: 12,
+        height: 12,
+        borderRadius: "50%",
+        backgroundColor: color,
+        border: "none",
+        cursor: "pointer",
+        padding: 0,
+        outline: "none",
+      }}
+    />
+  );
+}
+
 export function TitleBar() {
   const [showHotkeys, setShowHotkeys] = useState(false);
+
+  const handleClose = () => getCurrentWindow().close();
+  const handleMinimize = () => getCurrentWindow().minimize();
+  const handleMaximize = () => getCurrentWindow().toggleMaximize();
 
   return (
     <div
       data-tauri-drag-region
       style={{
-        height: 32,
+        height: 38,
         backgroundColor: "var(--bg-titlebar)",
         display: "flex",
         alignItems: "center",
-        justifyContent: "flex-end",
+        justifyContent: "space-between",
         userSelect: "none",
         WebkitUserSelect: "none",
         position: "relative",
         borderBottom: "1px solid var(--border)",
         flexShrink: 0,
-        paddingLeft: 78,
+        paddingLeft: 14,
+        paddingRight: 12,
       }}
     >
+      {/* macOS-style traffic light buttons */}
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <TrafficLight color="#ff5f57" onClick={handleClose} />
+        <TrafficLight color="#febc2e" onClick={handleMinimize} />
+        <TrafficLight color="#28c840" onClick={handleMaximize} />
+      </div>
+
+      {/* Right side: hotkey legend */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          marginRight: 12,
           gap: 4,
         }}
       >
-        {/* Keyboard shortcut legend */}
         <div
           style={{ position: "relative", display: "inline-flex" }}
           onMouseEnter={() => setShowHotkeys(true)}

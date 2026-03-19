@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "Panescale",
-        "decorations": true,
-        "titleBarStyle": "overlay",
+        "decorations": false,
+        "transparent": true,
         "width": 1400,
         "height": 900,
         "minWidth": 800,
