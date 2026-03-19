@@ -138,6 +138,8 @@ export interface SerializedNode {
     fileName?: string;
     // Terminal scrollback persistence
     savedBuffer?: string;
+    // WebView fields
+    url?: string;
     // SSH fields
     sshConnectionId?: string;
     sshHost?: string;

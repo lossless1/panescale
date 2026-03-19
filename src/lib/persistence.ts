@@ -38,6 +38,8 @@ export function serializeCanvas(state: {
       markdownContent: (n.data as Record<string, unknown>).markdownContent as string | undefined,
       filePath: (n.data as Record<string, unknown>).filePath as string | undefined,
       fileName: (n.data as Record<string, unknown>).fileName as string | undefined,
+      // WebView fields
+      url: (n.data as Record<string, unknown>).url as string | undefined,
       // Scrollback buffer for terminal persistence
       savedBuffer: buffers.get(n.id),
       // SSH fields

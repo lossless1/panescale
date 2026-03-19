@@ -27,6 +27,7 @@ import { NoteNode } from "./NoteNode";
 import { ImageNode } from "./ImageNode";
 import { FilePreviewNode } from "./FilePreviewNode";
 import { RegionNode } from "./RegionNode";
+import { WebViewNode } from "./WebViewNode";
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 2.0;
@@ -41,6 +42,7 @@ const nodeTypes: NodeTypes = {
   image: ImageNode,
   'file-preview': FilePreviewNode,
   region: RegionNode,
+  webview: WebViewNode,
 };
 
 /**

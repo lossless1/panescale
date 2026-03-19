@@ -27,6 +27,7 @@ interface CanvasState {
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
   addSshTerminalNode: (position: { x: number; y: number }, connection: { id: string; host: string; user: string }) => void;
+  addWebViewNode: (position: { x: number; y: number }, url: string) => void;
   addNoteNode: (position: { x: number; y: number }) => void;
   addRegion: (position: { x: number; y: number }, size: { width: number; height: number }, name: string, color: string) => void;
   removeNode: (id: string) => void;
@@ -154,6 +155,25 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       data: { markdownContent: "", fileName: "Note" },
       dragHandle: ".drag-handle",
       style: { width: 300, height: 300 },
+      zIndex: newZIndex,
+    };
+    set((state) => ({
+      nodes: [...state.nodes, newNode],
+      maxZIndex: newZIndex,
+    }));
+    forceSave();
+  },
+
+  addWebViewNode: (position, url) => {
+    const newZIndex = get().maxZIndex + 1;
+    const id = crypto.randomUUID();
+    const newNode: Node = {
+      id,
+      type: "webview",
+      position,
+      data: { url },
+      dragHandle: ".drag-handle",
+      style: { width: 800, height: 600 },
       zIndex: newZIndex,
     };
     set((state) => ({
