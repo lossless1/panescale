@@ -2,44 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { type NodeProps, NodeResizer } from "@xyflow/react";
 import { marked, Renderer } from "marked";
 import { readTextFile } from "@tauri-apps/plugin-fs";
-import { type Highlighter, createHighlighter } from "shiki";
+import type { Highlighter } from "shiki";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useProjectStore } from "../../stores/projectStore";
 import { useThemeStore } from "../../stores/themeStore";
 import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
-
-// Module-level highlighter cache (same pattern as FilePreviewNode)
-let highlighterPromise: Promise<Highlighter> | null = null;
-const loadedLangs = new Set<string>();
-
-// Common languages to preload
-const COMMON_LANGS = ["typescript", "javascript", "python", "rust", "bash", "json", "tsx", "jsx", "go", "html", "css"];
-
-async function getHighlighter(lang: string): Promise<Highlighter> {
-  if (!highlighterPromise) {
-    highlighterPromise = createHighlighter({
-      themes: ["one-dark-pro", "github-light"],
-      langs: COMMON_LANGS,
-    });
-    for (const l of COMMON_LANGS) {
-      loadedLangs.add(l);
-    }
-  }
-
-  const hl = await highlighterPromise;
-
-  // Dynamically load language if not yet loaded
-  if (lang !== "text" && !loadedLangs.has(lang)) {
-    try {
-      await hl.loadLanguage(lang as Parameters<typeof hl.loadLanguage>[0]);
-      loadedLangs.add(lang);
-    } catch {
-      // Language not available, will fall back to text
-    }
-  }
-
-  return hl;
-}
+import { getHighlighter, loadedLangs } from "../../lib/shikiHighlighter";
 
 // Extract code block languages from markdown content
 function extractCodeLanguages(markdown: string): string[] {

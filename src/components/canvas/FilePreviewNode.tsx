@@ -1,94 +1,15 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { type NodeProps, NodeResizer } from "@xyflow/react";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { type Highlighter, createHighlighter } from "shiki";
 import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
 import { useProjectStore } from "../../stores/projectStore";
+import { useThemeStore } from "../../stores/themeStore";
+import { getHighlighter, loadedLangs, detectLanguage } from "../../lib/shikiHighlighter";
 
 type FilePreviewNodeData = {
   filePath: string;
   fileName: string;
 };
-
-// Extension to language mapping
-const EXT_LANG_MAP: Record<string, string> = {
-  ts: "typescript",
-  tsx: "tsx",
-  js: "javascript",
-  jsx: "jsx",
-  py: "python",
-  rs: "rust",
-  go: "go",
-  rb: "ruby",
-  java: "java",
-  c: "c",
-  cpp: "cpp",
-  h: "c",
-  hpp: "cpp",
-  cs: "csharp",
-  swift: "swift",
-  kt: "kotlin",
-  md: "markdown",
-  json: "json",
-  yaml: "yaml",
-  yml: "yaml",
-  toml: "toml",
-  html: "html",
-  css: "css",
-  scss: "scss",
-  less: "less",
-  xml: "xml",
-  sql: "sql",
-  sh: "bash",
-  bash: "bash",
-  zsh: "bash",
-  fish: "fish",
-  ps1: "powershell",
-  dockerfile: "dockerfile",
-  makefile: "makefile",
-  lua: "lua",
-  vim: "viml",
-  graphql: "graphql",
-  php: "php",
-  dart: "dart",
-  r: "r",
-  zig: "zig",
-};
-
-function detectLanguage(fileName: string): string {
-  const parts = fileName.split(".");
-  if (parts.length < 2) return "text";
-  const ext = parts[parts.length - 1].toLowerCase();
-  return EXT_LANG_MAP[ext] || "text";
-}
-
-// Module-level highlighter cache
-let highlighterPromise: Promise<Highlighter> | null = null;
-const loadedLangs = new Set<string>();
-
-async function getHighlighter(lang: string): Promise<Highlighter> {
-  if (!highlighterPromise) {
-    highlighterPromise = createHighlighter({
-      themes: ["one-dark-pro", "github-light"],
-      langs: lang !== "text" ? [lang] : [],
-    });
-    if (lang !== "text") loadedLangs.add(lang);
-  }
-
-  const hl = await highlighterPromise;
-
-  // Dynamically load language if not yet loaded
-  if (lang !== "text" && !loadedLangs.has(lang)) {
-    try {
-      await hl.loadLanguage(lang as Parameters<typeof hl.loadLanguage>[0]);
-      loadedLangs.add(lang);
-    } catch {
-      // Language not available, will fall back to text
-    }
-  }
-
-  return hl;
-}
 
 /** File icon for tile header */
 function tileFileIcon(name: string): { icon: string; color: string } {
@@ -111,6 +32,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
   const { filePath, fileName } = data as unknown as FilePreviewNodeData;
   const openTerminal = useOpenTerminalFromTile(id);
   const activeProject = useProjectStore((s) => s.activeProject());
+  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
 
   // Compute relative path from project root
   const relativePath = activeProject?.path && filePath.startsWith(activeProject.path)
@@ -179,7 +101,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
         const effectiveLang = loadedLangs.has(lang) ? lang : "text";
         const html = hl.codeToHtml(editContent, {
           lang: effectiveLang,
-          theme: "one-dark-pro",
+          theme: resolvedTheme === "light" ? "github-light" : "one-dark-pro",
         });
         if (!cancelled) {
           setHighlightedHtml(html);
@@ -196,7 +118,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     return () => {
       cancelled = true;
     };
-  }, [editContent, fileName]);
+  }, [editContent, fileName, resolvedTheme]);
 
   return (
     <>
