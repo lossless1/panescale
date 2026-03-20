@@ -113,10 +113,12 @@ export function Sidebar() {
         WebkitUserSelect: "none",
       }}
     >
-      {/* Header */}
+      {/* Header — draggable for window movement, padded for macOS traffic lights */}
       <div
+        data-tauri-drag-region
         style={{
           padding: "8px 8px 8px 16px",
+          paddingTop: 40,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",

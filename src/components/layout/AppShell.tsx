@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { TitleBar } from "./TitleBar";
 import { Sidebar } from "./Sidebar";
 import { StatusBar } from "./StatusBar";
 
@@ -21,7 +20,6 @@ export function AppShell({ children }: AppShellProps) {
         fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
-      <TitleBar />
       <div
         style={{
           display: "flex",
