@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SshConnectionConfig, SshGroup } from "../lib/ipc";
-import { sshLoadConnections, sshSaveConnections } from "../lib/ipc";
+import type { SshConnectionConfig, SshGroup, SshConfigHost } from "../lib/ipc";
+import { sshLoadConnections, sshSaveConnections, sshListConfigHosts } from "../lib/ipc";
 
 interface ActiveSession {
   connectionId: string;
@@ -12,6 +12,10 @@ interface SshState {
   connections: SshConnectionConfig[];
   groups: SshGroup[];
   activeSessions: Record<string, ActiveSession>;
+  configHosts: SshConfigHost[];
+
+  // Config hosts
+  loadConfigHosts: () => Promise<void>;
 
   // Connection CRUD
   addConnection: (conn: Omit<SshConnectionConfig, "id"> & { id?: string }) => void;
@@ -49,6 +53,7 @@ export const useSshStore = create<SshState>()(
       connections: [],
       groups: [],
       activeSessions: {},
+      configHosts: [],
 
       addConnection: (conn) => {
         const full: SshConnectionConfig = {
@@ -136,6 +141,16 @@ export const useSshStore = create<SshState>()(
           const { [sessionId]: _, ...rest } = state.activeSessions;
           return { activeSessions: rest };
         });
+      },
+
+      loadConfigHosts: async () => {
+        try {
+          const hosts = await sshListConfigHosts();
+          set({ configHosts: hosts });
+        } catch (err) {
+          console.error("Failed to load SSH config hosts:", err);
+          set({ configHosts: [] });
+        }
       },
 
       syncFromBackend: async () => {
