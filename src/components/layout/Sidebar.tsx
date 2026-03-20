@@ -247,45 +247,6 @@ export function Sidebar() {
           )}
         </div>
         <div style={{ display: "flex", gap: 2 }}>
-          {/* View mode toggle */}
-          <button
-            onClick={() =>
-              setViewMode(viewMode === "tree" ? "feed" : "tree")
-            }
-            title={
-              viewMode === "tree" ? "Chronological feed" : "Tree view"
-            }
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--text-secondary)",
-              borderRadius: 3,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                "var(--bg-secondary)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                "transparent";
-            }}
-          >
-            {viewMode === "tree" ? (
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M8 4.5V8.5L10.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <path d="M2 3h4l1.5 1.5H14v8.5H2V3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-              </svg>
-            )}
-          </button>
           {/* Open folder button */}
           <button
             onClick={handleOpenFolder}
@@ -321,8 +282,51 @@ export function Sidebar() {
       <SidebarTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Content */}
-      {activeTab === "files" && viewMode === "tree" && <FileTree />}
-      {activeTab === "files" && viewMode === "feed" && <ChronologicalFeed />}
+      {activeTab === "files" && (
+        <>
+          {/* View mode toggle: Tree / Recent */}
+          <div style={{
+            display: "flex",
+            padding: "4px 8px",
+            gap: 2,
+            flexShrink: 0,
+          }}>
+            <button
+              onClick={() => setViewMode("tree")}
+              style={{
+                flex: 1,
+                padding: "3px 0",
+                fontSize: 11,
+                fontWeight: viewMode === "tree" ? 500 : 400,
+                border: "none",
+                borderRadius: 4,
+                cursor: "pointer",
+                background: viewMode === "tree" ? "var(--bg-secondary)" : "transparent",
+                color: viewMode === "tree" ? "var(--text-primary)" : "var(--text-secondary)",
+              }}
+            >
+              Tree
+            </button>
+            <button
+              onClick={() => setViewMode("feed")}
+              style={{
+                flex: 1,
+                padding: "3px 0",
+                fontSize: 11,
+                fontWeight: viewMode === "feed" ? 500 : 400,
+                border: "none",
+                borderRadius: 4,
+                cursor: "pointer",
+                background: viewMode === "feed" ? "var(--bg-secondary)" : "transparent",
+                color: viewMode === "feed" ? "var(--text-primary)" : "var(--text-secondary)",
+              }}
+            >
+              Recent
+            </button>
+          </div>
+          {viewMode === "tree" ? <FileTree /> : <ChronologicalFeed />}
+        </>
+      )}
       {activeTab === "terminals" && <TerminalList />}
       {activeTab === "git" && <GitPanel />}
       {activeTab === "ssh" && <SshPanel />}
