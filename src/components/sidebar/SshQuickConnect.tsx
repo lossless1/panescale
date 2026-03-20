@@ -255,14 +255,20 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
 
   const handleEditConfig = useCallback(async () => {
     const homeDir = await pathApi.homeDir();
-    // homeDir may or may not end with / — use path.join equivalent
     const configPath = homeDir.endsWith("/") ? `${homeDir}.ssh/config` : `${homeDir}/.ssh/config`;
-    const viewport = useCanvasStore.getState().viewport;
+    // Place at viewport center
+    const { viewport } = useCanvasStore.getState();
     const position = {
-      x: (-viewport.x + 200) / viewport.zoom,
-      y: (-viewport.y + 200) / viewport.zoom,
+      x: (-viewport.x + window.innerWidth / 2 - 250) / viewport.zoom,
+      y: (-viewport.y + window.innerHeight / 2 - 200) / viewport.zoom,
     };
     addContentNode(position, "file-preview", { path: configPath, name: "config" });
+    // Pan camera to the new node
+    const nodes = useCanvasStore.getState().nodes;
+    const newNode = nodes[nodes.length - 1];
+    if (newNode) {
+      useCanvasStore.getState().setPanToNode(newNode.id);
+    }
     onClose();
   }, [addContentNode, onClose]);
 
