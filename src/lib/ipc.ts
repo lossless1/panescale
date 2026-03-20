@@ -456,3 +456,44 @@ export async function sshLoadConnections(): Promise<SshConnectionConfig[]> {
   const raw = await invoke<string>("ssh_load_connections");
   return JSON.parse(raw);
 }
+
+// --- SSH Enhanced (Phase 8) ---
+
+export interface SshConfigHost {
+  host_alias: string;
+  hostname: string | null;
+  user: string | null;
+  port: number | null;
+  identity_file: string | null;
+}
+
+export interface RemoteFileEntry {
+  name: string;
+  is_dir: boolean;
+  path: string;
+}
+
+export async function sshListConfigHosts(): Promise<SshConfigHost[]> {
+  return invoke<SshConfigHost[]>("ssh_list_config_hosts");
+}
+
+export async function sshReadRemoteDir(
+  sessionId: string,
+  remotePath: string,
+): Promise<RemoteFileEntry[]> {
+  return invoke<RemoteFileEntry[]>("ssh_read_remote_dir", { sessionId, remotePath });
+}
+
+export async function sshConnectForBrowsing(
+  host: string,
+  port: number,
+  user: string,
+  keyPath: string | null,
+  password: string | null,
+): Promise<string> {
+  return invoke<string>("ssh_connect_for_browsing", { host, port, user, keyPath, password });
+}
+
+export async function sshOpenConfigInEditor(): Promise<void> {
+  return invoke("ssh_open_config_in_editor");
+}
