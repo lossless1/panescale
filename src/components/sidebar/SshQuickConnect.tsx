@@ -17,10 +17,21 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
   const addSshTerminalNode = useCanvasStore((s) => s.addSshTerminalNode);
   const [showForm, setShowForm] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [alignRight, setAlignRight] = useState(false);
 
   // Load config hosts on mount
   useEffect(() => {
     useSshStore.getState().loadConfigHosts();
+  }, []);
+
+  // Auto-position: open right by default, flip left if it would overflow viewport
+  useEffect(() => {
+    const el = dropdownRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) {
+      setAlignRight(true);
+    }
   }, []);
 
   // Dismiss on outside click
@@ -162,7 +173,7 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
       style={{
         position: "absolute",
         top: "100%",
-        right: 0,
+        ...(alignRight ? { right: 0 } : { left: 0 }),
         marginTop: 4,
         minWidth: 240,
         maxWidth: 320,
