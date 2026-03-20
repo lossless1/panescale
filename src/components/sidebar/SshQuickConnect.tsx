@@ -263,8 +263,21 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
       });
     }
 
-    // Spawn terminal tile
-    addSshTerminalNode({ x: 100, y: 100 }, hostInfo);
+    // Spawn terminal tile at viewport center
+    const { viewport } = useCanvasStore.getState();
+    const position = {
+      x: (-viewport.x + window.innerWidth / 2 - 320) / viewport.zoom,
+      y: (-viewport.y + window.innerHeight / 2 - 240) / viewport.zoom,
+    };
+    addSshTerminalNode(position, hostInfo);
+
+    // Set startup command to cd into the selected folder
+    const nodes = useCanvasStore.getState().nodes;
+    const newNode = nodes[nodes.length - 1];
+    if (newNode) {
+      useCanvasStore.getState().updateNodeData(newNode.id, { startupCommand: `cd ${remotePath}` });
+      useCanvasStore.getState().setPanToNode(newNode.id);
+    }
 
     // Open as remote project
     useProjectStore.getState().openRemoteProject(remotePath, sessionId, browseState.hostLabel);
