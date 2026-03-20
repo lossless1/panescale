@@ -17,7 +17,9 @@ export function SshConnectionForm({
   const [host, setHost] = useState(editingConnection?.host ?? "");
   const [port, setPort] = useState(editingConnection?.port ?? 22);
   const [user, setUser] = useState(editingConnection?.user ?? "");
+  const [authMode, setAuthMode] = useState<"key" | "password">(editingConnection?.keyPath ? "key" : "key");
   const [keyPath, setKeyPath] = useState(editingConnection?.keyPath ?? "");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleBrowseKey = useCallback(async () => {
@@ -54,9 +56,10 @@ export function SshConnectionForm({
       host: host.trim(),
       port,
       user: user.trim(),
-      keyPath: keyPath.trim() || undefined,
+      keyPath: authMode === "key" && keyPath.trim() ? keyPath.trim() : undefined,
+      authMode,
     });
-  }, [name, host, port, user, keyPath, editingConnection, onSave]);
+  }, [name, host, port, user, keyPath, password, authMode, editingConnection, onSave]);
 
   const labelStyle: React.CSSProperties = {
     fontSize: 11,
@@ -153,30 +156,62 @@ export function SshConnectionForm({
         </div>
 
         <div>
-          <div style={labelStyle}>Key File (optional)</div>
-          <div style={{ display: "flex", gap: 4 }}>
-            <input
-              value={keyPath}
-              onChange={(e) => setKeyPath(e.target.value)}
-              placeholder="~/.ssh/id_rsa"
-              style={{ ...inputStyle, flex: 1 }}
-            />
-            <button
-              onClick={handleBrowseKey}
+          <div style={{ ...labelStyle, display: "flex", gap: 8 }}>
+            <span
+              onClick={() => setAuthMode("key")}
               style={{
-                padding: "4px 8px",
-                fontSize: 11,
-                background: "var(--bg-secondary)",
-                color: "var(--text-primary)",
-                border: "1px solid var(--border)",
-                borderRadius: 4,
                 cursor: "pointer",
-                whiteSpace: "nowrap",
+                color: authMode === "key" ? "var(--text-primary)" : "var(--text-secondary)",
+                fontWeight: authMode === "key" ? 600 : 400,
               }}
             >
-              Browse
-            </button>
+              Key File
+            </span>
+            <span style={{ color: "var(--border)" }}>|</span>
+            <span
+              onClick={() => setAuthMode("password")}
+              style={{
+                cursor: "pointer",
+                color: authMode === "password" ? "var(--text-primary)" : "var(--text-secondary)",
+                fontWeight: authMode === "password" ? 600 : 400,
+              }}
+            >
+              Password
+            </span>
           </div>
+          {authMode === "key" ? (
+            <div style={{ display: "flex", gap: 4 }}>
+              <input
+                value={keyPath}
+                onChange={(e) => setKeyPath(e.target.value)}
+                placeholder="~/.ssh/id_rsa (optional)"
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button
+                onClick={handleBrowseKey}
+                style={{
+                  padding: "4px 8px",
+                  fontSize: 11,
+                  background: "var(--bg-secondary)",
+                  color: "var(--text-primary)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Browse
+              </button>
+            </div>
+          ) : (
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              style={inputStyle}
+            />
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 4, justifyContent: "flex-end" }}>

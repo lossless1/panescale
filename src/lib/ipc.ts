@@ -401,6 +401,7 @@ export interface SshConnectionConfig {
   port: number;
   user: string;
   keyPath?: string;
+  authMode?: "key" | "password";
   group?: string;
 }
 

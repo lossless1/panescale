@@ -196,15 +196,33 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
   const connectAndBrowse = useCallback(async (
     hostname: string, port: number, user: string,
     keyPath: string | null, hostLabel: string, hostInfo: { id: string; host: string; user: string },
+    password?: string | null,
   ) => {
     setView("connecting");
     setConnectError(null);
     try {
-      const sessionId = await sshConnectForBrowsing(hostname, port, user, keyPath, null);
+      const sessionId = await sshConnectForBrowsing(hostname, port, user, keyPath, password ?? null);
       setBrowseState({ sessionId, hostLabel, hostInfo });
       setView("browse");
     } catch (err) {
-      setConnectError(String(err));
+      const errStr = String(err);
+      // If key auth failed and no password was provided, prompt for password
+      if (!password && errStr.toLowerCase().includes("password")) {
+        const pw = window.prompt(`Enter password for ${user}@${hostname}:`);
+        if (pw) {
+          try {
+            const sessionId = await sshConnectForBrowsing(hostname, port, user, null, pw);
+            setBrowseState({ sessionId, hostLabel, hostInfo });
+            setView("browse");
+            return;
+          } catch (e2) {
+            setConnectError(String(e2));
+            setView("list");
+            return;
+          }
+        }
+      }
+      setConnectError(errStr);
       setView("list");
     }
   }, []);
@@ -217,7 +235,12 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
   }, [connectAndBrowse]);
 
   const handleSavedConnectionClick = useCallback((conn: SshConnectionConfig) => {
-    connectAndBrowse(conn.host, conn.port, conn.user, conn.keyPath || null, `${conn.user}@${conn.host}`, { id: conn.id, host: conn.host, user: conn.user });
+    let pw: string | null = null;
+    if (conn.authMode === "password") {
+      pw = window.prompt(`Enter password for ${conn.user}@${conn.host}:`);
+      if (pw === null) return;
+    }
+    connectAndBrowse(conn.host, conn.port, conn.user, conn.keyPath || null, `${conn.user}@${conn.host}`, { id: conn.id, host: conn.host, user: conn.user }, pw);
   }, [connectAndBrowse]);
 
   // User selected a folder in the browser
