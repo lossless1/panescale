@@ -70,6 +70,15 @@ impl TmuxBridge {
     /// Session name format: "exc-{tile_id}"
     pub fn create_session(tile_id: &str, shell: &str, cwd: &str) -> Result<String, String> {
         let session_name = format!("{}{}", SESSION_PREFIX, tile_id);
+
+        // Configure the tmux server BEFORE creating the session so that
+        // `set-option -g status off` is the global default before the
+        // session inherits it.  If no server is running yet, these commands
+        // silently fail (the server is started by new-session below) and
+        // we re-apply per-session options after creation as a fallback.
+        let server_was_configured = SERVER_CONFIGURED.load(Ordering::SeqCst);
+        let _ = Self::configure_server();
+
         let output = Self::tmux_cmd()?
             .args([
                 "new-session",
@@ -94,8 +103,18 @@ impl TmuxBridge {
             ));
         }
 
-        // Configure the tmux server to hide all UI (only runs once)
-        Self::configure_server()?;
+        // If this is the very first session (server was just started by new-session),
+        // re-run configure_server since the pre-creation attempt had no server to configure.
+        if !server_was_configured {
+            SERVER_CONFIGURED.store(false, Ordering::SeqCst);
+            let _ = Self::configure_server();
+
+            // Also apply status off directly to this session since it was created
+            // before the global option was set.
+            let _ = Self::tmux_cmd()?
+                .args(["set-option", "-t", &session_name, "status", "off"])
+                .output();
+        }
 
         Ok(session_name)
     }

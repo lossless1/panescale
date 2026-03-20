@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback } from "react";
 import { Channel } from "@tauri-apps/api/core";
 import type { Terminal } from "@xterm/xterm";
 import {
@@ -29,6 +29,8 @@ export function usePty(): UsePtyReturn {
   const renderRef = useRef(0);
   // Prevent double-spawn in React strict mode
   const spawnLock = useRef(false);
+  // Track the tmux session name so StrictMode remount can reattach
+  const sessionNameRef = useRef<string | null>(null);
 
   /** Create a Channel wired to an xterm Terminal instance. */
   const createChannel = useCallback((term: Terminal): Channel<PtyEvent> => {
@@ -57,13 +59,22 @@ export function usePty(): UsePtyReturn {
   const spawn = useCallback(
     async (cwd: string, cols: number, rows: number, term: Terminal): Promise<string> => {
       if (spawnLock.current) {
-        return ptyIdRef.current ?? "";
+        // StrictMode remount: the first mount's detach() already cleaned up the
+        // backend PTY.  Just reset the lock and do a fresh spawn — the tmux
+        // session still exists so spawn will create a new PTY that attaches to it.
+        // Wait briefly for the backend detach to finish.
+        await new Promise((r) => setTimeout(r, 50));
+        spawnLock.current = false;
+        // Clear stale refs so the fresh spawn gets clean state
+        ptyIdRef.current = null;
+        sessionNameRef.current = null;
       }
       spawnLock.current = true;
 
       const channel = createChannel(term);
       const id = await ptySpawn(cwd, cols, rows, channel);
       ptyIdRef.current = id;
+      sessionNameRef.current = `exc-${id}`;
       isAliveRef.current = true;
       renderRef.current += 1;
 
@@ -85,6 +96,7 @@ export function usePty(): UsePtyReturn {
       const channel = createChannel(term);
       await ptyReattach(nodeId, sessionName, cols, rows, channel);
       ptyIdRef.current = nodeId;
+      sessionNameRef.current = sessionName;
       isAliveRef.current = true;
       renderRef.current += 1;
 
@@ -110,6 +122,7 @@ export function usePty(): UsePtyReturn {
       isAliveRef.current = false;
       ptyKill(ptyIdRef.current);
       ptyIdRef.current = null;
+      sessionNameRef.current = null;
       renderRef.current += 1;
     }
     spawnLock.current = false;
@@ -119,22 +132,17 @@ export function usePty(): UsePtyReturn {
     if (ptyIdRef.current && isAliveRef.current) {
       isAliveRef.current = false;
       ptyDetach(ptyIdRef.current);
-      ptyIdRef.current = null;
+      // NOTE: Do NOT clear ptyIdRef or sessionNameRef here.
+      // In React StrictMode, detach runs between unmount-remount, and
+      // spawn() needs these refs to reattach to the existing tmux session.
+      // Do NOT reset spawnLock either -- spawn() uses it to detect remount.
       renderRef.current += 1;
     }
-    spawnLock.current = false;
   }, []);
 
-  // Cleanup on unmount -- detach (not kill) to preserve tmux sessions
-  useEffect(() => {
-    return () => {
-      if (ptyIdRef.current && isAliveRef.current) {
-        isAliveRef.current = false;
-        ptyDetach(ptyIdRef.current);
-      }
-      spawnLock.current = false;
-    };
-  }, []);
+  // NOTE: No useEffect cleanup here. TerminalNode's cleanup effect handles
+  // kill vs detach decision via pty.kill() or pty.detach(). Having a second
+  // cleanup here would race with TerminalNode's cleanup and cause double-detach.
 
   return {
     spawn,

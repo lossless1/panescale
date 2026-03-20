@@ -84,9 +84,16 @@ impl PtyManager {
         })?;
 
         let cmd = if cfg!(unix) && self.tmux_available {
-            // Create a tmux session and attach to it
-            let session_name = TmuxBridge::create_session(&id, &shell, &cwd)
-                .map_err(|e| format!("tmux create_session failed: {}", e))?;
+            // Check if a tmux session already exists for this tile (e.g. after
+            // React StrictMode unmount/remount or app restart).  If so, reuse it
+            // instead of creating a duplicate.
+            let expected_session = format!("exc-{}", id);
+            let session_name = if TmuxBridge::session_exists(&expected_session) {
+                expected_session
+            } else {
+                TmuxBridge::create_session(&id, &shell, &cwd)
+                    .map_err(|e| format!("tmux create_session failed: {}", e))?
+            };
             let attach_args = TmuxBridge::attach_args(&session_name)
                 .map_err(|e| format!("tmux attach_args failed: {}", e))?;
 

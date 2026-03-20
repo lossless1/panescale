@@ -42,6 +42,9 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   const termRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const searchAddonRef = useRef<SearchAddon | null>(null);
+  // Track whether the user explicitly closed the tile (kill tmux session)
+  // vs component unmounting for other reasons (detach to preserve session)
+  const pendingKillRef = useRef(false);
   const pty = usePty();
   const ssh = useSsh();
 
@@ -110,6 +113,8 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     });
 
     // Use Canvas renderer (faster than DOM, avoids WebGL disposal crashes)
+    // Defer both canvas addon loading AND initial fit to next frame so the
+    // container has non-zero dimensions and the renderer is fully initialized.
     let canvasAddon: CanvasAddon | null = null;
     let disposed = false;
     const rafId = requestAnimationFrame(() => {
@@ -121,9 +126,8 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         // Canvas not available, DOM renderer is fine
         canvasAddon = null;
       }
+      try { fitAddon.fit(); } catch { /* renderer not ready yet */ }
     });
-
-    fitAddon.fit();
 
     termRef.current = term;
     fitAddonRef.current = fitAddon;
@@ -205,8 +209,11 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       disposed = true;
       if (nodeData.sshConnectionId) {
         ssh.disconnect();
+      } else if (pendingKillRef.current) {
+        // User explicitly closed the tile — kill the tmux session
+        pty.kill();
       } else {
-        // Detach (not kill) to preserve tmux sessions for reattach
+        // Component unmounting for other reasons (StrictMode, app quit) — detach to preserve session
         pty.detach();
       }
       cancelAnimationFrame(rafId);
@@ -272,8 +279,10 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     }
   }, [id, enterTerminalMode, bringToFront]);
 
-  // Handle close — just remove the node; cleanup effect handles PTY/SSH + terminal disposal
+  // Handle close — mark for kill (not detach), then remove the node.
+  // The cleanup effect checks pendingKillRef to decide kill vs detach.
   const handleClose = useCallback(() => {
+    pendingKillRef.current = true;
     removeNode(id);
   }, [id, removeNode]);
 
