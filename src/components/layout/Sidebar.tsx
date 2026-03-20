@@ -246,36 +246,8 @@ export function Sidebar() {
             </div>
           )}
         </div>
-        <div style={{ display: "flex", gap: 2 }}>
-          {/* Open folder button */}
-          <button
-            onClick={handleOpenFolder}
-            title="Open Folder"
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--text-secondary)",
-              borderRadius: 3,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                "var(--bg-secondary)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor =
-                "transparent";
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </button>
-        </div>
+        {/* Settings button placeholder */}
+        <div style={{ display: "flex", gap: 2 }} />
       </div>
 
       {/* Tabs */}
