@@ -41,7 +41,11 @@ impl TmuxBridge {
             &["set-option", "-g", "prefix", "None"],
             &["set-option", "-g", "prefix2", "None"],
             &["set-option", "-g", "escape-time", "0"],
-            &["set-option", "-g", "mouse", "on"],
+            &["set-option", "-g", "mouse", "off"],
+            // Disable alternate screen so xterm.js keeps its own scrollback buffer.
+            // Without this, tmux uses alternate screen mode which causes xterm.js
+            // to convert scroll events into arrow keys (command history cycling).
+            &["set-option", "-ga", "terminal-overrides", ",xterm*:smcup@:rmcup@"],
         ];
 
         for args in options {
