@@ -8,8 +8,6 @@ import { ContextMenu } from "./ContextMenu";
 
 export function FileTree() {
   const activeProject = useProjectStore((s) => s.activeProject());
-  const projects = useProjectStore((s) => s.projects);
-  const setActiveProject = useProjectStore((s) => s.setActiveProject);
   const openProject = useProjectStore((s) => s.openProject);
   const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
 
@@ -161,35 +159,6 @@ export function FileTree() {
 
   return (
     <div style={{ flex: 1, overflow: "auto" }}>
-      {/* Project selector for multiple projects */}
-      {projects.length > 1 && (
-        <div
-          style={{
-            padding: "4px 8px",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          <select
-            value={useProjectStore.getState().activeProjectIndex}
-            onChange={(e) => setActiveProject(Number(e.target.value))}
-            style={{
-              width: "100%",
-              fontSize: 12,
-              padding: "2px 4px",
-              background: "var(--bg-sidebar)",
-              color: "var(--text-primary)",
-              border: "1px solid var(--border)",
-              borderRadius: 3,
-            }}
-          >
-            {projects.map((p, i) => (
-              <option key={p.path} value={i}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
       {visibleEntries.map(({ entry, depth }) => (
         <FileTreeItem
           key={entry.path}
