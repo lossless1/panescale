@@ -41,7 +41,7 @@ impl TmuxBridge {
             &["set-option", "-g", "prefix", "None"],
             &["set-option", "-g", "prefix2", "None"],
             &["set-option", "-g", "escape-time", "0"],
-            &["set-option", "-g", "mouse", "off"],
+            &["set-option", "-g", "mouse", "on"],
         ];
 
         for args in options {
