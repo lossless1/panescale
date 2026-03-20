@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-03-20T22:27:48Z"
+status: executing
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-20T22:35:44.342Z"
 last_activity: 2026-03-20 -- Completed Plan 08-01 SSH backend infrastructure
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 28
-  completed_plans: 26
-  percent: 93
+  completed_plans: 27
+  percent: 96
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-17)
 ## Current Position
 
 Phase: 8 of 8 (Enhanced SSH Connection Integration)
-Plan: 1 of 3 in current phase (08-01 complete)
+Plan: 2 of 3 in current phase (08-02 complete)
 Status: In Progress
-Last activity: 2026-03-20 -- Completed Plan 08-01 SSH backend infrastructure
+Last activity: 2026-03-20 -- Completed Plan 08-02 SSH quick connect dropdown
 
-Progress: [█████████░] 93%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [█████████░] 93%
 | Phase 07 P01 | 1 | 2 tasks | 8 files |
 | Phase 07 P02 | 1 | 2 tasks | 1 files |
 | Phase 08 P01 | 5 | 2 tasks | 6 files |
+| Phase 08 P02 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -157,6 +158,8 @@ Recent decisions affecting current work:
 - [Phase 08-01]: Channel open within lock scope instead of Handle clone (russh 0.58 Handle is not Clone)
 - [Phase 08-01]: ls -1pA for remote dir listing (cross-platform, slash-suffix for directories)
 - [Phase 08-01]: open crate v5 for editor launch (simpler than tauri-plugin-shell opener API)
+- [Phase 08]: Config hosts loaded fresh on dropdown open via IPC, not persisted in localStorage
+- [Phase 08]: SSH connection flow: addSshTerminalNode + sshConnectForBrowsing + openRemoteProject for full file browsing
 
 ### Roadmap Evolution
 
@@ -190,6 +193,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T22:27:48Z
-Stopped at: Completed 08-01-PLAN.md
-Resume file: .planning/phases/08-enhanced-ssh-connection-integration/08-02-PLAN.md
+Last session: 2026-03-20T22:35:44.340Z
+Stopped at: Completed 08-02-PLAN.md
+Resume file: None
