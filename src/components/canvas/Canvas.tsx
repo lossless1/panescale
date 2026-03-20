@@ -92,6 +92,7 @@ function useRubberBandEffect() {
 
 function CanvasInner() {
   const nodes = useCanvasStore((s) => s.nodes);
+  const storedViewport = useCanvasStore((s) => s.viewport);
   const onNodesChange = useCanvasStore((s) => s.onNodesChange);
   const setViewport = useCanvasStore((s) => s.setViewport);
   const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
@@ -446,7 +447,7 @@ function CanvasInner() {
         zoomOnDoubleClick={false}
         selectionOnDrag={false}
         fitView={false}
-        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        defaultViewport={storedViewport}
         onMoveEnd={handleMoveEnd}
         onPaneClick={undefined}
         onDoubleClick={handlePaneDoubleClick}
