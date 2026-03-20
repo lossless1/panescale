@@ -6,6 +6,13 @@
   height: 100%;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 12px;
+  background: var(--bg-primary) !important;
+}
+
+/* Override CodeMirror theme backgrounds to match the tile panel */
+.cm-editor .cm-gutters {
+  background: var(--bg-primary) !important;
+  border-right: 1px solid var(--border) !important;
 }
 
 .cm-editor .cm-scroller {

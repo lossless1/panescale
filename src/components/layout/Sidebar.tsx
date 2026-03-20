@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
+import * as path from "@tauri-apps/api/path";
 import { useProjectStore } from "../../stores/projectStore";
+import { useCanvasStore } from "../../stores/canvasStore";
+import { extensionToTileType } from "../../lib/ipc";
 import { SidebarTabs } from "../sidebar/SidebarTabs";
 import { FileTree } from "../sidebar/FileTree";
 import { ChronologicalFeed } from "../sidebar/ChronologicalFeed";
@@ -40,6 +43,21 @@ export function Sidebar() {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [showProjects]);
+
+  // Open a file as a tile on the canvas (used by FuzzySearch and file tree)
+  const handleOpenFile = useCallback(async (filePath: string) => {
+    const ext = "." + filePath.split(".").pop();
+    const tileType = extensionToTileType(ext);
+    if (!tileType) return; // Binary file — skip
+
+    const fileName = await path.basename(filePath);
+    const viewport = useCanvasStore.getState().viewport;
+    const position = {
+      x: (-viewport.x + 200) / viewport.zoom,
+      y: (-viewport.y + 200) / viewport.zoom,
+    };
+    useCanvasStore.getState().addContentNode(position, tileType, { path: filePath, name: fileName });
+  }, []);
 
   const onPointerDown = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
@@ -304,7 +322,7 @@ export function Sidebar() {
       {activeTab === "ssh" && <SshPanel />}
 
       {/* Fuzzy search overlay (manages own visibility via Cmd+K) */}
-      <FuzzySearch />
+      <FuzzySearch onNavigateToFile={handleOpenFile} />
 
       {/* Resize handle */}
       <div
