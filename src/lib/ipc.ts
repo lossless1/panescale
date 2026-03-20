@@ -32,6 +32,10 @@ export async function ptyKill(ptyId: string): Promise<void> {
   return invoke("pty_kill", { ptyId });
 }
 
+export async function ptyDetach(ptyId: string): Promise<void> {
+  return invoke("pty_detach", { ptyId });
+}
+
 // --- Tmux Session Persistence ---
 
 export async function ptyReattach(

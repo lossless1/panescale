@@ -182,14 +182,23 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       }
     } else {
       // Local PTY terminal
-      pty.spawn(cwd, term.cols, term.rows, term).then(() => {
-        const cmd = nodeData.startupCommand;
-        if (cmd && !nodeData.restored) {
-          setTimeout(() => {
-            pty.write(cmd + "\n");
-          }, 300);
-        }
-      });
+      if (nodeData.restored) {
+        // Try to reattach to existing tmux session
+        const sessionName = `exc-${id}`;
+        pty.reattach(sessionName, term.cols, term.rows, term).catch(() => {
+          // Session gone -- fall back to fresh spawn
+          pty.spawn(cwd, term.cols, term.rows, term);
+        });
+      } else {
+        pty.spawn(cwd, term.cols, term.rows, term).then(() => {
+          const cmd = nodeData.startupCommand;
+          if (cmd) {
+            setTimeout(() => {
+              pty.write(cmd + "\n");
+            }, 300);
+          }
+        });
+      }
     }
 
     return () => {
@@ -197,7 +206,8 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       if (nodeData.sshConnectionId) {
         ssh.disconnect();
       } else {
-        pty.kill();
+        // Detach (not kill) to preserve tmux sessions for reattach
+        pty.detach();
       }
       cancelAnimationFrame(rafId);
       // Dispose canvas addon before terminal to avoid render-after-dispose errors

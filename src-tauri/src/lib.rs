@@ -31,6 +31,7 @@ pub fn run() {
             pty::commands::pty_write,
             pty::commands::pty_resize,
             pty::commands::pty_kill,
+            pty::commands::pty_detach,
             pty::commands::pty_reattach,
             pty::commands::pty_tmux_available,
             pty::commands::pty_tmux_list_sessions,

@@ -53,6 +53,15 @@ pub async fn pty_kill(
     state.kill(&pty_id).map_err(|e| e.to_string())
 }
 
+/// Detach from a PTY session without killing the tmux session (for unmount/app close).
+#[tauri::command]
+pub async fn pty_detach(
+    pty_id: String,
+    state: tauri::State<'_, PtyManager>,
+) -> Result<(), String> {
+    state.detach(&pty_id).map_err(|e| e.to_string())
+}
+
 /// Reattach to an existing tmux session (used on app restart for session persistence).
 #[tauri::command]
 pub async fn pty_reattach(

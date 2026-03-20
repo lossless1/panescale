@@ -32,8 +32,8 @@ pub struct PtyManager {
 
 impl PtyManager {
     pub fn new() -> Self {
-        // tmux disabled — using direct PTY spawn for simpler terminal lifecycle
-        let tmux_available = false;
+        // Re-enable tmux for session persistence with socket isolation
+        let tmux_available = TmuxBridge::is_available();
         Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),
             tmux_available,
@@ -87,7 +87,8 @@ impl PtyManager {
             // Create a tmux session and attach to it
             let session_name = TmuxBridge::create_session(&id, &shell, &cwd)
                 .map_err(|e| format!("tmux create_session failed: {}", e))?;
-            let attach_args = TmuxBridge::attach_args(&session_name);
+            let attach_args = TmuxBridge::attach_args(&session_name)
+                .map_err(|e| format!("tmux attach_args failed: {}", e))?;
 
             // Store tmux session mapping
             self.tmux_sessions
@@ -184,7 +185,8 @@ impl PtyManager {
             pixel_height: 0,
         })?;
 
-        let attach_args = TmuxBridge::attach_args(&session_name);
+        let attach_args = TmuxBridge::attach_args(&session_name)
+            .map_err(|e| format!("tmux attach_args failed: {}", e))?;
         let mut cmd = CommandBuilder::new(&attach_args[0]);
         for arg in &attach_args[1..] {
             cmd.arg(arg);
@@ -316,6 +318,42 @@ impl PtyManager {
         {
             let _ = TmuxBridge::kill_session(&session_name);
         }
+
+        Ok(())
+    }
+
+    /// Detach from a PTY session without killing the tmux session.
+    /// Used on terminal unmount/app close to preserve tmux sessions for reattach.
+    pub fn detach(
+        &self,
+        id: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let mut session = self
+            .sessions
+            .lock()
+            .map_err(|e| format!("Lock poisoned: {}", e))?
+            .remove(id)
+            .ok_or_else(|| format!("PTY session '{}' not found", id))?;
+
+        // Kill the child process (the `tmux attach` process, NOT the tmux session)
+        session.child.kill()?;
+
+        // Drop master to close the PTY (triggers EOF on reader thread)
+        drop(session.master);
+        drop(session.writer);
+
+        // Join reader thread
+        if let Some(handle) = session.reader_handle.take() {
+            let _ = handle.join();
+        }
+
+        // Do NOT call TmuxBridge::kill_session -- session persists for reattach
+        // Just remove the mapping from our tracking
+        let _ = self
+            .tmux_sessions
+            .lock()
+            .map_err(|e| format!("Lock poisoned: {}", e))?
+            .remove(id);
 
         Ok(())
     }
