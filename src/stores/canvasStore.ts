@@ -23,6 +23,7 @@ interface CanvasState {
   bellActiveNodes: Set<string>;
   onNodesChange: (changes: NodeChange[]) => void;
   updateNodeData: (id: string, dataUpdate: Record<string, unknown>) => void;
+  updateNodeStyle: (id: string, style: Record<string, unknown>) => void;
   setBellActive: (id: string, active: boolean) => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
@@ -58,6 +59,17 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     forceSave();
   },
 
+  updateNodeStyle: (id, style) => {
+    set((state) => ({
+      nodes: state.nodes.map((n) =>
+        n.id === id
+          ? { ...n, style: { ...n.style, ...style } }
+          : n,
+      ),
+    }));
+    forceSave();
+  },
+
   setBellActive: (id, active) => {
     set((state) => {
       const next = new Set(state.bellActiveNodes);
@@ -71,9 +83,26 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   onNodesChange: (changes: NodeChange[]) => {
-    set((state) => ({
-      nodes: applyNodeChanges(changes, state.nodes),
-    }));
+    set((state) => {
+      let nodes = applyNodeChanges(changes, state.nodes);
+
+      // When a resize ends (resizing transitions from true to false),
+      // sync the measured dimensions into style so they persist on save.
+      for (const change of changes) {
+        if (change.type === "dimensions" && !(change as Record<string, unknown>).resizing) {
+          const dims = (change as Record<string, unknown>).dimensions as { width: number; height: number } | undefined;
+          if (dims) {
+            nodes = nodes.map((n) =>
+              n.id === change.id
+                ? { ...n, style: { ...((n as Record<string, unknown>).style as Record<string, unknown> ?? {}), width: dims.width, height: dims.height } }
+                : n,
+            );
+          }
+        }
+      }
+
+      return { nodes };
+    });
   },
 
   addTerminalNode: (position, cwd) => {

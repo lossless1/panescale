@@ -71,6 +71,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    console.log(`[TerminalNode ${id}] useEffect MOUNT — restored=${!!(data as TerminalNodeData).restored}, ssh=${isSsh}`);
 
     const term = new Terminal({
       fontFamily,
@@ -189,12 +190,15 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       if (nodeData.restored) {
         // Try to reattach to existing tmux session
         const sessionName = `exc-${id}`;
-        pty.reattach(sessionName, term.cols, term.rows, term).catch(() => {
-          // Session gone -- fall back to fresh spawn
-          pty.spawn(cwd, term.cols, term.rows, term);
+        console.log(`[TerminalNode ${id}] restored=true, calling pty.reattach(${sessionName})`);
+        pty.reattach(sessionName, term.cols, term.rows, term).catch((e) => {
+          console.log(`[TerminalNode ${id}] reattach failed, falling back to spawn:`, e);
+          pty.spawn(id, cwd, term.cols, term.rows, term);
         });
       } else {
-        pty.spawn(cwd, term.cols, term.rows, term).then(() => {
+        console.log(`[TerminalNode ${id}] restored=false, calling pty.spawn(${id}, ${cwd})`);
+        pty.spawn(id, cwd, term.cols, term.rows, term).then(() => {
+          console.log(`[TerminalNode ${id}] spawn completed`);
           const cmd = nodeData.startupCommand;
           if (cmd) {
             setTimeout(() => {
@@ -207,13 +211,14 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
 
     return () => {
       disposed = true;
+      console.log(`[TerminalNode ${id}] useEffect CLEANUP — pendingKill=${pendingKillRef.current}, ssh=${!!nodeData.sshConnectionId}`);
       if (nodeData.sshConnectionId) {
         ssh.disconnect();
       } else if (pendingKillRef.current) {
-        // User explicitly closed the tile — kill the tmux session
+        console.log(`[TerminalNode ${id}] calling pty.kill()`);
         pty.kill();
       } else {
-        // Component unmounting for other reasons (StrictMode, app quit) — detach to preserve session
+        console.log(`[TerminalNode ${id}] calling pty.detach()`);
         pty.detach();
       }
       cancelAnimationFrame(rafId);
@@ -350,7 +355,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     e.stopPropagation();
   }, []);
 
-  // Handle resize from NodeResizer with magnetic snap
+  // Handle resize from NodeResizer with grid-step snapping
   const handleResize = useCallback(
     (event: unknown, params: { x: number; y: number; width: number; height: number }) => {
       // Fit terminal to new size
@@ -364,7 +369,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         }
       }
 
-      // Check modifier key from the D3 drag event's sourceEvent
+      // Check modifier key — Cmd/Ctrl disables snap
       const d3Event = event as { sourceEvent?: MouseEvent };
       const sourceEvent = d3Event?.sourceEvent;
       if (sourceEvent?.ctrlKey || sourceEvent?.metaKey) {
@@ -372,7 +377,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         return;
       }
 
-      // Snap width (right edge = x + width) and height (bottom edge = y + height)
+      // Snap edges to grid dots
       const { size: snappedWidth, snapped: snappedW } = magneticSnapSize(params.x, params.width);
       const { size: snappedHeight, snapped: snappedH } = magneticSnapSize(params.y, params.height);
 

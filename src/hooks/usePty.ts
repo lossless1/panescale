@@ -12,7 +12,7 @@ import {
 import type { PtyEvent } from "../lib/ipc";
 
 interface UsePtyReturn {
-  spawn: (cwd: string, cols: number, rows: number, term: Terminal) => Promise<string>;
+  spawn: (nodeId: string, cwd: string, cols: number, rows: number, term: Terminal) => Promise<string>;
   reattach: (sessionName: string, cols: number, rows: number, term: Terminal) => Promise<void>;
   write: (data: string) => void;
   resize: (cols: number, rows: number) => void;
@@ -25,14 +25,15 @@ interface UsePtyReturn {
 export function usePty(): UsePtyReturn {
   const ptyIdRef = useRef<string | null>(null);
   const isAliveRef = useRef(false);
-  // Keep a ref to force re-renders when state changes
   const renderRef = useRef(0);
-  // Prevent double-spawn in React strict mode
-  const spawnLock = useRef(false);
-  // Track the tmux session name so StrictMode remount can reattach
   const sessionNameRef = useRef<string | null>(null);
 
-  /** Create a Channel wired to an xterm Terminal instance. */
+  // Shared spawn promise: if a spawn is in-flight, the StrictMode remount
+  // reuses it instead of creating a second PTY/tmux session.
+  const spawnPromiseRef = useRef<Promise<string> | null>(null);
+  // Same for reattach
+  const reattachPromiseRef = useRef<Promise<void> | null>(null);
+
   const createChannel = useCallback((term: Terminal): Channel<PtyEvent> => {
     const channel = new Channel<PtyEvent>();
     channel.onmessage = (event: PtyEvent) => {
@@ -47,7 +48,6 @@ export function usePty(): UsePtyReturn {
     return channel;
   }, []);
 
-  /** Wire keyboard input from xterm to PTY. */
   const wireInput = useCallback((term: Terminal) => {
     term.onData((data: string) => {
       if (ptyIdRef.current && isAliveRef.current) {
@@ -57,50 +57,91 @@ export function usePty(): UsePtyReturn {
   }, []);
 
   const spawn = useCallback(
-    async (cwd: string, cols: number, rows: number, term: Terminal): Promise<string> => {
-      if (spawnLock.current) {
-        // StrictMode remount: the first mount's detach() already cleaned up the
-        // backend PTY.  Just reset the lock and do a fresh spawn — the tmux
-        // session still exists so spawn will create a new PTY that attaches to it.
-        // Wait briefly for the backend detach to finish.
-        await new Promise((r) => setTimeout(r, 50));
-        spawnLock.current = false;
-        // Clear stale refs so the fresh spawn gets clean state
-        ptyIdRef.current = null;
-        sessionNameRef.current = null;
+    async (nodeId: string, cwd: string, cols: number, rows: number, term: Terminal): Promise<string> => {
+      // If a spawn is already in flight (StrictMode remount while ptySpawn
+      // is still async), wait for it to finish instead of spawning again.
+      // The first mount's channel/wireInput won't work (that Terminal was
+      // disposed), so we need to re-wire after awaiting.
+      if (spawnPromiseRef.current) {
+        console.log("[usePty] spawn() — reusing in-flight spawn promise (StrictMode remount)");
+        const id = await spawnPromiseRef.current;
+
+        // The first mount's Terminal was disposed by StrictMode cleanup.
+        // Re-wire the NEW Terminal to the existing PTY via reattach.
+        if (ptyIdRef.current && sessionNameRef.current) {
+          try {
+            // Detach first (the old attach from mount #1 has a dead channel)
+            await ptyDetach(ptyIdRef.current).catch(() => {});
+            await new Promise((r) => setTimeout(r, 50));
+            const channel = createChannel(term);
+            await ptyReattach(ptyIdRef.current, sessionNameRef.current, cols, rows, channel);
+            isAliveRef.current = true;
+            wireInput(term);
+            console.log("[usePty] spawn() — re-wired to existing session after StrictMode remount");
+          } catch (e) {
+            console.warn("[usePty] spawn() — re-wire failed:", e);
+          }
+        }
+        return id;
       }
-      spawnLock.current = true;
 
-      const channel = createChannel(term);
-      const id = await ptySpawn(cwd, cols, rows, channel);
-      ptyIdRef.current = id;
-      sessionNameRef.current = `exc-${id}`;
-      isAliveRef.current = true;
-      renderRef.current += 1;
+      // No spawn in flight — do a fresh spawn using the node ID
+      // so the tmux session name (exc-{nodeId}) matches on restore.
+      const promise = (async () => {
+        const channel = createChannel(term);
+        const id = await ptySpawn(nodeId, cwd, cols, rows, channel);
+        ptyIdRef.current = id;
+        sessionNameRef.current = `exc-${id}`;
+        isAliveRef.current = true;
+        renderRef.current += 1;
+        wireInput(term);
+        console.log(`[usePty] spawn() — fresh spawn SUCCESS: ${id}`);
+        return id;
+      })();
 
-      wireInput(term);
-      return id;
+      spawnPromiseRef.current = promise;
+      return promise;
     },
     [createChannel, wireInput],
   );
 
   const reattach = useCallback(
     async (sessionName: string, cols: number, rows: number, term: Terminal): Promise<void> => {
-      if (spawnLock.current) {
+      // Same pattern: reuse in-flight reattach promise
+      if (reattachPromiseRef.current) {
+        console.log("[usePty] reattach() — reusing in-flight promise (StrictMode remount)");
+        await reattachPromiseRef.current;
+
+        if (ptyIdRef.current && sessionNameRef.current) {
+          try {
+            await ptyDetach(ptyIdRef.current).catch(() => {});
+            await new Promise((r) => setTimeout(r, 50));
+            const channel = createChannel(term);
+            await ptyReattach(ptyIdRef.current, sessionNameRef.current, cols, rows, channel);
+            isAliveRef.current = true;
+            wireInput(term);
+            console.log("[usePty] reattach() — re-wired after StrictMode remount");
+          } catch (e) {
+            console.warn("[usePty] reattach() — re-wire failed:", e);
+          }
+        }
         return;
       }
-      spawnLock.current = true;
 
-      // Derive ptyId from session name (strip "exc-" prefix to get node ID)
-      const nodeId = sessionName.startsWith("exc-") ? sessionName.slice(4) : sessionName;
-      const channel = createChannel(term);
-      await ptyReattach(nodeId, sessionName, cols, rows, channel);
-      ptyIdRef.current = nodeId;
-      sessionNameRef.current = sessionName;
-      isAliveRef.current = true;
-      renderRef.current += 1;
+      const promise = (async () => {
+        const nodeId = sessionName.startsWith("exc-") ? sessionName.slice(4) : sessionName;
+        const channel = createChannel(term);
+        await ptyReattach(nodeId, sessionName, cols, rows, channel);
+        ptyIdRef.current = nodeId;
+        sessionNameRef.current = sessionName;
+        isAliveRef.current = true;
+        renderRef.current += 1;
+        wireInput(term);
+        console.log(`[usePty] reattach() — SUCCESS: ${sessionName}`);
+      })();
 
-      wireInput(term);
+      reattachPromiseRef.current = promise;
+      return promise;
     },
     [createChannel, wireInput],
   );
@@ -118,6 +159,7 @@ export function usePty(): UsePtyReturn {
   }, []);
 
   const kill = useCallback(() => {
+    console.log("[usePty] kill()");
     if (ptyIdRef.current && isAliveRef.current) {
       isAliveRef.current = false;
       ptyKill(ptyIdRef.current);
@@ -125,24 +167,22 @@ export function usePty(): UsePtyReturn {
       sessionNameRef.current = null;
       renderRef.current += 1;
     }
-    spawnLock.current = false;
+    spawnPromiseRef.current = null;
+    reattachPromiseRef.current = null;
   }, []);
 
   const detach = useCallback(() => {
+    console.log(`[usePty] detach() — ptyId=${ptyIdRef.current}, alive=${isAliveRef.current}`);
     if (ptyIdRef.current && isAliveRef.current) {
       isAliveRef.current = false;
       ptyDetach(ptyIdRef.current);
-      // NOTE: Do NOT clear ptyIdRef or sessionNameRef here.
-      // In React StrictMode, detach runs between unmount-remount, and
-      // spawn() needs these refs to reattach to the existing tmux session.
-      // Do NOT reset spawnLock either -- spawn() uses it to detect remount.
+      // Keep ptyIdRef, sessionNameRef, and promiseRefs intact
+      // so StrictMode remount can re-wire to the same session.
       renderRef.current += 1;
     }
+    // If ptyId is null, spawn is still in flight — that's fine,
+    // the remount will pick it up via spawnPromiseRef.
   }, []);
-
-  // NOTE: No useEffect cleanup here. TerminalNode's cleanup effect handles
-  // kill vs detach decision via pty.kill() or pty.detach(). Having a second
-  // cleanup here would race with TerminalNode's cleanup and cause double-detach.
 
   return {
     spawn,

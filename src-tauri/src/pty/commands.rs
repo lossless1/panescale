@@ -8,17 +8,18 @@ use crate::platform::tmux::{InstallProgress, TmuxBridge};
 /// The `on_event` channel receives `PtyEvent::Data` for output and `PtyEvent::Exit` on termination.
 #[tauri::command]
 pub async fn pty_spawn(
+    node_id: String,
     cwd: String,
     cols: u16,
     rows: u16,
     on_event: Channel<PtyEvent>,
     state: tauri::State<'_, PtyManager>,
 ) -> Result<String, String> {
-    let id = uuid::Uuid::new_v4().to_string();
+    // Use the React Flow node ID so tmux session name (exc-{id}) matches on restore
     state
-        .spawn(id.clone(), cwd, cols, rows, on_event)
+        .spawn(node_id.clone(), cwd, cols, rows, on_event)
         .map_err(|e| e.to_string())?;
-    Ok(id)
+    Ok(node_id)
 }
 
 /// Write input bytes to a running PTY session.

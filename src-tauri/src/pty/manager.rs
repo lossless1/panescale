@@ -89,8 +89,10 @@ impl PtyManager {
             // instead of creating a duplicate.
             let expected_session = format!("exc-{}", id);
             let session_name = if TmuxBridge::session_exists(&expected_session) {
+                eprintln!("[PtyManager::spawn] Reusing existing tmux session: {}", expected_session);
                 expected_session
             } else {
+                eprintln!("[PtyManager::spawn] Creating NEW tmux session for id: {}", id);
                 TmuxBridge::create_session(&id, &shell, &cwd)
                     .map_err(|e| format!("tmux create_session failed: {}", e))?
             };
@@ -179,10 +181,13 @@ impl PtyManager {
         rows: u16,
         channel: Channel<PtyEvent>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        eprintln!("[PtyManager::reattach] id={}, session={}", id, session_name);
         // Verify the tmux session still exists
         if !TmuxBridge::session_exists(&session_name) {
+            eprintln!("[PtyManager::reattach] Session '{}' does NOT exist", session_name);
             return Err(format!("tmux session '{}' does not exist", session_name).into());
         }
+        eprintln!("[PtyManager::reattach] Session '{}' exists, attaching", session_name);
 
         let pty_system = native_pty_system();
         let pair = pty_system.openpty(PtySize {
@@ -296,6 +301,7 @@ impl PtyManager {
         &self,
         id: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        eprintln!("[PtyManager::kill] Killing PTY id: {}", id);
         let mut session = self
             .sessions
             .lock()
@@ -335,6 +341,7 @@ impl PtyManager {
         &self,
         id: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        eprintln!("[PtyManager::detach] Detaching PTY id: {}", id);
         let mut session = self
             .sessions
             .lock()

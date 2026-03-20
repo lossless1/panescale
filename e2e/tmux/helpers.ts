@@ -85,6 +85,41 @@ export function killServer(): void {
 }
 
 /**
+ * Create a tmux session mimicking what the Panescale app does.
+ * Applies server configuration (status off, prefix None, etc.).
+ */
+export function createSession(name: string, cwd?: string): void {
+  const dir = cwd ?? os.homedir();
+  execSync(
+    `tmux -S "${TMUX_SOCK}" new-session -d -s "${name}" -c "${dir}" -x 80 -y 24 /bin/zsh`,
+  );
+  // Apply the same server config the app applies
+  const opts = [
+    ["set-option", "-g", "status", "off"],
+    ["set-option", "-g", "prefix", "None"],
+    ["set-option", "-g", "prefix2", "None"],
+    ["set-option", "-g", "escape-time", "0"],
+    ["set-option", "-g", "mouse", "off"],
+  ];
+  for (const args of opts) {
+    execSync(`tmux -S "${TMUX_SOCK}" ${args.join(" ")} 2>/dev/null || true`);
+  }
+  // Per-session status off
+  execSync(
+    `tmux -S "${TMUX_SOCK}" set-option -t "${name}" status off 2>/dev/null || true`,
+  );
+}
+
+/**
+ * Kill a single tmux session by name.
+ */
+export function killSession(name: string): void {
+  execSync(
+    `tmux -S "${TMUX_SOCK}" kill-session -t "${name}" 2>/dev/null || true`,
+  );
+}
+
+/**
  * Poll until a predicate returns true or timeout is reached.
  * @param predicate - Function that returns true when the condition is met.
  * @param timeoutMs - Maximum wait time in milliseconds (default 10000).

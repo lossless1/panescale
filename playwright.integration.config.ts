@@ -3,19 +3,23 @@ import { defineConfig } from "@playwright/test";
 /**
  * Playwright config for Tier 2 integration tests.
  *
- * These tests run against the real Tauri app (not mocked IPC).
- * Start the app with `cargo tauri dev` before running:
- *   npm run test:e2e:integration
+ * These tests verify tmux socket state against the running Tauri app.
+ * They do NOT open a browser — Tauri apps require the native IPC bridge
+ * which isn't available in standalone Chromium.
  *
- * No webServer block -- the real Tauri app must be started manually
- * since `cargo tauri dev` is needed for real PTY/tmux.
+ * How to run:
+ *   1. Start the app: `cargo tauri dev`
+ *   2. Open at least one terminal tile
+ *   3. npm run test:e2e:integration
  */
 export default defineConfig({
   testDir: "./e2e/tmux",
-  timeout: 60_000,
+  timeout: 30_000,
   retries: 0,
   use: {
-    baseURL: "http://localhost:1420",
-    screenshot: "only-on-failure",
+    // No browser needed — tests use shell commands against tmux socket
+    launchOptions: {
+      // Still launches browser but tests don't navigate anywhere
+    },
   },
 });

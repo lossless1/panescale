@@ -5,12 +5,13 @@ export type PtyEvent =
   | { event: "exit"; data: { code: number | null } };
 
 export async function ptySpawn(
+  nodeId: string,
   cwd: string,
   cols: number,
   rows: number,
   onEvent: Channel<PtyEvent>,
 ): Promise<string> {
-  return invoke<string>("pty_spawn", { cwd, cols, rows, onEvent });
+  return invoke<string>("pty_spawn", { nodeId, cwd, cols, rows, onEvent });
 }
 
 export async function ptyWrite(

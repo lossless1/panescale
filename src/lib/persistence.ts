@@ -23,8 +23,8 @@ export function serializeCanvas(state: {
     id: n.id,
     type: n.type ?? "terminal",
     position: { x: n.position.x, y: n.position.y },
-    width: (n.style?.width as number) ?? (n.measured?.width as number) ?? 640,
-    height: (n.style?.height as number) ?? (n.measured?.height as number) ?? 480,
+    width: parseFloat(String(n.style?.width ?? "")) || (n.measured?.width as number) || n.width || 640,
+    height: parseFloat(String(n.style?.height ?? "")) || (n.measured?.height as number) || n.height || 480,
     zIndex: n.zIndex ?? 0,
     data: {
       cwd: (n.data as Record<string, unknown>).cwd as string,
