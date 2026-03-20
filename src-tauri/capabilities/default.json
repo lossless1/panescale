@@ -18,7 +18,7 @@
     },
     {
       "identifier": "fs:allow-read-text-file",
-      "allow": [{ "path": "**" }]
+      "allow": [{ "path": "**" }, { "path": "$HOME/.ssh/**" }]
     },
     {
       "identifier": "fs:allow-read-text-file-lines",
@@ -34,7 +34,7 @@
     },
     {
       "identifier": "fs:allow-write-text-file",
-      "allow": [{ "path": "**" }]
+      "allow": [{ "path": "**" }, { "path": "$HOME/.ssh/**" }]
     },
     {
       "identifier": "fs:allow-rename",
