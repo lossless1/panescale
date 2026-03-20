@@ -181,9 +181,10 @@ None yet.
 | 260319-lc5 | Shared shiki highlighter module with theme-aware file preview | 2026-03-19 | 7abfb4d | [260319-lc5-add-shiki-syntax-highlighting-to-filepre](./quick/260319-lc5-add-shiki-syntax-highlighting-to-filepre/) |
 | 260319-mjb | CodeMirror 6 syntax-highlighted editor replacing plain textarea in FilePreviewNode | 2026-03-19 | 3e8a4a9 | [260319-mjb-replace-plain-textarea-with-syntax-highl](./quick/260319-mjb-replace-plain-textarea-with-syntax-highl/) |
 | 260319-mq5 | Grab cursor only on header, remove preview mode from FilePreviewNode | 2026-03-19 | a3346ba | [260319-mq5-grab-cursor-only-on-header-remove-previe](./quick/260319-mq5-grab-cursor-only-on-header-remove-previe/) |
+| 260320-lch | Socket-isolated tmux with hidden UI and process persistence | 2026-03-20 | 6f6be37 | [260320-lch-isolate-tmux-sessions-from-user-namespac](./quick/260320-lch-isolate-tmux-sessions-from-user-namespac/) |
 
 ## Session Continuity
 
-Last session: 2026-03-19T16:08:47.915Z
-Stopped at: Phase 8 UI-SPEC approved
-Resume file: .planning/phases/08-enhanced-ssh-connection-integration/08-UI-SPEC.md
+Last session: 2026-03-20T14:35:56Z
+Stopped at: Quick task 260320-lch checkpoint (human-verify)
+Resume file: .planning/quick/260320-lch-isolate-tmux-sessions-from-user-namespac/260320-lch-PLAN.md
