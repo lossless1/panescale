@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-03-20T22:35:44.342Z"
-last_activity: 2026-03-20 -- Completed Plan 08-01 SSH backend infrastructure
+status: complete
+stopped_at: Completed 08-03-PLAN.md
+last_updated: "2026-03-20T22:36:10Z"
+last_activity: 2026-03-20 -- Completed Plan 08-03 Remote file tree
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 28
-  completed_plans: 27
-  percent: 96
+  completed_plans: 28
+  percent: 100
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-17)
 ## Current Position
 
 Phase: 8 of 8 (Enhanced SSH Connection Integration)
-Plan: 2 of 3 in current phase (08-02 complete)
-Status: In Progress
-Last activity: 2026-03-20 -- Completed Plan 08-02 SSH quick connect dropdown
+Plan: 3 of 3 in current phase (08-03 complete)
+Status: Complete
+Last activity: 2026-03-20 -- Completed Plan 08-03 Remote file tree
 
-Progress: [██████████] 96%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -158,6 +158,8 @@ Recent decisions affecting current work:
 - [Phase 08-01]: Channel open within lock scope instead of Handle clone (russh 0.58 Handle is not Clone)
 - [Phase 08-01]: ls -1pA for remote dir listing (cross-platform, slash-suffix for directories)
 - [Phase 08-01]: open crate v5 for editor launch (simpler than tauri-plugin-shell opener API)
+- [Phase 08-03]: Stale sshSessionId detection on mount with error/reconnect UI for persisted remote projects
+- [Phase 08-03]: Reconnect handler uses sshConnectForBrowsing then openRemoteProject to refresh session
 - [Phase 08]: Config hosts loaded fresh on dropdown open via IPC, not persisted in localStorage
 - [Phase 08]: SSH connection flow: addSshTerminalNode + sshConnectForBrowsing + openRemoteProject for full file browsing
 
@@ -193,6 +195,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T22:35:44.340Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-03-20T22:36:10Z
+Stopped at: Completed 08-03-PLAN.md (all phases complete)
 Resume file: None

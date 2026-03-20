@@ -152,7 +152,7 @@ Plans:
   2. Dropdown lists ~/.ssh/config hosts and saved connections for one-click terminal spawning
   3. Users can browse remote directories in the Files tab after connecting via SSH
   4. Remote projects are visually distinct (SSH badge, accent left border on file tree)
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 08-01-PLAN.md — Rust backend: ssh2-config parsing, exec_command on SshManager, IPC commands and frontend wrappers
