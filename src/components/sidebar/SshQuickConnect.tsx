@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
+import * as path from "@tauri-apps/api/path";
 import { useSshStore } from "../../stores/sshStore";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useProjectStore } from "../../stores/projectStore";
-import { sshConnectForBrowsing, sshOpenConfigInEditor } from "../../lib/ipc";
+import { sshConnectForBrowsing } from "../../lib/ipc";
 import type { SshConfigHost, SshConnectionConfig } from "../../lib/ipc";
 import { SshConnectionForm } from "./SshConnectionForm";
 
@@ -17,30 +18,28 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
   const connections = useSshStore((s) => s.connections);
   const addConnection = useSshStore((s) => s.addConnection);
   const addSshTerminalNode = useCanvasStore((s) => s.addSshTerminalNode);
+  const addContentNode = useCanvasStore((s) => s.addContentNode);
   const [showForm, setShowForm] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Load config hosts on mount
   useEffect(() => {
     useSshStore.getState().loadConfigHosts();
   }, []);
 
-  // Position relative to anchor button
-  useEffect(() => {
+  // Use useLayoutEffect to calculate position before paint — prevents flash at (0,0)
+  useLayoutEffect(() => {
     const anchor = anchorRef?.current;
     if (!anchor) return;
     const rect = anchor.getBoundingClientRect();
     let left = rect.left;
     const top = rect.bottom + 4;
-    // If dropdown would overflow right edge, align to right side of button
     if (left + 280 > window.innerWidth) {
       left = rect.right - 280;
     }
     setPos({ top, left: Math.max(8, left) });
   }, [anchorRef]);
 
-  // Dismiss on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -51,12 +50,9 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
-  // Dismiss on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -69,29 +65,16 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
         const user = host.user || "root";
         const port = host.port || 22;
 
-        // 1. Spawn terminal tile on canvas
         addSshTerminalNode(
           { x: 100, y: 100 },
           { id: host.host_alias, host: hostname, user },
         );
 
-        // 2. Connect for file browsing (separate session, no PTY)
-        const sessionId = await sshConnectForBrowsing(
-          hostname,
-          port,
-          user,
-          host.identity_file,
-          null,
-        );
-
-        // 3. Register remote project so Files tab shows RemoteFileTree
-        const { openRemoteProject } = useProjectStore.getState();
-        openRemoteProject(`/home/${user}`, sessionId, `${user}@${hostname}`);
-
+        const sessionId = await sshConnectForBrowsing(hostname, port, user, host.identity_file, null);
+        useProjectStore.getState().openRemoteProject(`/home/${user}`, sessionId, `${user}@${hostname}`);
         onClose();
       } catch (err) {
         console.error("Failed to connect to config host:", err);
-        // If browsing connection fails, terminal may still work -- don't block
       }
     },
     [addSshTerminalNode, onClose],
@@ -100,29 +83,13 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
   const handleSavedConnectionClick = useCallback(
     async (conn: SshConnectionConfig) => {
       try {
-        // 1. Spawn terminal tile on canvas
         addSshTerminalNode(
           { x: 100, y: 100 },
           { id: conn.id, host: conn.host, user: conn.user },
         );
 
-        // 2. Connect for file browsing (separate session, no PTY)
-        const sessionId = await sshConnectForBrowsing(
-          conn.host,
-          conn.port,
-          conn.user,
-          conn.keyPath || null,
-          null,
-        );
-
-        // 3. Register remote project so Files tab shows RemoteFileTree
-        const { openRemoteProject } = useProjectStore.getState();
-        openRemoteProject(
-          `/home/${conn.user}`,
-          sessionId,
-          `${conn.user}@${conn.host}`,
-        );
-
+        const sessionId = await sshConnectForBrowsing(conn.host, conn.port, conn.user, conn.keyPath || null, null);
+        useProjectStore.getState().openRemoteProject(`/home/${conn.user}`, sessionId, `${conn.user}@${conn.host}`);
         onClose();
       } catch (err) {
         console.error("Failed to connect to saved connection:", err);
@@ -139,22 +106,32 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
     [addConnection],
   );
 
-  const handleEditConfig = useCallback(() => {
-    sshOpenConfigInEditor().catch((err) => {
-      console.error("Failed to open SSH config in editor:", err);
-    });
+  const handleEditConfig = useCallback(async () => {
+    // Open SSH config as a file tile on the canvas
+    const homeDir = await path.homeDir();
+    const configPath = `${homeDir}.ssh/config`;
+    const viewport = useCanvasStore.getState().viewport;
+    const position = {
+      x: (-viewport.x + 200) / viewport.zoom,
+      y: (-viewport.y + 200) / viewport.zoom,
+    };
+    addContentNode(position, "file-preview", { path: configPath, name: "config" });
     onClose();
-  }, [onClose]);
+  }, [addContentNode, onClose]);
 
-  const isEmpty = configHosts.length === 0 && connections.length === 0;
-
-  const sectionHeaderStyle: React.CSSProperties = {
-    fontSize: 11,
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
+  const actionBtnStyle: React.CSSProperties = {
+    padding: "6px 8px",
+    cursor: "pointer",
+    borderRadius: 6,
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    background: "transparent",
+    border: "none",
+    width: "100%",
+    textAlign: "left",
     color: "var(--text-secondary)",
-    padding: "8px 8px 4px",
+    fontSize: 12,
   };
 
   const itemStyle: React.CSSProperties = {
@@ -171,6 +148,16 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
     color: "var(--text-primary)",
     fontSize: 12,
   };
+
+  const hoverIn = (e: React.MouseEvent) => {
+    (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-secondary)";
+  };
+  const hoverOut = (e: React.MouseEvent) => {
+    (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+  };
+
+  // Don't render until position is calculated
+  if (!pos) return null;
 
   const dropdown = (
     <div
@@ -192,241 +179,65 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
         padding: 4,
       }}
     >
-      {isEmpty ? (
-        <div
-          style={{
-            padding: "12px 8px",
-            fontSize: 12,
-            color: "var(--text-secondary)",
-            fontStyle: "italic",
-            lineHeight: 1.4,
-          }}
-        >
-          No SSH connections yet. Add hosts to ~/.ssh/config or click '+ New
-          Connection' to get started.
-        </div>
-      ) : (
-        <>
-          {/* SSH Config Hosts */}
-          <div style={sectionHeaderStyle}>SSH Config Hosts</div>
-          {configHosts.length === 0 ? (
-            <div
-              style={{
-                padding: "4px 8px 8px",
-                fontSize: 12,
-                color: "var(--text-secondary)",
-                fontStyle: "italic",
-              }}
-            >
-              No SSH Config Hosts
-              <br />
-              <span style={{ fontSize: 11 }}>
-                Add hosts to ~/.ssh/config or create a connection below.
-              </span>
-            </div>
-          ) : (
-            configHosts.map((host) => (
-              <button
-                key={host.host_alias}
-                role="menuitem"
-                style={itemStyle}
-                onClick={() => handleConfigHostClick(host)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.outline =
-                    "2px solid var(--accent)";
-                  e.currentTarget.style.outlineOffset = "1px";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.outline = "none";
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "inherit",
-                  }}
-                >
-                  {host.host_alias}
-                </span>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 400,
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  ({host.hostname || host.host_alias})
-                </span>
-              </button>
-            ))
-          )}
-
-          {/* Saved Connections */}
-          <div style={sectionHeaderStyle}>Saved Connections</div>
-          {connections.length === 0 ? (
-            <div
-              style={{
-                padding: "4px 8px 8px",
-                fontSize: 12,
-                color: "var(--text-secondary)",
-                fontStyle: "italic",
-              }}
-            >
-              No Saved Connections
-              <br />
-              <span style={{ fontSize: 11 }}>
-                Click '+ New Connection' to add one.
-              </span>
-            </div>
-          ) : (
-            connections.map((conn) => (
-              <button
-                key={conn.id}
-                role="menuitem"
-                style={itemStyle}
-                onClick={() => handleSavedConnectionClick(conn)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.outline =
-                    "2px solid var(--accent)";
-                  e.currentTarget.style.outlineOffset = "1px";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.outline = "none";
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "inherit",
-                  }}
-                >
-                  {conn.name}
-                </span>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 400,
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  ({conn.user}@{conn.host})
-                </span>
-              </button>
-            ))
-          )}
-        </>
-      )}
-
-      {/* Divider */}
-      <div
-        style={{
-          height: 1,
-          backgroundColor: "var(--border)",
-          margin: "4px 8px",
-        }}
-      />
-
-      {/* Actions */}
-      <button
-        role="menuitem"
-        onClick={() => setShowForm(true)}
-        style={{
-          ...itemStyle,
-          flexDirection: "row",
-          gap: 6,
-          alignItems: "center",
-          color: "var(--text-primary)",
-          fontSize: 12,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--bg-primary)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.outline = "2px solid var(--accent)";
-          e.currentTarget.style.outlineOffset = "1px";
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.outline = "none";
-        }}
-      >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 16 16"
-          fill="none"
-          style={{ flexShrink: 0 }}
-        >
-          <path
-            d="M8 3V13M3 8H13"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
+      {/* Actions at top */}
+      <button role="menuitem" onClick={() => setShowForm(true)} style={actionBtnStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+          <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
-        + New Connection...
+        New Connection
       </button>
-
-      <button
-        role="menuitem"
-        onClick={handleEditConfig}
-        style={{
-          ...itemStyle,
-          flexDirection: "row",
-          gap: 6,
-          alignItems: "center",
-          color: "var(--text-primary)",
-          fontSize: 12,
-          marginBottom: 4,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--bg-primary)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.outline = "2px solid var(--accent)";
-          e.currentTarget.style.outlineOffset = "1px";
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.outline = "none";
-        }}
-      >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 16 16"
-          fill="none"
-          style={{ flexShrink: 0 }}
-        >
-          <path
-            d="M2 11.5V14h2.5L12.06 6.44 9.56 3.94 2 11.5zM14.06 4.44l-2.5-2.5-1.5 1.5 2.5 2.5 1.5-1.5z"
-            stroke="currentColor"
-            strokeWidth="1.2"
-            strokeLinejoin="round"
-          />
+      <button role="menuitem" onClick={handleEditConfig} style={actionBtnStyle} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+          <path d="M2 11.5V14h2.5L12.06 6.44 9.56 3.94 2 11.5zM14.06 4.44l-2.5-2.5-1.5 1.5 2.5 2.5 1.5-1.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
         </svg>
         Edit SSH Config
       </button>
 
-      {/* New Connection Form overlay */}
+      {/* Divider */}
+      <div style={{ height: 1, backgroundColor: "var(--border)", margin: "4px 8px" }} />
+
+      {/* SSH Config Hosts */}
+      {configHosts.length > 0 && (
+        <>
+          <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", padding: "6px 8px 2px" }}>
+            SSH Config
+          </div>
+          {configHosts.map((host) => (
+            <button key={host.host_alias} role="menuitem" style={itemStyle} onClick={() => handleConfigHostClick(host)} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+              <span style={{ fontWeight: 500 }}>{host.host_alias}</span>
+              <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                {host.hostname || host.host_alias}
+              </span>
+            </button>
+          ))}
+        </>
+      )}
+
+      {/* Saved Connections */}
+      {connections.length > 0 && (
+        <>
+          <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", padding: "6px 8px 2px" }}>
+            Saved
+          </div>
+          {connections.map((conn) => (
+            <button key={conn.id} role="menuitem" style={itemStyle} onClick={() => handleSavedConnectionClick(conn)} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+              <span style={{ fontWeight: 500 }}>{conn.name}</span>
+              <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                {conn.user}@{conn.host}
+              </span>
+            </button>
+          ))}
+        </>
+      )}
+
+      {/* Empty state */}
+      {configHosts.length === 0 && connections.length === 0 && (
+        <div style={{ padding: "8px", fontSize: 12, color: "var(--text-secondary)", fontStyle: "italic" }}>
+          No hosts found. Add to ~/.ssh/config or create a new connection.
+        </div>
+      )}
+
+      {/* New Connection Form */}
       {showForm && (
         <SshConnectionForm
           onSave={handleNewConnectionSave}
