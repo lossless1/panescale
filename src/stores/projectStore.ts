@@ -4,6 +4,9 @@ import { persist } from "zustand/middleware";
 interface Project {
   path: string;
   name: string;
+  isRemote?: boolean;
+  sshSessionId?: string;
+  sshHost?: string;
 }
 
 interface ProjectState {
@@ -15,6 +18,7 @@ interface ProjectState {
   setActiveProject: (index: number) => void;
   setViewMode: (mode: "tree" | "feed") => void;
   activeProject: () => Project | null;
+  openRemoteProject: (remotePath: string, sshSessionId: string, sshHost: string) => void;
 }
 
 function basename(path: string): string {
@@ -37,6 +41,30 @@ export const useProjectStore = create<ProjectState>()(
           return;
         }
         const newProject: Project = { path, name: basename(path) };
+        set({
+          projects: [...projects, newProject],
+          activeProjectIndex: projects.length,
+        });
+      },
+
+      openRemoteProject: (remotePath: string, sshSessionId: string, sshHost: string) => {
+        const { projects } = get();
+        const displayPath = `${sshHost}:${remotePath}`;
+        const existingIndex = projects.findIndex((p) => p.path === displayPath);
+        if (existingIndex >= 0) {
+          // Update the sshSessionId in case of reconnection, then activate
+          const updated = [...projects];
+          updated[existingIndex] = { ...updated[existingIndex], sshSessionId };
+          set({ projects: updated, activeProjectIndex: existingIndex });
+          return;
+        }
+        const newProject: Project = {
+          path: displayPath,
+          name: basename(remotePath),
+          isRemote: true,
+          sshSessionId,
+          sshHost,
+        };
         set({
           projects: [...projects, newProject],
           activeProjectIndex: projects.length,
