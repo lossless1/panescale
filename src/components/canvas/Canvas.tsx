@@ -302,12 +302,12 @@ function CanvasInner() {
   const handlePaneDoubleClick = useCallback(
     (event: React.MouseEvent) => {
       // Only spawn terminal when double-clicking on the empty pane background,
-      // not on existing nodes/tiles
+      // not on existing nodes/tiles or their children
       const target = event.target as HTMLElement;
+      if (target.closest(".react-flow__node")) return;
       const isPane =
         target.classList.contains("react-flow__pane") ||
-        target.classList.contains("react-flow__background") ||
-        target.closest(".react-flow__pane") === target;
+        target.classList.contains("react-flow__background");
       if (!isPane) return;
 
       const position = reactFlow.screenToFlowPosition({
