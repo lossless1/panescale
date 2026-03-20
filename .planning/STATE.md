@@ -182,9 +182,10 @@ None yet.
 | 260319-mjb | CodeMirror 6 syntax-highlighted editor replacing plain textarea in FilePreviewNode | 2026-03-19 | 3e8a4a9 | [260319-mjb-replace-plain-textarea-with-syntax-highl](./quick/260319-mjb-replace-plain-textarea-with-syntax-highl/) |
 | 260319-mq5 | Grab cursor only on header, remove preview mode from FilePreviewNode | 2026-03-19 | a3346ba | [260319-mq5-grab-cursor-only-on-header-remove-previe](./quick/260319-mq5-grab-cursor-only-on-header-remove-previe/) |
 | 260320-lch | Socket-isolated tmux with hidden UI and process persistence | 2026-03-20 | 6f6be37 | [260320-lch-isolate-tmux-sessions-from-user-namespac](./quick/260320-lch-isolate-tmux-sessions-from-user-namespac/) |
+| 260320-td0 | E2E integration testing infrastructure with 4 tmux test scenarios | 2026-03-20 | d8611fd | [260320-td0-set-up-e2e-testing-infrastructure-for-pa](./quick/260320-td0-set-up-e2e-testing-infrastructure-for-pa/) |
 
 ## Session Continuity
 
-Last session: 2026-03-20T14:35:56Z
-Stopped at: Quick task 260320-lch checkpoint (human-verify)
-Resume file: .planning/quick/260320-lch-isolate-tmux-sessions-from-user-namespac/260320-lch-PLAN.md
+Last session: 2026-03-20T20:18:07Z
+Stopped at: Completed 260320-td0 quick task
+Resume file: .planning/quick/260320-td0-set-up-e2e-testing-infrastructure-for-pa/260320-td0-PLAN.md
