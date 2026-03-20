@@ -143,7 +143,7 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
   const itemStyle: React.CSSProperties = {
     padding: "6px 8px",
     cursor: "pointer",
-    borderRadius: 4,
+    borderRadius: 6,
     display: "flex",
     flexDirection: "column",
     gap: 1,
@@ -151,6 +151,8 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
     border: "none",
     width: "100%",
     textAlign: "left",
+    color: "var(--text-primary)",
+    fontSize: 12,
   };
 
   return (
@@ -164,12 +166,14 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
         marginTop: 4,
         minWidth: 240,
         maxWidth: 320,
-        backgroundColor: "var(--bg-secondary)",
+        maxHeight: "70vh",
+        overflowY: "auto",
+        backgroundColor: "var(--bg-primary)",
         border: "1px solid var(--border)",
-        borderRadius: 6,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+        borderRadius: 8,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
         zIndex: 9999,
-        overflow: "hidden",
+        padding: 4,
       }}
     >
       {isEmpty ? (
@@ -212,12 +216,10 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
                 style={itemStyle}
                 onClick={() => handleConfigHostClick(host)}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--accent)";
-                  e.currentTarget.style.color = "#fff";
+                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "";
                 }}
                 onFocus={(e) => {
                   e.currentTarget.style.outline =
@@ -275,12 +277,10 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
                 style={itemStyle}
                 onClick={() => handleSavedConnectionClick(conn)}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "var(--accent)";
-                  e.currentTarget.style.color = "#fff";
+                  e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "";
                 }}
                 onFocus={(e) => {
                   e.currentTarget.style.outline =
