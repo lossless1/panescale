@@ -12,9 +12,14 @@ type ImageNodeData = {
 function ImageNodeInner({ id, data, selected }: NodeProps) {
   const { filePath, fileName } = data as unknown as ImageNodeData;
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const removeNode = useCanvasStore((s) => s.removeNode);
   const openTerminal = useOpenTerminalFromTile(id);
   const [isDragOver, setIsDragOver] = useState(false);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+
+  const handleClose = useCallback(() => {
+    removeNode(id);
+  }, [id, removeNode]);
 
   const assetUrl = filePath ? convertFileSrc(filePath) : null;
   const displayUrl = objectUrl || assetUrl;
@@ -105,7 +110,31 @@ function ImageNodeInner({ id, data, selected }: NodeProps) {
             flexShrink: 0,
           }}
         >
-          <span style={{ fontWeight: 600 }}>{fileName || "Image"}</span>
+          <span style={{ fontWeight: 600, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName || "Image"}</span>
+          <button
+            className="nodrag"
+            onClick={handleClose}
+            title="Close"
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              fontSize: 14,
+              padding: "0 4px",
+              lineHeight: 1,
+              borderRadius: 3,
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.color = "#ef4444";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.color = "var(--text-secondary)";
+            }}
+          >
+            &#x2715;
+          </button>
         </div>
         <div
           className="nodrag nowheel nopan"

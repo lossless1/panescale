@@ -26,9 +26,11 @@ function extractCodeLanguages(markdown: string): string[] {
 function createCodeRenderer(highlighter: Highlighter | null, theme: "one-dark-pro" | "github-light"): Renderer {
   const renderer = new Renderer();
   // Override link renderer to prevent target="_blank" -- links are intercepted by onClick handler
-  renderer.link = ({ href, text }: { href: string; text: string }) => {
+  // Use this.parser.parseInline(tokens) to render nested content (e.g. images inside links)
+  renderer.link = function({ href, tokens }: { href: string; text: string; tokens: import("marked").Token[] }) {
     const escaped = (href ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-    return `<a href="${escaped}">${text}</a>`;
+    const body = this.parser.parseInline(tokens);
+    return `<a href="${escaped}">${body}</a>`;
   };
   renderer.code = ({ text, lang }: { text: string; lang?: string }) => {
     const language = lang || "text";
@@ -54,6 +56,7 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
     data as unknown as NoteNodeData;
   const isFileBacked = !!filePath;
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const removeNode = useCanvasStore((s) => s.removeNode);
   const addWebViewNode = useCanvasStore((s) => s.addWebViewNode);
   const activeProject = useProjectStore((s) => s.activeProject());
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -135,6 +138,10 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
     },
     [id, updateNodeData],
   );
+
+  const handleClose = useCallback(() => {
+    removeNode(id);
+  }, [id, removeNode]);
 
   const togglePreview = useCallback(() => {
     updateNodeData(id, { isPreview: !isPreview });
@@ -218,22 +225,47 @@ function NoteNodeInner({ id, data, selected }: NodeProps) {
             )}
             {displayName}
           </span>
-          <button
-            className="nodrag"
-            onClick={togglePreview}
-            style={{
-              background: "none",
-              border: "1px solid var(--border)",
-              borderRadius: 4,
-              color: "var(--text-secondary)",
-              cursor: "pointer",
-              fontSize: 11,
-              padding: "2px 8px",
-              lineHeight: 1.4,
-            }}
-          >
-            {isPreview ? "Edit" : "Preview"}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <button
+              className="nodrag"
+              onClick={togglePreview}
+              style={{
+                background: "none",
+                border: "1px solid var(--border)",
+                borderRadius: 4,
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                fontSize: 11,
+                padding: "2px 8px",
+                lineHeight: 1.4,
+              }}
+            >
+              {isPreview ? "Edit" : "Preview"}
+            </button>
+            <button
+              className="nodrag"
+              onClick={handleClose}
+              title="Close"
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                fontSize: 14,
+                padding: "0 4px",
+                lineHeight: 1,
+                borderRadius: 3,
+              }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLElement).style.color = "#ef4444";
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLElement).style.color = "var(--text-secondary)";
+              }}
+            >
+              &#x2715;
+            </button>
+          </div>
         </div>
         <div
           className="nodrag nowheel nopan"

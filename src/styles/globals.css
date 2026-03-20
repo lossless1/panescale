@@ -170,6 +170,23 @@ pre,
 .prose img {
   max-width: 100%;
   border-radius: 4px;
+  display: inline; /* Override Tailwind preflight display:block so badges/shields render inline */
+}
+
+/* Shiki syntax-highlighted code blocks inside prose */
+.prose .shiki {
+  margin: 0;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.prose .shiki code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
 }
 
 /* Shiki syntax highlighting in file preview tiles */

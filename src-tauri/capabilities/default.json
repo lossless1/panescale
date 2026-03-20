@@ -33,6 +33,10 @@
       "allow": [{ "path": "**" }]
     },
     {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
       "identifier": "fs:allow-rename",
       "allow": [{ "path": "**" }]
     },
