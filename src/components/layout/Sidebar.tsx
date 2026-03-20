@@ -21,6 +21,7 @@ export function Sidebar() {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [activeTab, setActiveTab] = useState<"files" | "terminals" | "git">("files");
   const [sshDropdownOpen, setSshDropdownOpen] = useState(false);
+  const sshButtonRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -284,7 +285,7 @@ export function Sidebar() {
         {/* Header actions */}
         <div style={{ display: "flex", gap: 2 }}>
           {/* SSH quick connect button */}
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative" }} ref={sshButtonRef}>
             <button
               onClick={() => setSshDropdownOpen((v) => !v)}
               title="SSH Connections"
@@ -316,7 +317,7 @@ export function Sidebar() {
               </svg>
             </button>
             {sshDropdownOpen && (
-              <SshQuickConnect onClose={() => setSshDropdownOpen(false)} />
+              <SshQuickConnect onClose={() => setSshDropdownOpen(false)} anchorRef={sshButtonRef} />
             )}
           </div>
 

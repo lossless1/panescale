@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useSshStore } from "../../stores/sshStore";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useProjectStore } from "../../stores/projectStore";
@@ -8,31 +9,36 @@ import { SshConnectionForm } from "./SshConnectionForm";
 
 interface SshQuickConnectProps {
   onClose: () => void;
+  anchorRef?: React.RefObject<HTMLElement | null>;
 }
 
-export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
+export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
   const configHosts = useSshStore((s) => s.configHosts);
   const connections = useSshStore((s) => s.connections);
   const addConnection = useSshStore((s) => s.addConnection);
   const addSshTerminalNode = useCanvasStore((s) => s.addSshTerminalNode);
   const [showForm, setShowForm] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [alignRight, setAlignRight] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   // Load config hosts on mount
   useEffect(() => {
     useSshStore.getState().loadConfigHosts();
   }, []);
 
-  // Auto-position: open right by default, flip left if it would overflow viewport
+  // Position relative to anchor button
   useEffect(() => {
-    const el = dropdownRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.right > window.innerWidth - 8) {
-      setAlignRight(true);
+    const anchor = anchorRef?.current;
+    if (!anchor) return;
+    const rect = anchor.getBoundingClientRect();
+    let left = rect.left;
+    const top = rect.bottom + 4;
+    // If dropdown would overflow right edge, align to right side of button
+    if (left + 280 > window.innerWidth) {
+      left = rect.right - 280;
     }
-  }, []);
+    setPos({ top, left: Math.max(8, left) });
+  }, [anchorRef]);
 
   // Dismiss on outside click
   useEffect(() => {
@@ -166,16 +172,15 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
     fontSize: 12,
   };
 
-  return (
+  const dropdown = (
     <div
       ref={dropdownRef}
       role="menu"
       style={{
-        position: "absolute",
-        top: "100%",
-        ...(alignRight ? { right: 0 } : { left: 0 }),
-        marginTop: 4,
-        minWidth: 240,
+        position: "fixed",
+        top: pos.top,
+        left: pos.left,
+        minWidth: 260,
         maxWidth: 320,
         maxHeight: "70vh",
         overflowY: "auto",
@@ -183,7 +188,7 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
         border: "1px solid var(--border)",
         borderRadius: 8,
         boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-        zIndex: 9999,
+        zIndex: 99999,
         padding: 4,
       }}
     >
@@ -430,4 +435,6 @@ export function SshQuickConnect({ onClose }: SshQuickConnectProps) {
       )}
     </div>
   );
+
+  return createPortal(dropdown, document.body);
 }
