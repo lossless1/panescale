@@ -1,4 +1,5 @@
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::ipc::Channel;
 
 /// Progress events streamed during tmux auto-installation.
@@ -12,7 +13,51 @@ pub struct TmuxBridge;
 
 const SESSION_PREFIX: &str = "exc-";
 
+/// Whether the tmux server has already been configured (status off, prefix None, etc.)
+static SERVER_CONFIGURED: AtomicBool = AtomicBool::new(false);
+
 impl TmuxBridge {
+    /// Get the path to the Panescale-dedicated tmux socket.
+    /// Uses the app data directory for persistence across reboots.
+    fn socket_path() -> Result<String, String> {
+        let data_dir = dirs::data_dir()
+            .ok_or("Could not determine data directory")?;
+        let app_dir = data_dir.join("panescale");
+        std::fs::create_dir_all(&app_dir)
+            .map_err(|e| format!("Failed to create app dir: {}", e))?;
+        Ok(app_dir.join("tmux.sock").to_string_lossy().to_string())
+    }
+
+    /// Build a tmux Command with the dedicated socket pre-injected.
+    fn tmux_cmd() -> Result<Command, String> {
+        let sock = Self::socket_path()?;
+        let mut cmd = Command::new("tmux");
+        cmd.arg("-S").arg(&sock);
+        Ok(cmd)
+    }
+
+    /// Configure the tmux server to hide all UI artifacts.
+    /// Only runs once per process lifetime (the tmux server persists).
+    fn configure_server() -> Result<(), String> {
+        if SERVER_CONFIGURED.swap(true, Ordering::SeqCst) {
+            return Ok(()); // Already configured
+        }
+
+        let options: &[&[&str]] = &[
+            &["set-option", "-g", "status", "off"],
+            &["set-option", "-g", "prefix", "None"],
+            &["set-option", "-g", "prefix2", "None"],
+            &["set-option", "-g", "escape-time", "0"],
+            &["set-option", "-g", "mouse", "off"],
+        ];
+
+        for args in options {
+            let _ = Self::tmux_cmd()?.args(*args).output();
+        }
+
+        Ok(())
+    }
+
     /// Check if tmux is available on this system
     pub fn is_available() -> bool {
         Command::new("tmux")
@@ -25,7 +70,7 @@ impl TmuxBridge {
     /// Session name format: "exc-{tile_id}"
     pub fn create_session(tile_id: &str, shell: &str, cwd: &str) -> Result<String, String> {
         let session_name = format!("{}{}", SESSION_PREFIX, tile_id);
-        let output = Command::new("tmux")
+        let output = Self::tmux_cmd()?
             .args([
                 "new-session",
                 "-d",
@@ -49,28 +94,29 @@ impl TmuxBridge {
             ));
         }
 
-        // Hide tmux status bar — the app provides its own title bar
-        let _ = Command::new("tmux")
-            .args(["set-option", "-t", &session_name, "status", "off"])
-            .output();
+        // Configure the tmux server to hide all UI (only runs once)
+        Self::configure_server()?;
 
         Ok(session_name)
     }
 
     /// Return the command args to attach to an existing session.
     /// The PTY should spawn this command instead of the shell directly.
-    pub fn attach_args(session_name: &str) -> Vec<String> {
-        vec![
+    pub fn attach_args(session_name: &str) -> Result<Vec<String>, String> {
+        let sock = Self::socket_path()?;
+        Ok(vec![
             "tmux".into(),
+            "-S".into(),
+            sock,
             "attach-session".into(),
             "-t".into(),
             session_name.into(),
-        ]
+        ])
     }
 
     /// List all excalicode-managed tmux sessions (prefixed with "exc-")
     pub fn list_sessions() -> Result<Vec<String>, String> {
-        let output = Command::new("tmux")
+        let output = Self::tmux_cmd()?
             .args(["list-sessions", "-F", "#{session_name}"])
             .output()
             .map_err(|e| format!("Failed to list tmux sessions: {}", e))?;
@@ -87,7 +133,7 @@ impl TmuxBridge {
 
     /// Kill a tmux session
     pub fn kill_session(session_name: &str) -> Result<(), String> {
-        Command::new("tmux")
+        Self::tmux_cmd()?
             .args(["kill-session", "-t", session_name])
             .output()
             .map_err(|e| format!("Failed to kill tmux session: {}", e))?;
@@ -96,15 +142,18 @@ impl TmuxBridge {
 
     /// Check if a specific session exists
     pub fn session_exists(session_name: &str) -> bool {
-        Command::new("tmux")
-            .args(["has-session", "-t", session_name])
-            .output()
+        Self::tmux_cmd()
+            .and_then(|mut cmd| {
+                cmd.args(["has-session", "-t", session_name])
+                    .output()
+                    .map_err(|e| format!("{}", e))
+            })
             .map_or(false, |o| o.status.success())
     }
 
     /// Capture the visible pane content for instant restore display
     pub fn capture_pane(session_name: &str) -> Result<String, String> {
-        let output = Command::new("tmux")
+        let output = Self::tmux_cmd()?
             .args(["capture-pane", "-t", session_name, "-p", "-S", "-"])
             .output()
             .map_err(|e| format!("Failed to capture pane: {}", e))?;
@@ -245,18 +294,28 @@ mod tests {
         let tile_id = "test-tile-42";
         let expected = format!("exc-{}", tile_id);
         // Verify that attach_args produces the correct session name reference
-        let args = TmuxBridge::attach_args(&expected);
+        let args = TmuxBridge::attach_args(&expected).unwrap();
         assert_eq!(args[0], "tmux");
-        assert_eq!(args[1], "attach-session");
-        assert_eq!(args[2], "-t");
-        assert_eq!(args[3], expected);
+        assert_eq!(args[1], "-S");
+        // args[2] is the socket path
+        assert_eq!(args[3], "attach-session");
+        assert_eq!(args[4], "-t");
+        assert_eq!(args[5], expected);
     }
 
     #[test]
     fn test_attach_args_structure() {
-        let args = TmuxBridge::attach_args("exc-my-tile");
-        assert_eq!(args.len(), 4);
+        let args = TmuxBridge::attach_args("exc-my-tile").unwrap();
+        assert_eq!(args.len(), 6);
         assert_eq!(args[0], "tmux");
-        assert_eq!(args[1], "attach-session");
+        assert_eq!(args[1], "-S");
+        assert_eq!(args[3], "attach-session");
+    }
+
+    #[test]
+    fn test_socket_path_contains_panescale() {
+        let path = TmuxBridge::socket_path().unwrap();
+        assert!(path.contains("panescale"), "Socket path should contain 'panescale'");
+        assert!(path.ends_with("tmux.sock"), "Socket path should end with 'tmux.sock'");
     }
 }
