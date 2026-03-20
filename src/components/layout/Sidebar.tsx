@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useProjectStore } from "../../stores/projectStore";
 import { SidebarTabs } from "../sidebar/SidebarTabs";
@@ -21,9 +21,25 @@ export function Sidebar() {
   const startWidth = useRef(0);
 
   const activeProject = useProjectStore((s) => s.activeProject());
+  const projects = useProjectStore((s) => s.projects);
+  const setActiveProject = useProjectStore((s) => s.setActiveProject);
+  const closeProject = useProjectStore((s) => s.closeProject);
   const viewMode = useProjectStore((s) => s.viewMode);
   const setViewMode = useProjectStore((s) => s.setViewMode);
   const openProject = useProjectStore((s) => s.openProject);
+  const [showProjects, setShowProjects] = useState(false);
+  const projectsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showProjects) return;
+    const close = (e: MouseEvent) => {
+      if (projectsRef.current && !projectsRef.current.contains(e.target as Node)) {
+        setShowProjects(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [showProjects]);
 
   const onPointerDown = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
@@ -89,21 +105,147 @@ export function Sidebar() {
           flexShrink: 0,
         }}
       >
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            color: "var(--text-primary)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            maxWidth: 160,
-          }}
-        >
-          {activeProject ? activeProject.name : "Panescale"}
-        </span>
+        <div style={{ position: "relative" }} ref={projectsRef}>
+          <button
+            onClick={() => setShowProjects((v) => !v)}
+            style={{
+              background: "none",
+              border: "none",
+              padding: "4px 6px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              borderRadius: 4,
+              color: "var(--text-primary)",
+              maxWidth: 180,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-secondary)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+          >
+            {/* Folder icon */}
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+              <path d="M2 4h4l1.5 1.5H14v7.5H2V4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+            </svg>
+            <span style={{
+              fontSize: 12,
+              fontWeight: 500,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}>
+              {activeProject ? activeProject.name : "Open Folder"}
+            </span>
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
+              <path d="M2 3L4 5L6 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          {showProjects && (
+            <div style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              left: 0,
+              right: 0,
+              minWidth: 220,
+              backgroundColor: "var(--bg-primary)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              padding: 4,
+              zIndex: 9999,
+            }}>
+              {projects.map((p, i) => {
+                const isActive = activeProject?.path === p.path;
+                return (
+                  <button
+                    key={p.path}
+                    onClick={() => { setActiveProject(i); setShowProjects(false); }}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "6px 8px",
+                      border: "none",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      background: isActive ? "var(--bg-secondary)" : "transparent",
+                      color: "var(--text-primary)",
+                    }}
+                    onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "var(--bg-secondary)"; }}
+                    onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    {/* Active dot */}
+                    <span style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: "50%",
+                      backgroundColor: isActive ? "var(--accent)" : "transparent",
+                      flexShrink: 0,
+                    }} />
+                    <div style={{ overflow: "hidden", flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: isActive ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {p.name}
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {p.path}
+                      </div>
+                    </div>
+                    {projects.length > 1 && (
+                      <span
+                        onClick={(e) => { e.stopPropagation(); closeProject(p.path); if (projects.length <= 1) setShowProjects(false); }}
+                        style={{
+                          opacity: 0.3,
+                          cursor: "pointer",
+                          fontSize: 12,
+                          padding: "0 2px",
+                          flexShrink: 0,
+                          lineHeight: 1,
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.3"; }}
+                        title="Close project"
+                      >
+                        &#x2715;
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* Divider */}
+              <div style={{ height: 1, backgroundColor: "var(--border)", margin: "4px 8px" }} />
+
+              {/* Open folder */}
+              <button
+                onClick={() => { handleOpenFolder(); setShowProjects(false); }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "6px 8px",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  background: "transparent",
+                  color: "var(--text-secondary)",
+                  fontSize: 12,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-secondary)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.5 }}>
+                  <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                Open Folder
+              </button>
+            </div>
+          )}
+        </div>
         <div style={{ display: "flex", gap: 2 }}>
           {/* View mode toggle */}
           <button
