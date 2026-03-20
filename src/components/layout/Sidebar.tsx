@@ -10,7 +10,8 @@ import { ChronologicalFeed } from "../sidebar/ChronologicalFeed";
 import { TerminalList } from "../sidebar/TerminalList";
 import { FuzzySearch } from "../sidebar/FuzzySearch";
 import { GitPanel } from "../sidebar/git/GitPanel";
-import { SshPanel } from "../sidebar/SshPanel";
+import { SshQuickConnect } from "../sidebar/SshQuickConnect";
+import { RemoteFileTree } from "../sidebar/RemoteFileTree";
 
 const DEFAULT_WIDTH = 240;
 const MIN_WIDTH = 180;
@@ -18,7 +19,8 @@ const MAX_WIDTH = 480;
 
 export function Sidebar() {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
-  const [activeTab, setActiveTab] = useState<"files" | "terminals" | "git" | "ssh">("files");
+  const [activeTab, setActiveTab] = useState<"files" | "terminals" | "git">("files");
+  const [sshDropdownOpen, setSshDropdownOpen] = useState(false);
   const dragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -206,8 +208,21 @@ export function Sidebar() {
                       flexShrink: 0,
                     }} />
                     <div style={{ overflow: "hidden", flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: isActive ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: 12, fontWeight: isActive ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
                         {p.name}
+                        {p.isRemote && (
+                          <span style={{
+                            fontSize: 9,
+                            fontWeight: 600,
+                            padding: "2px 8px",
+                            borderRadius: 8,
+                            backgroundColor: "var(--accent)",
+                            color: "#fff",
+                            flexShrink: 0,
+                          }}>
+                            SSH
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 10, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {p.path}
@@ -266,8 +281,73 @@ export function Sidebar() {
             </div>
           )}
         </div>
-        {/* Settings button placeholder */}
-        <div style={{ display: "flex", gap: 2 }} />
+        {/* Header actions */}
+        <div style={{ display: "flex", gap: 2 }}>
+          {/* SSH quick connect button */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setSshDropdownOpen((v) => !v)}
+              title="SSH Connections"
+              aria-label="SSH Connections"
+              aria-expanded={sshDropdownOpen}
+              style={{
+                background: sshDropdownOpen ? "var(--bg-secondary)" : "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--text-secondary)",
+                borderRadius: 3,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-secondary)";
+              }}
+              onMouseLeave={(e) => {
+                if (!sshDropdownOpen) {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+                }
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M1.5 8h13M8 1.5c-2 2-2 5 0 6.5s2 4.5 0 6.5M8 1.5c2 2 2 5 0 6.5s-2 4.5 0 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+            {sshDropdownOpen && (
+              <SshQuickConnect onClose={() => setSshDropdownOpen(false)} />
+            )}
+          </div>
+
+          {/* Open folder button */}
+          <button
+            onClick={handleOpenFolder}
+            title="Open Folder"
+            aria-label="Open Folder"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--text-secondary)",
+              borderRadius: 3,
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-secondary)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -316,12 +396,13 @@ export function Sidebar() {
               Recent
             </button>
           </div>
-          {viewMode === "tree" ? <FileTree /> : <ChronologicalFeed />}
+          {viewMode === "tree" ? (
+            activeProject?.isRemote ? <RemoteFileTree /> : <FileTree />
+          ) : <ChronologicalFeed />}
         </>
       )}
       {activeTab === "terminals" && <TerminalList />}
       {activeTab === "git" && <GitPanel />}
-      {activeTab === "ssh" && <SshPanel />}
 
       {/* Fuzzy search overlay (manages own visibility via Cmd+K) */}
       <FuzzySearch onNavigateToFile={handleOpenFile} />

@@ -1,4 +1,6 @@
-type TabId = "files" | "terminals" | "git" | "ssh";
+type TabId = "files" | "terminals" | "git";
+
+export type { TabId };
 
 interface SidebarTabsProps {
   activeTab: TabId;
@@ -9,7 +11,6 @@ const tabs: { id: TabId; label: string }[] = [
   { id: "files", label: "Files" },
   { id: "terminals", label: "Piles" },
   { id: "git", label: "Git" },
-  { id: "ssh", label: "SSH" },
 ];
 
 export function SidebarTabs({ activeTab, onTabChange }: SidebarTabsProps) {
