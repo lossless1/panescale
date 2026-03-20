@@ -12,18 +12,18 @@ export type ThemeVariables = Record<string, string>;
 
 export const themes: Record<ResolvedTheme, ThemeVariables> = {
   dark: {
-    "--bg-primary": "#1a1a2e",
-    "--bg-secondary": "#16213e",
-    "--bg-titlebar": "#0f0f23",
-    "--bg-sidebar": "#12122a",
+    "--bg-primary": "#0d0d0d",
+    "--bg-secondary": "#141414",
+    "--bg-titlebar": "#0a0a0a",
+    "--bg-sidebar": "#111111",
     "--bg-terminal": "#000000",
     "--text-primary": "#e0e0e0",
-    "--text-secondary": "#8888aa",
-    "--border": "#2a2a4a",
+    "--text-secondary": "#777777",
+    "--border": "#222222",
     "--accent": "#6366f1",
     "--focus-glow": "rgba(99, 102, 241, 0.4)",
-    "--grid-minor": "#404068",
-    "--grid-major": "#555588",
+    "--grid-minor": "#1a1a1a",
+    "--grid-major": "#252525",
   },
   light: {
     "--bg-primary": "#ffffff",
