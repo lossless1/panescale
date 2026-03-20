@@ -12,26 +12,34 @@ pub async fn ssh_connect(
     password: Option<String>,
     cols: u16,
     rows: u16,
+    // Optional direct connection params — used when connection isn't in the config store
+    host: Option<String>,
+    port: Option<u16>,
+    user: Option<String>,
+    key_path: Option<String>,
     on_event: Channel<SshEvent>,
     ssh_state: tauri::State<'_, SshManager>,
 ) -> Result<String, String> {
-    // Load connection config from saved connections
-    let config = {
+    // Try to load from saved connections first, fall back to direct params
+    let (conn_host, conn_port, conn_user, conn_key) = {
         let store = ssh_state.get_config_store().await;
-        store
-            .get_connection(&connection_id)
-            .cloned()
-            .ok_or_else(|| format!("Connection '{}' not found", connection_id))?
+        if let Some(config) = store.get_connection(&connection_id) {
+            (config.host.clone(), config.port, config.user.clone(), config.key_path.clone())
+        } else if let (Some(h), Some(u)) = (&host, &user) {
+            (h.clone(), port.unwrap_or(22), u.clone(), key_path.clone())
+        } else {
+            return Err(format!("Connection '{}' not found and no direct params provided", connection_id));
+        }
     };
 
     let session_id = uuid::Uuid::new_v4().to_string();
     ssh_state
         .connect(
             session_id.clone(),
-            config.host,
-            config.port,
-            config.user,
-            config.key_path,
+            conn_host,
+            conn_port,
+            conn_user,
+            conn_key,
             password,
             cols as u32,
             rows as u32,

@@ -142,22 +142,24 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
 
     // Spawn PTY or connect SSH
     if (nodeData.sshConnectionId) {
-      // SSH terminal
+      // SSH terminal — pass direct params so backend doesn't need stored connection
+      const sshDirect = nodeData.sshHost && nodeData.sshUser
+        ? { host: nodeData.sshHost, port: 22, user: nodeData.sshUser }
+        : undefined;
+
       if (nodeData.restored) {
-        // Restored SSH terminal: show reconnect prompt instead of auto-connecting
         const userHost = `${nodeData.sshUser ?? "user"}@${nodeData.sshHost ?? "host"}`;
         term.write(`\r\nSSH session disconnected. Press Enter to reconnect to ${userHost}...\r\n`);
         const disposable = term.onData(() => {
           disposable.dispose();
           ssh
-            .connect(nodeData.sshConnectionId!, null, term.cols, term.rows, term)
+            .connect(nodeData.sshConnectionId!, null, term.cols, term.rows, term, sshDirect)
             .catch((err: unknown) => {
               const errMsg = err instanceof Error ? err.message : String(err);
-              // If password required, prompt and retry
               if (errMsg.toLowerCase().includes("password")) {
                 const pw = window.prompt(`Enter password for ${userHost}:`);
                 if (pw) {
-                  ssh.connect(nodeData.sshConnectionId!, pw, term.cols, term.rows, term).catch((e2: unknown) => {
+                  ssh.connect(nodeData.sshConnectionId!, pw, term.cols, term.rows, term, sshDirect).catch((e2: unknown) => {
                     term.write(`\r\nSSH reconnect failed: ${e2 instanceof Error ? e2.message : String(e2)}\r\n`);
                   });
                 }
@@ -167,16 +169,15 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
             });
         });
       } else {
-        // Fresh SSH terminal
         ssh
-          .connect(nodeData.sshConnectionId, null, term.cols, term.rows, term)
+          .connect(nodeData.sshConnectionId, null, term.cols, term.rows, term, sshDirect)
           .catch((err: unknown) => {
             const errMsg = err instanceof Error ? err.message : String(err);
             if (errMsg.toLowerCase().includes("password")) {
               const userHost = `${nodeData.sshUser ?? "user"}@${nodeData.sshHost ?? "host"}`;
               const pw = window.prompt(`Enter password for ${userHost}:`);
               if (pw) {
-                ssh.connect(nodeData.sshConnectionId!, pw, term.cols, term.rows, term).catch((e2: unknown) => {
+                ssh.connect(nodeData.sshConnectionId!, pw, term.cols, term.rows, term, sshDirect).catch((e2: unknown) => {
                   term.write(`\r\nSSH connect failed: ${e2 instanceof Error ? e2.message : String(e2)}\r\n`);
                 });
               }

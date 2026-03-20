@@ -416,12 +416,17 @@ export async function sshConnect(
   cols: number,
   rows: number,
   onEvent: Channel<SshEvent>,
+  directParams?: { host: string; port: number; user: string; keyPath?: string | null },
 ): Promise<string> {
   return invoke<string>("ssh_connect", {
     connectionId,
     password,
     cols,
     rows,
+    host: directParams?.host ?? null,
+    port: directParams?.port ?? null,
+    user: directParams?.user ?? null,
+    keyPath: directParams?.keyPath ?? null,
     onEvent,
   });
 }

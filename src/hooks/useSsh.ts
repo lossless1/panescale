@@ -16,6 +16,7 @@ export interface UseSshReturn {
     cols: number,
     rows: number,
     term: Terminal,
+    directParams?: { host: string; port: number; user: string; keyPath?: string | null },
   ) => Promise<string>;
   write: (data: string) => void;
   resize: (cols: number, rows: number) => void;
@@ -61,6 +62,7 @@ export function useSsh(): UseSshReturn {
       cols: number,
       rows: number,
       term: Terminal,
+      directParams?: { host: string; port: number; user: string; keyPath?: string | null },
     ): Promise<string> => {
       if (spawnLock.current) {
         return sessionIdRef.current ?? "";
@@ -68,7 +70,7 @@ export function useSsh(): UseSshReturn {
       spawnLock.current = true;
 
       const channel = createChannel(term);
-      const id = await sshConnect(connectionId, password, cols, rows, channel);
+      const id = await sshConnect(connectionId, password, cols, rows, channel, directParams);
       sessionIdRef.current = id;
       isAliveRef.current = true;
       renderRef.current += 1;
