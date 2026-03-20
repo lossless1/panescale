@@ -71,6 +71,10 @@ pub fn run() {
             ssh::commands::ssh_disconnect,
             ssh::commands::ssh_save_connections,
             ssh::commands::ssh_load_connections,
+            ssh::commands::ssh_list_config_hosts,
+            ssh::commands::ssh_read_remote_dir,
+            ssh::commands::ssh_connect_for_browsing,
+            ssh::commands::ssh_open_config_in_editor,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

@@ -187,6 +187,103 @@ impl SshManager {
         Ok(())
     }
 
+    /// Execute a command on a remote host via a new exec channel.
+    /// Opens the channel while holding the lock, then drops the lock before reading output.
+    pub async fn exec_command(
+        &self,
+        session_id: &str,
+        command: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let ch = {
+            let sessions = self.sessions.lock().await;
+            let session = sessions.get(session_id)
+                .ok_or_else(|| format!("Session '{}' not found", session_id))?;
+            session.handle.channel_open_session().await?
+        }; // Lock dropped here before reading output
+
+        let (mut read_half, write_half) = ch.split();
+        write_half.exec(true, command).await?;
+
+        let mut output = Vec::new();
+        loop {
+            match read_half.wait().await {
+                Some(ChannelMsg::Data { ref data }) => output.extend_from_slice(data),
+                Some(ChannelMsg::Eof) | None => break,
+                _ => {}
+            }
+        }
+        Ok(String::from_utf8_lossy(&output).to_string())
+    }
+
+    /// Connect for file browsing only (no PTY, no terminal tile).
+    /// Authenticates and stores the Handle for later exec commands.
+    pub async fn connect_browsing(
+        &self,
+        session_id: String,
+        host: String,
+        port: u16,
+        user: String,
+        key_path: Option<String>,
+        password: Option<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let config = Arc::new(russh::client::Config {
+            inactivity_timeout: Some(Duration::from_secs(30)),
+            ..Default::default()
+        });
+
+        let mut session = tokio::time::timeout(
+            Duration::from_secs(10),
+            russh::client::connect(config, (host.as_str(), port), SshHandler),
+        )
+        .await
+        .map_err(|_| "SSH connection timed out")?
+        .map_err(|e| format!("SSH connection failed: {}", e))?;
+
+        // Auth cascade: key first, then password (same pattern as connect())
+        let mut authenticated = false;
+        if let Some(ref kp) = key_path {
+            match russh::keys::load_secret_key(kp, password.as_deref()) {
+                Ok(key) => {
+                    let best_hash = session.best_supported_rsa_hash().await.ok().flatten().flatten();
+                    let key_with_alg = PrivateKeyWithHashAlg::new(Arc::new(key), best_hash);
+                    match session.authenticate_publickey(&user, key_with_alg).await {
+                        Ok(result) if result.success() => authenticated = true,
+                        _ => {}
+                    }
+                }
+                Err(_) => {}
+            }
+        }
+        if !authenticated {
+            if let Some(ref pw) = password {
+                let auth_result = session.authenticate_password(&user, pw).await
+                    .map_err(|e| format!("Password auth error: {}", e))?;
+                if !auth_result.success() {
+                    return Err("Authentication failed".into());
+                }
+            } else {
+                return Err("Authentication failed: no valid key or password provided".into());
+            }
+        }
+
+        // Store a browsing-only session (no PTY channel, no reader task)
+        // Open a session channel just to have valid types, but don't request PTY.
+        let ch = session.channel_open_session().await
+            .map_err(|e| format!("Failed to open channel: {}", e))?;
+        let channel_id = ch.id();
+        let (_read_half, write_half) = ch.split();
+
+        let ssh_session = SshSession {
+            handle: session,
+            channel_id,
+            write_half,
+            reader_task: None, // No reader for browsing sessions
+        };
+
+        self.sessions.lock().await.insert(session_id, ssh_session);
+        Ok(())
+    }
+
     /// Write data to an active SSH session.
     pub async fn write(
         &self,

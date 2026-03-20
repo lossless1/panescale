@@ -1,5 +1,6 @@
 use tauri::ipc::Channel;
 
+use super::config::SshConfigHost;
 use super::manager::{SshEvent, SshManager};
 
 /// Connect to an SSH server. Returns the session ID.
@@ -102,4 +103,166 @@ pub async fn ssh_load_connections(
 ) -> Result<String, String> {
     let store = ssh_state.get_config_store().await;
     serde_json::to_string(&*store).map_err(|e| e.to_string())
+}
+
+/// List hosts from ~/.ssh/config.
+#[tauri::command]
+pub fn ssh_list_config_hosts() -> Result<Vec<SshConfigHost>, String> {
+    use ssh2_config::{ParseRule, SshConfig};
+    use std::io::BufReader;
+
+    let home = dirs::home_dir().ok_or("No home directory")?;
+    let config_path = home.join(".ssh").join("config");
+    if !config_path.exists() {
+        return Ok(vec![]);
+    }
+
+    let file = std::fs::File::open(&config_path).map_err(|e| e.to_string())?;
+    let mut reader = BufReader::new(file);
+    let config = SshConfig::default()
+        .parse(&mut reader, ParseRule::STRICT)
+        .map_err(|e| format!("Failed to parse SSH config: {}", e))?;
+
+    let mut hosts = Vec::new();
+    for host in config.get_hosts() {
+        let aliases: Vec<&str> = host.pattern.iter()
+            .filter(|c| !c.negated && c.pattern != "*")
+            .map(|c| c.pattern.as_str())
+            .collect();
+
+        for alias in aliases {
+            let params = config.query(alias);
+            hosts.push(SshConfigHost {
+                host_alias: alias.to_string(),
+                hostname: params.host_name.clone(),
+                user: params.user.clone(),
+                port: params.port,
+                identity_file: params.identity_file.as_ref()
+                    .and_then(|files| files.first())
+                    .map(|p| p.to_string_lossy().to_string()),
+            });
+        }
+    }
+    Ok(hosts)
+}
+
+/// Remote directory listing via SSH exec channel.
+#[derive(serde::Serialize)]
+pub struct RemoteFileEntry {
+    pub name: String,
+    pub is_dir: bool,
+    pub path: String,
+}
+
+#[tauri::command]
+pub async fn ssh_read_remote_dir(
+    session_id: String,
+    remote_path: String,
+    ssh_state: tauri::State<'_, SshManager>,
+) -> Result<Vec<RemoteFileEntry>, String> {
+    let cmd = format!("ls -1pA {}", shell_escape(&remote_path));
+    let output = ssh_state
+        .exec_command(&session_id, &cmd)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let entries: Vec<RemoteFileEntry> = output
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(|line| {
+            let is_dir = line.ends_with('/');
+            let name = if is_dir {
+                line.trim_end_matches('/').to_string()
+            } else {
+                line.to_string()
+            };
+            let path = if remote_path.ends_with('/') {
+                format!("{}{}", remote_path, &name)
+            } else {
+                format!("{}/{}", remote_path, &name)
+            };
+            RemoteFileEntry { name, is_dir, path }
+        })
+        .collect();
+
+    Ok(entries)
+}
+
+fn shell_escape(s: &str) -> String {
+    format!("'{}'", s.replace('\'', "'\\''"))
+}
+
+/// Connect for file browsing only (no PTY).
+#[tauri::command]
+pub async fn ssh_connect_for_browsing(
+    host: String,
+    port: u16,
+    user: String,
+    key_path: Option<String>,
+    password: Option<String>,
+    ssh_state: tauri::State<'_, SshManager>,
+) -> Result<String, String> {
+    let session_id = uuid::Uuid::new_v4().to_string();
+    ssh_state
+        .connect_browsing(session_id.clone(), host, port, user, key_path, password)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(session_id)
+}
+
+/// Open ~/.ssh/config in system default editor. Creates file if missing.
+#[tauri::command]
+pub fn ssh_open_config_in_editor() -> Result<(), String> {
+    let home = dirs::home_dir().ok_or("No home directory")?;
+    let config_path = home.join(".ssh").join("config");
+
+    if !config_path.exists() {
+        if let Some(parent) = config_path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        std::fs::write(&config_path, "# SSH Config\n").map_err(|e| e.to_string())?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&config_path,
+                std::fs::Permissions::from_mode(0o600)).ok();
+        }
+    }
+
+    open::that(&config_path).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ssh_list_config_hosts_returns_ok_when_no_config() {
+        // If ~/.ssh/config does not exist, should return Ok(empty vec)
+        // This test works on any machine -- the command handles missing file gracefully
+        let result = ssh_list_config_hosts();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_shell_escape_basic() {
+        assert_eq!(shell_escape("/home/user"), "'/home/user'");
+    }
+
+    #[test]
+    fn test_shell_escape_single_quotes() {
+        assert_eq!(shell_escape("it's"), "'it'\\''s'");
+    }
+
+    #[test]
+    fn test_remote_file_entry_serialization() {
+        let entry = RemoteFileEntry {
+            name: "src".to_string(),
+            is_dir: true,
+            path: "/home/user/src".to_string(),
+        };
+        let json = serde_json::to_string(&entry).unwrap();
+        assert!(json.contains("\"is_dir\":true"));
+        assert!(json.contains("\"name\":\"src\""));
+    }
 }

@@ -72,6 +72,16 @@ impl SshConnectionStore {
     }
 }
 
+/// A host entry parsed from ~/.ssh/config.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct SshConfigHost {
+    pub host_alias: String,
+    pub hostname: Option<String>,
+    pub user: Option<String>,
+    pub port: Option<u16>,
+    pub identity_file: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -101,6 +111,20 @@ mod tests {
         };
         let json = serde_json::to_string(&group).unwrap();
         assert!(json.contains("production"));
+    }
+
+    #[test]
+    fn test_ssh_config_host_serialization() {
+        let host = SshConfigHost {
+            host_alias: "myserver".to_string(),
+            hostname: Some("192.168.1.1".to_string()),
+            user: Some("admin".to_string()),
+            port: Some(22),
+            identity_file: Some("/home/user/.ssh/id_rsa".to_string()),
+        };
+        let json = serde_json::to_string(&host).unwrap();
+        assert!(json.contains("\"host_alias\":\"myserver\""));
+        assert!(json.contains("\"hostname\":\"192.168.1.1\""));
     }
 
     #[test]

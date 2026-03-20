@@ -23,6 +23,8 @@ dirs = "5"
 log = "0.4"
 git2 = "0.20"
 russh = { version = "0.58", features = ["aws-lc-rs"] }
+ssh2-config = "0.7"
 async-trait = "0.1"
 bytes = "1"
 tauri-plugin-updater = "2"
+open = "5"
