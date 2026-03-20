@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 8 UI-SPEC approved
-last_updated: "2026-03-19T16:08:47.917Z"
-last_activity: 2026-03-19 -- Completed Plan 07-02 GitHub Actions release workflow
+status: in_progress
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-20T22:27:48Z"
+last_activity: 2026-03-20 -- Completed Plan 08-01 SSH backend infrastructure
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 25
-  completed_plans: 25
-  percent: 100
+  total_plans: 28
+  completed_plans: 26
+  percent: 93
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-17)
 
 **Core value:** Users can visually organize and interact with multiple terminal sessions on an infinite canvas, with layout and session state persisting across restarts via tmux.
-**Current focus:** Phase 7: Release Process with GitHub CI/CD
+**Current focus:** Phase 8: Enhanced SSH Connection Integration
 
 ## Current Position
 
-Phase: 7 of 7 (Release Process with GitHub CI/CD)
-Plan: 2 of 2 in current phase (07-02 complete)
-Status: Complete
-Last activity: 2026-03-19 -- Completed Plan 07-02 GitHub Actions release workflow
+Phase: 8 of 8 (Enhanced SSH Connection Integration)
+Plan: 1 of 3 in current phase (08-01 complete)
+Status: In Progress
+Last activity: 2026-03-20 -- Completed Plan 08-01 SSH backend infrastructure
 
-Progress: [██████████] 100%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 06 P02 | 2 | 2 tasks | 8 files |
 | Phase 07 P01 | 1 | 2 tasks | 8 files |
 | Phase 07 P02 | 1 | 2 tasks | 1 files |
+| Phase 08 P01 | 5 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -153,6 +154,9 @@ Recent decisions affecting current work:
 - [Phase 07-02]: Draft release pattern: each platform uploads to draft, publish job converts to public
 - [Phase 07-02]: No code signing in v1: placeholder comments for future Apple/Windows signing secrets
 - [Phase 07-02]: Universal macOS binary via --target universal-apple-darwin
+- [Phase 08-01]: Channel open within lock scope instead of Handle clone (russh 0.58 Handle is not Clone)
+- [Phase 08-01]: ls -1pA for remote dir listing (cross-platform, slash-suffix for directories)
+- [Phase 08-01]: open crate v5 for editor launch (simpler than tauri-plugin-shell opener API)
 
 ### Roadmap Evolution
 
@@ -186,6 +190,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T20:18:07Z
-Stopped at: Completed 260320-td0 quick task
-Resume file: .planning/quick/260320-td0-set-up-e2e-testing-infrastructure-for-pa/260320-td0-PLAN.md
+Last session: 2026-03-20T22:27:48Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: .planning/phases/08-enhanced-ssh-connection-integration/08-02-PLAN.md
