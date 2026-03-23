@@ -346,62 +346,6 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fix mouse selection in CSS-transformed (zoomed) containers.
-  // xterm.js calculates mouse position using getBoundingClientRect() which returns
-  // scaled coordinates, but its cached cell metrics are in unscaled pixels.
-  // We intercept mouse events on the xterm viewport and adjust coordinates.
-  const zoom = useCanvasStore((s) => s.viewport.zoom);
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const adjustMouseEvent = (e: MouseEvent) => {
-      if (zoom === 1) return; // No adjustment needed at 100%
-
-      const xtermEl = el.querySelector(".xterm-screen");
-      if (!xtermEl) return;
-
-      const rect = xtermEl.getBoundingClientRect();
-      // Get mouse position relative to the xterm element in screen coords
-      const screenX = e.clientX - rect.left;
-      const screenY = e.clientY - rect.top;
-      // Convert to unscaled coords (what xterm expects internally)
-      const unscaledX = screenX / zoom;
-      const unscaledY = screenY / zoom;
-      // Calculate the offset correction
-      const deltaX = unscaledX - screenX;
-      const deltaY = unscaledY - screenY;
-
-      // Dispatch a new event with corrected coordinates
-      e.stopImmediatePropagation();
-      const corrected = new MouseEvent(e.type, {
-        ...e,
-        clientX: e.clientX + deltaX,
-        clientY: e.clientY + deltaY,
-        bubbles: e.bubbles,
-        cancelable: e.cancelable,
-        button: e.button,
-        buttons: e.buttons,
-      });
-      Object.defineProperty(corrected, '_corrected', { value: true });
-      xtermEl.dispatchEvent(corrected);
-    };
-
-    const handler = (e: MouseEvent) => {
-      if ((e as unknown as { _corrected?: boolean })._corrected) return;
-      adjustMouseEvent(e);
-    };
-
-    el.addEventListener("mousedown", handler, true);
-    el.addEventListener("mousemove", handler, true);
-    el.addEventListener("mouseup", handler, true);
-
-    return () => {
-      el.removeEventListener("mousedown", handler, true);
-      el.removeEventListener("mousemove", handler, true);
-      el.removeEventListener("mouseup", handler, true);
-    };
-  }, [zoom]);
 
   // Handle mousedown on terminal container — enter focus mode but don't
   // call term.focus() directly. xterm handles its own focus via mousedown
