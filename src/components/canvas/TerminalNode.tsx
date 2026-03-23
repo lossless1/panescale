@@ -346,6 +346,50 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fix mouse selection at non-default zoom levels.
+  //
+  // Root cause: xterm.js computes col = (clientX - rect.left) / cssCellWidth
+  //   - (clientX - rect.left) is in screen pixels (SCALED by React Flow CSS transform)
+  //   - cssCellWidth is UNSCALED (measured via OffscreenCanvas.measureText)
+  //   - Result is off by factor of zoom
+  //
+  // Fix: monkey-patch MouseService.getCoords to divide pixel offset by zoom
+  // BEFORE the cell-width division. This only affects mouse hit-testing, not rendering.
+  const zoom = useCanvasStore((s) => s.viewport.zoom);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mouseService = (term as any)._core?._mouseService;
+    if (!mouseService || mouseService._patchedGetCoords) return;
+
+    const origGetCoords = mouseService.getCoords.bind(mouseService);
+    mouseService._patchedGetCoords = true;
+
+    mouseService.getCoords = function(
+      event: { clientX: number; clientY: number },
+      element: HTMLElement,
+      colCount: number,
+      rowCount: number,
+      isSelection?: boolean,
+    ): [number, number] | undefined {
+      const z = zoomRef.current;
+      if (z === 1) return origGetCoords(event, element, colCount, rowCount, isSelection);
+
+      // Create a fake event with zoom-corrected coordinates.
+      // getBoundingClientRect returns scaled position, clientX is screen-space.
+      // The offset (clientX - rect.left) is scaled by zoom.
+      // We need it unscaled, so we adjust clientX to compensate.
+      const rect = element.getBoundingClientRect();
+      const correctedEvent = {
+        clientX: rect.left + (event.clientX - rect.left) / z,
+        clientY: rect.top + (event.clientY - rect.top) / z,
+      };
+      return origGetCoords(correctedEvent, element, colCount, rowCount, isSelection);
+    };
+  }, []);
 
   // Handle mousedown on terminal container — enter focus mode but don't
   // call term.focus() directly. xterm handles its own focus via mousedown
