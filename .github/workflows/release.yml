@@ -156,12 +156,15 @@ jobs:
         shell: bash
         run: |
           set +e
-          echo "=== Finding bundle artifacts ==="
-          find src-tauri/target -name "*.msi" -o -name "*.exe" 2>/dev/null | head -20
+          BUNDLE_DIR="src-tauri/target/release/bundle"
+          echo "=== Bundle directory contents ==="
+          ls -la "$BUNDLE_DIR"/msi/ "$BUNDLE_DIR"/nsis/ 2>/dev/null || true
           echo "=== Uploading ==="
-          find src-tauri/target -name "*.msi" -o -name "*.exe" | while read f; do
-            echo "Uploading: $f"
-            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+          for f in "$BUNDLE_DIR"/msi/*.msi; do
+            [ -f "$f" ] && echo "Uploading: $f" && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+          done
+          for f in "$BUNDLE_DIR"/nsis/*setup*.exe "$BUNDLE_DIR"/nsis/*Panescale*.exe; do
+            [ -f "$f" ] && echo "Uploading: $f" && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
           done
 
   publish:
