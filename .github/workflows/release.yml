@@ -1,9 +1,6 @@
 # Panescale Release Workflow
 # Builds for macOS (universal), Linux (AppImage + deb), and Windows (MSI + NSIS)
 # Triggered by pushing a version tag: git tag v1.0.0 && git push --tags
-#
-# To release: update version in package.json, src-tauri/Cargo.toml, and src-tauri/tauri.conf.json
-# Then: git tag v{version} && git push --tags
 
 name: Release
 
@@ -16,7 +13,22 @@ permissions:
   contents: write
 
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --draft \
+            --title "Panescale ${{ github.ref_name }}" \
+            --target "${{ github.sha }}" \
+            --repo "${{ github.repository }}" || true
+
   build-macos:
+    needs: create-release
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,23 +57,18 @@ jobs:
       - name: Build Tauri app (universal macOS)
         run: npx tauri build --target universal-apple-darwin
 
-      - name: Upload macOS artifacts to release
+      - name: Upload macOS artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ github.ref_name }}"
-          # Create draft release if it doesn't exist
-          gh release create "$TAG" --draft --title "Panescale $TAG" --repo ${{ github.repository }} 2>/dev/null || true
-          # Upload artifacts
           BUNDLE_DIR="src-tauri/target/universal-apple-darwin/release/bundle"
-          for f in "$BUNDLE_DIR"/dmg/*.dmg; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber --repo ${{ github.repository }}
-          done
-          for f in "$BUNDLE_DIR"/macos/*.app.tar.gz; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber --repo ${{ github.repository }}
+          ls -la "$BUNDLE_DIR"/dmg/ "$BUNDLE_DIR"/macos/ 2>/dev/null || true
+          for f in "$BUNDLE_DIR"/dmg/*.dmg "$BUNDLE_DIR"/macos/*.app.tar.gz; do
+            [ -f "$f" ] && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
           done
 
   build-linux:
+    needs: create-release
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -93,21 +100,18 @@ jobs:
       - name: Build Tauri app (Linux)
         run: npx tauri build
 
-      - name: Upload Linux artifacts to release
+      - name: Upload Linux artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${{ github.ref_name }}"
-          gh release create "$TAG" --draft --title "Panescale $TAG" --repo ${{ github.repository }} 2>/dev/null || true
           BUNDLE_DIR="src-tauri/target/release/bundle"
-          for f in "$BUNDLE_DIR"/appimage/*.AppImage; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber --repo ${{ github.repository }}
-          done
-          for f in "$BUNDLE_DIR"/deb/*.deb; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber --repo ${{ github.repository }}
+          ls -la "$BUNDLE_DIR"/appimage/ "$BUNDLE_DIR"/deb/ 2>/dev/null || true
+          for f in "$BUNDLE_DIR"/appimage/*.AppImage "$BUNDLE_DIR"/deb/*.deb; do
+            [ -f "$f" ] && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
           done
 
   build-windows:
+    needs: create-release
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -134,19 +138,15 @@ jobs:
       - name: Build Tauri app (Windows)
         run: npx tauri build
 
-      - name: Upload Windows artifacts to release
+      - name: Upload Windows artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          TAG="${{ github.ref_name }}"
-          gh release create "$TAG" --draft --title "Panescale $TAG" --repo ${{ github.repository }} 2>/dev/null || true
           BUNDLE_DIR="src-tauri/target/release/bundle"
-          for f in "$BUNDLE_DIR"/msi/*.msi; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber --repo ${{ github.repository }}
-          done
-          for f in "$BUNDLE_DIR"/nsis/*.exe; do
-            [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber --repo ${{ github.repository }}
+          ls -la "$BUNDLE_DIR"/msi/ "$BUNDLE_DIR"/nsis/ 2>/dev/null || true
+          for f in "$BUNDLE_DIR"/msi/*.msi "$BUNDLE_DIR"/nsis/*.exe; do
+            [ -f "$f" ] && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
           done
 
   publish:
@@ -157,7 +157,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release edit ${{ github.ref_name }} \
+          gh release edit "${{ github.ref_name }}" \
             --draft=false \
             --generate-notes \
-            --repo ${{ github.repository }}
+            --repo "${{ github.repository }}"

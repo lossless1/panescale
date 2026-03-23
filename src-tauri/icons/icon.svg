@@ -1,112 +1,146 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <!-- Background gradient -->
+    <!-- Background -->
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#18181B"/>
-      <stop offset="100%" stop-color="#09090B"/>
-    </linearGradient>
-    <!-- Terminal window gradient -->
-    <linearGradient id="win" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#27272A"/>
-      <stop offset="100%" stop-color="#1C1C1E"/>
-    </linearGradient>
-    <!-- Accent glow -->
-    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#818CF8"/>
-      <stop offset="100%" stop-color="#6366F1"/>
+      <stop offset="0%" stop-color="#111113"/>
+      <stop offset="100%" stop-color="#0A0A0C"/>
     </linearGradient>
     <!-- Cursor gradient -->
-    <linearGradient id="cursor" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#A78BFA"/>
-      <stop offset="100%" stop-color="#7C3AED"/>
+    <linearGradient id="cursor" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#B794F6"/>
+      <stop offset="40%" stop-color="#9F7AEA"/>
+      <stop offset="100%" stop-color="#805AD5"/>
     </linearGradient>
-    <!-- Grid dot color -->
-    <radialGradient id="dot" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#3F3F46"/>
-      <stop offset="100%" stop-color="#27272A"/>
+    <!-- Glow layers -->
+    <radialGradient id="glow-outer" cx="50%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.35"/>
+      <stop offset="40%" stop-color="#6D28D9" stop-opacity="0.15"/>
+      <stop offset="70%" stop-color="#4C1D95" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#4C1D95" stop-opacity="0"/>
     </radialGradient>
-    <!-- Soft shadow -->
-    <filter id="sh" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="3" stdDeviation="8" flood-color="#000" flood-opacity="0.4"/>
-    </filter>
-    <filter id="glow-f" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <radialGradient id="glow-inner" cx="50%" cy="50%" r="22%">
+      <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Cursor soft shadow -->
+    <filter id="cursor-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8"/>
     </filter>
   </defs>
 
   <!-- Background rounded square -->
   <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="url(#bg)"/>
 
-  <!-- Subtle canvas grid dots -->
-  <g opacity="0.3">
-    <circle cx="96" cy="96" r="3" fill="#3F3F46"/>
-    <circle cx="160" cy="96" r="3" fill="#3F3F46"/>
-    <circle cx="224" cy="96" r="3" fill="#3F3F46"/>
-    <circle cx="288" cy="96" r="3" fill="#3F3F46"/>
-    <circle cx="352" cy="96" r="3" fill="#3F3F46"/>
-    <circle cx="416" cy="96" r="3" fill="#3F3F46"/>
-    <circle cx="96" cy="160" r="3" fill="#3F3F46"/>
-    <circle cx="416" cy="160" r="3" fill="#3F3F46"/>
-    <circle cx="96" cy="224" r="3" fill="#3F3F46"/>
-    <circle cx="416" cy="224" r="3" fill="#3F3F46"/>
-    <circle cx="96" cy="288" r="3" fill="#3F3F46"/>
-    <circle cx="416" cy="288" r="3" fill="#3F3F46"/>
-    <circle cx="96" cy="352" r="3" fill="#3F3F46"/>
-    <circle cx="416" cy="352" r="3" fill="#3F3F46"/>
-    <circle cx="96" cy="416" r="3" fill="#3F3F46"/>
-    <circle cx="160" cy="416" r="3" fill="#3F3F46"/>
-    <circle cx="224" cy="416" r="3" fill="#3F3F46"/>
-    <circle cx="288" cy="416" r="3" fill="#3F3F46"/>
-    <circle cx="352" cy="416" r="3" fill="#3F3F46"/>
-    <circle cx="416" cy="416" r="3" fill="#3F3F46"/>
+  <!-- Subtle border/edge highlight -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96"
+        fill="none" stroke="#27272A" stroke-width="1"/>
+
+  <!-- Grid dots - full grid pattern -->
+  <g opacity="0.25">
+    <!-- Row 1 -->
+    <circle cx="80" cy="80" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="80" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="80" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="80" r="2.5" fill="#3F3F46"/>
+    <circle cx="256" cy="80" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="80" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="80" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="80" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="80" r="2.5" fill="#3F3F46"/>
+    <!-- Row 2 -->
+    <circle cx="80" cy="124" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="124" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="124" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="124" r="2.5" fill="#3F3F46"/>
+    <circle cx="256" cy="124" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="124" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="124" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="124" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="124" r="2.5" fill="#3F3F46"/>
+    <!-- Row 3 -->
+    <circle cx="80" cy="168" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="168" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="168" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="168" r="2.5" fill="#3F3F46"/>
+    <circle cx="256" cy="168" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="168" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="168" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="168" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="168" r="2.5" fill="#3F3F46"/>
+    <!-- Row 4 -->
+    <circle cx="80" cy="212" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="212" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="212" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="212" r="2.5" fill="#3F3F46"/>
+    <circle cx="256" cy="212" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="212" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="212" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="212" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="212" r="2.5" fill="#3F3F46"/>
+    <!-- Row 5 (center) -->
+    <circle cx="80" cy="256" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="256" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="256" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="256" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="256" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="256" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="256" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="256" r="2.5" fill="#3F3F46"/>
+    <!-- Row 6 -->
+    <circle cx="80" cy="300" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="300" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="300" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="300" r="2.5" fill="#3F3F46"/>
+    <circle cx="256" cy="300" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="300" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="300" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="300" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="300" r="2.5" fill="#3F3F46"/>
+    <!-- Row 7 -->
+    <circle cx="80" cy="344" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="344" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="344" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="344" r="2.5" fill="#3F3F46"/>
+    <circle cx="256" cy="344" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="344" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="344" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="344" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="344" r="2.5" fill="#3F3F46"/>
+    <!-- Row 8 -->
+    <circle cx="80" cy="388" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="388" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="388" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="388" r="2.5" fill="#3F3F46"/>
+    <circle cx="256" cy="388" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="388" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="388" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="388" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="388" r="2.5" fill="#3F3F46"/>
+    <!-- Row 9 -->
+    <circle cx="80" cy="432" r="2.5" fill="#3F3F46"/>
+    <circle cx="124" cy="432" r="2.5" fill="#3F3F46"/>
+    <circle cx="168" cy="432" r="2.5" fill="#3F3F46"/>
+    <circle cx="212" cy="432" r="2.5" fill="#3F3F46"/>
+    <circle cx="256" cy="432" r="2.5" fill="#3F3F46"/>
+    <circle cx="300" cy="432" r="2.5" fill="#3F3F46"/>
+    <circle cx="344" cy="432" r="2.5" fill="#3F3F46"/>
+    <circle cx="388" cy="432" r="2.5" fill="#3F3F46"/>
+    <circle cx="432" cy="432" r="2.5" fill="#3F3F46"/>
   </g>
 
-  <!-- Back terminal window (smaller, upper left) -->
-  <rect x="80" y="110" width="200" height="160" rx="16" ry="16"
-        fill="url(#win)" stroke="#3F3F46" stroke-width="1" opacity="0.6" filter="url(#sh)"/>
-  <!-- Title bar dots -->
-  <circle cx="100" cy="128" r="4" fill="#EF4444" opacity="0.5"/>
-  <circle cx="114" cy="128" r="4" fill="#EAB308" opacity="0.5"/>
-  <circle cx="128" cy="128" r="4" fill="#22C55E" opacity="0.5"/>
-  <!-- Text lines -->
-  <rect x="100" y="150" width="80" height="4" rx="2" fill="#52525B" opacity="0.5"/>
-  <rect x="100" y="164" width="60" height="4" rx="2" fill="#52525B" opacity="0.4"/>
+  <!-- Outer glow (wide, diffuse) -->
+  <ellipse cx="256" cy="256" rx="180" ry="180" fill="url(#glow-outer)"/>
 
-  <!-- Main terminal window (front, larger) -->
-  <rect x="160" y="200" width="280" height="220" rx="18" ry="18"
-        fill="url(#win)" stroke="#3F3F46" stroke-width="1.5" filter="url(#sh)"/>
-  <!-- Title bar -->
-  <rect x="160" y="200" width="280" height="36" rx="18" ry="18" fill="#1C1C1E"/>
-  <rect x="160" y="218" width="280" height="18" fill="#1C1C1E"/>
-  <!-- Title bar dots -->
-  <circle cx="182" cy="218" r="5" fill="#EF4444" opacity="0.8"/>
-  <circle cx="198" cy="218" r="5" fill="#EAB308" opacity="0.8"/>
-  <circle cx="214" cy="218" r="5" fill="#22C55E" opacity="0.8"/>
+  <!-- Inner glow (concentrated) -->
+  <ellipse cx="256" cy="256" rx="110" ry="110" fill="url(#glow-inner)"/>
 
-  <!-- Terminal content -->
-  <!-- Prompt line with chevron -->
-  <text x="184" y="262" font-family="monospace" font-size="16" font-weight="bold" fill="url(#glow)" opacity="0.9">&#x276F;</text>
-  <rect x="200" y="252" width="100" height="4" rx="2" fill="#A1A1AA" opacity="0.4"/>
+  <!-- Cursor glow (blurred copy behind) -->
+  <rect x="226" y="206" width="60" height="100" rx="10" fill="#8B5CF6" opacity="0.6" filter="url(#cursor-glow)"/>
 
-  <!-- Output lines -->
-  <rect x="184" y="278" width="160" height="4" rx="2" fill="#52525B" opacity="0.5"/>
-  <rect x="184" y="294" width="120" height="4" rx="2" fill="#52525B" opacity="0.4"/>
-  <rect x="184" y="310" width="200" height="4" rx="2" fill="#52525B" opacity="0.35"/>
+  <!-- Terminal cursor block -->
+  <rect x="226" y="206" width="60" height="100" rx="10" fill="url(#cursor)" opacity="0.9"/>
 
-  <!-- Active prompt with blinking cursor -->
-  <text x="184" y="342" font-family="monospace" font-size="16" font-weight="bold" fill="url(#glow)" opacity="0.9">&#x276F;</text>
-  <rect x="200" y="332" width="80" height="4" rx="2" fill="#A1A1AA" opacity="0.3"/>
-  <!-- Cursor block -->
-  <rect x="286" y="328" width="10" height="16" rx="2" fill="url(#cursor)" filter="url(#glow-f)" opacity="0.9"/>
-
-  <!-- Small floating note tile (top right) -->
-  <rect x="320" y="90" width="110" height="80" rx="12" ry="12"
-        fill="#1C1C1E" stroke="#3F3F46" stroke-width="1" opacity="0.5" filter="url(#sh)"/>
-  <rect x="336" y="110" width="70" height="3" rx="1.5" fill="#52525B" opacity="0.4"/>
-  <rect x="336" y="120" width="50" height="3" rx="1.5" fill="#52525B" opacity="0.3"/>
-  <rect x="336" y="130" width="60" height="3" rx="1.5" fill="#52525B" opacity="0.25"/>
+  <!-- Cursor inner highlight (glass effect) -->
+  <rect x="232" y="212" width="48" height="40" rx="6" fill="white" opacity="0.08"/>
 </svg>
