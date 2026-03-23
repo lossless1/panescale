@@ -20,6 +20,7 @@ interface TerminalTitleBarProps {
   sshHost?: string;
   sshUser?: string;
   onClose: () => void;
+  onDuplicate?: () => void;
   onMinimize?: () => void;
   onRename?: (name: string) => void;
   onBadgeColorChange?: (color: string | undefined) => void;
@@ -39,6 +40,7 @@ export const TerminalTitleBar = React.memo(function TerminalTitleBar({
   sshHost,
   sshUser,
   onClose,
+  onDuplicate,
   onMinimize,
   onRename,
   onBadgeColorChange,
@@ -228,7 +230,33 @@ export const TerminalTitleBar = React.memo(function TerminalTitleBar({
       )}
 
       {/* Right: buttons */}
-      <div style={{ display: "flex", gap: 4 }}>
+      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+        {onDuplicate && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDuplicate();
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              fontSize: 15,
+              padding: "0 4px",
+              lineHeight: 1,
+            }}
+            title="Duplicate terminal"
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.color = "var(--accent)";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.color = "var(--text-secondary)";
+            }}
+          >
+            &#x2398;
+          </button>
+        )}
         {onMinimize && (
           <button
             onClick={(e) => {

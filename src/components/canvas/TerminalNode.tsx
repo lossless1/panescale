@@ -592,6 +592,30 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           sshHost={sshHost}
           sshUser={sshUser}
           onClose={handleClose}
+          onDuplicate={() => {
+            const nd = data as TerminalNodeData;
+            const nodes = useCanvasStore.getState().nodes;
+            const thisNode = nodes.find((n) => n.id === id);
+            const pos = thisNode
+              ? { x: thisNode.position.x + 40, y: thisNode.position.y + 40 }
+              : { x: 100, y: 100 };
+            if (nd.sshConnectionId) {
+              useCanvasStore.getState().addSshTerminalNode(pos, {
+                id: nd.sshConnectionId,
+                host: nd.sshHost ?? "",
+                user: nd.sshUser ?? "",
+                port: nd.sshPort ?? 22,
+                keyPath: nd.sshKeyPath ?? undefined,
+              });
+              const newNodes = useCanvasStore.getState().nodes;
+              const newNode = newNodes[newNodes.length - 1];
+              if (newNode && nd.startupCommand) {
+                useCanvasStore.getState().updateNodeData(newNode.id, { startupCommand: nd.startupCommand });
+              }
+            } else {
+              useCanvasStore.getState().addTerminalNode(pos, cwd);
+            }
+          }}
           onRename={(name) => updateNodeData(id, { customName: name || undefined })}
           onBadgeColorChange={(color) => updateNodeData(id, { badgeColor: color })}
         />
