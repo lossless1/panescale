@@ -233,6 +233,55 @@ export function TerminalList() {
               </div>
             </div>
 
+            {/* Duplicate button */}
+            <button
+              className="pile-close"
+              onClick={(e) => {
+                e.stopPropagation();
+                const nd = node.data as Record<string, unknown>;
+                const pos = { x: node.position.x + 40, y: node.position.y + 40 };
+                if (nd.sshConnectionId) {
+                  useCanvasStore.getState().addSshTerminalNode(pos, {
+                    id: nd.sshConnectionId as string,
+                    host: (nd.sshHost as string) ?? "",
+                    user: (nd.sshUser as string) ?? "",
+                    port: (nd.sshPort as number) ?? 22,
+                    keyPath: (nd.sshKeyPath as string) ?? undefined,
+                  });
+                  // Copy startup command (cd to same folder)
+                  const nodes = useCanvasStore.getState().nodes;
+                  const newNode = nodes[nodes.length - 1];
+                  if (newNode && nd.startupCommand) {
+                    useCanvasStore.getState().updateNodeData(newNode.id, { startupCommand: nd.startupCommand });
+                  }
+                } else {
+                  useCanvasStore.getState().addTerminalNode(pos, (nd.cwd as string) ?? "~");
+                }
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                fontSize: 14,
+                padding: "2px 4px",
+                lineHeight: 1,
+                borderRadius: 3,
+                flexShrink: 0,
+                opacity: 0,
+                transition: "opacity 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "var(--accent)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+              }}
+              title="Duplicate terminal"
+            >
+              &#x2398;
+            </button>
+
             {/* Close button */}
             <button
               className="pile-close"

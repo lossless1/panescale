@@ -174,5 +174,4 @@ jobs:
         run: |
           gh release edit "${{ github.ref_name }}" \
             --draft=false \
-            --generate-notes \
             --repo "${{ github.repository }}"
