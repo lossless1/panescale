@@ -60,11 +60,19 @@ jobs:
       - name: Upload macOS artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
-          BUNDLE_DIR="src-tauri/target/universal-apple-darwin/release/bundle"
-          ls -la "$BUNDLE_DIR"/dmg/ "$BUNDLE_DIR"/macos/ 2>/dev/null || true
-          for f in "$BUNDLE_DIR"/dmg/*.dmg "$BUNDLE_DIR"/macos/*.app.tar.gz; do
-            [ -f "$f" ] && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+          set +e
+          echo "=== Finding bundle artifacts ==="
+          find src-tauri/target -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.app" -type d 2>/dev/null | head -20
+          echo "=== Uploading ==="
+          find src-tauri/target -name "*.dmg" | while read f; do
+            echo "Uploading: $f"
+            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+          done
+          find src-tauri/target -name "*.app.tar.gz" | while read f; do
+            echo "Uploading: $f"
+            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
           done
 
   build-linux:
@@ -103,11 +111,15 @@ jobs:
       - name: Upload Linux artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
-          BUNDLE_DIR="src-tauri/target/release/bundle"
-          ls -la "$BUNDLE_DIR"/appimage/ "$BUNDLE_DIR"/deb/ 2>/dev/null || true
-          for f in "$BUNDLE_DIR"/appimage/*.AppImage "$BUNDLE_DIR"/deb/*.deb; do
-            [ -f "$f" ] && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+          set +e
+          echo "=== Finding bundle artifacts ==="
+          find src-tauri/target -name "*.AppImage" -o -name "*.deb" 2>/dev/null | head -20
+          echo "=== Uploading ==="
+          find src-tauri/target -name "*.AppImage" -o -name "*.deb" | while read f; do
+            echo "Uploading: $f"
+            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
           done
 
   build-windows:
@@ -143,10 +155,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          BUNDLE_DIR="src-tauri/target/release/bundle"
-          ls -la "$BUNDLE_DIR"/msi/ "$BUNDLE_DIR"/nsis/ 2>/dev/null || true
-          for f in "$BUNDLE_DIR"/msi/*.msi "$BUNDLE_DIR"/nsis/*.exe; do
-            [ -f "$f" ] && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+          set +e
+          echo "=== Finding bundle artifacts ==="
+          find src-tauri/target -name "*.msi" -o -name "*.exe" 2>/dev/null | head -20
+          echo "=== Uploading ==="
+          find src-tauri/target -name "*.msi" -o -name "*.exe" | while read f; do
+            echo "Uploading: $f"
+            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
           done
 
   publish:
