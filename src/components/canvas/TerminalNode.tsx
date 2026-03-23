@@ -346,19 +346,61 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Counter-scale: keep terminal text at 1:1 pixel size regardless of canvas zoom.
-  // This also fixes mouse selection coordinates since there's no CSS scale mismatch.
+  // Fix mouse selection in CSS-transformed (zoomed) containers.
+  // xterm.js calculates mouse position using getBoundingClientRect() which returns
+  // scaled coordinates, but its cached cell metrics are in unscaled pixels.
+  // We intercept mouse events on the xterm viewport and adjust coordinates.
   const zoom = useCanvasStore((s) => s.viewport.zoom);
   useEffect(() => {
-    // Re-fit terminal when zoom changes (available space in unscaled pixels changes)
-    if (fitAddonRef.current && termRef.current) {
-      try {
-        fitAddonRef.current.fit();
-        const resizeFn = isSsh ? ssh.resize : pty.resize;
-        resizeFn(termRef.current.cols, termRef.current.rows);
-      } catch { /* ignore */ }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const el = containerRef.current;
+    if (!el) return;
+
+    const adjustMouseEvent = (e: MouseEvent) => {
+      if (zoom === 1) return; // No adjustment needed at 100%
+
+      const xtermEl = el.querySelector(".xterm-screen");
+      if (!xtermEl) return;
+
+      const rect = xtermEl.getBoundingClientRect();
+      // Get mouse position relative to the xterm element in screen coords
+      const screenX = e.clientX - rect.left;
+      const screenY = e.clientY - rect.top;
+      // Convert to unscaled coords (what xterm expects internally)
+      const unscaledX = screenX / zoom;
+      const unscaledY = screenY / zoom;
+      // Calculate the offset correction
+      const deltaX = unscaledX - screenX;
+      const deltaY = unscaledY - screenY;
+
+      // Dispatch a new event with corrected coordinates
+      e.stopImmediatePropagation();
+      const corrected = new MouseEvent(e.type, {
+        ...e,
+        clientX: e.clientX + deltaX,
+        clientY: e.clientY + deltaY,
+        bubbles: e.bubbles,
+        cancelable: e.cancelable,
+        button: e.button,
+        buttons: e.buttons,
+      });
+      Object.defineProperty(corrected, '_corrected', { value: true });
+      xtermEl.dispatchEvent(corrected);
+    };
+
+    const handler = (e: MouseEvent) => {
+      if ((e as unknown as { _corrected?: boolean })._corrected) return;
+      adjustMouseEvent(e);
+    };
+
+    el.addEventListener("mousedown", handler, true);
+    el.addEventListener("mousemove", handler, true);
+    el.addEventListener("mouseup", handler, true);
+
+    return () => {
+      el.removeEventListener("mousedown", handler, true);
+      el.removeEventListener("mousemove", handler, true);
+      el.removeEventListener("mouseup", handler, true);
+    };
   }, [zoom]);
 
   // Handle mousedown on terminal container — enter focus mode but don't
@@ -536,15 +578,6 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           }}
         />
       )}
-      {/* Counter-scale wrapper: renders content at 1:1 pixel scale */}
-      <div
-        style={{
-          width: `${zoom * 100}%`,
-          height: `${zoom * 100}%`,
-          transform: `scale(${1 / zoom})`,
-          transformOrigin: "top left",
-        }}
-      >
       <div
         style={{
           width: "100%",
@@ -607,11 +640,10 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           onContextMenu={handleTerminalContextMenu}
           style={{
             flex: 1,
-            padding: 4,
+            padding: 0,
             overflow: "hidden",
           }}
         />
-      </div>
       </div>
     </>
   );

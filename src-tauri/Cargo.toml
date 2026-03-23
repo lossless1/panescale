@@ -21,7 +21,7 @@ anyhow = "1"
 uuid = { version = "1", features = ["v4"] }
 dirs = "5"
 log = "0.4"
-git2 = "0.20"
+git2 = { version = "0.20", features = ["vendored-openssl"] }
 russh = { version = "0.58", features = ["aws-lc-rs"] }
 ssh2-config = "0.7"
 async-trait = "0.1"
