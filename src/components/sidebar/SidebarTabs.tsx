@@ -1,3 +1,6 @@
+import { useCanvasStore } from "../../stores/canvasStore";
+import { useT } from "../../lib/i18n";
+
 type TabId = "files" | "terminals" | "git";
 
 export type { TabId };
@@ -7,13 +10,17 @@ interface SidebarTabsProps {
   onTabChange: (tab: TabId) => void;
 }
 
-const tabs: { id: TabId; label: string }[] = [
-  { id: "files", label: "Files" },
-  { id: "terminals", label: "Piles" },
-  { id: "git", label: "Git" },
+const tabKeys: { id: TabId; i18nKey: string }[] = [
+  { id: "files", i18nKey: "sidebar.files" },
+  { id: "terminals", i18nKey: "sidebar.piles" },
+  { id: "git", i18nKey: "sidebar.git" },
 ];
 
 export function SidebarTabs({ activeTab, onTabChange }: SidebarTabsProps) {
+  const t = useT();
+  const bellActiveNodes = useCanvasStore((s) => s.bellActiveNodes);
+  const hasPilesNotification = bellActiveNodes.size > 0;
+
   return (
     <div
       style={{
@@ -22,7 +29,7 @@ export function SidebarTabs({ activeTab, onTabChange }: SidebarTabsProps) {
         flexShrink: 0,
       }}
     >
-      {tabs.map((tab) => (
+      {tabKeys.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
@@ -43,7 +50,20 @@ export function SidebarTabs({ activeTab, onTabChange }: SidebarTabsProps) {
             transition: "color 0.15s, border-color 0.15s",
           }}
         >
-          {tab.label}
+          <span style={{ position: "relative", display: "inline-block" }}>
+            {t(tab.i18nKey)}
+            {tab.id === "terminals" && hasPilesNotification && activeTab !== "terminals" && (
+              <span style={{
+                position: "absolute",
+                top: -2,
+                right: -8,
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                backgroundColor: "#6366f1",
+              }} />
+            )}
+          </span>
         </button>
       ))}
     </div>

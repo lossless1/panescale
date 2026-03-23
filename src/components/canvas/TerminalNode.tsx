@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useState, Component, type ErrorI
 import { type NodeProps, type NodeChange, NodeResizer } from "@xyflow/react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { CanvasAddon } from "@xterm/addon-canvas";
+// CanvasAddon disabled — breaks mouse selection inside React Flow's CSS transforms
 import { SearchAddon } from "@xterm/addon-search";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import "@xterm/xterm/css/xterm.css";
@@ -17,7 +17,7 @@ import { modKeyCode } from "../../lib/platform";
 import { magneticSnapSize } from "../../lib/gridSnap";
 import { TerminalTitleBar } from "./TerminalTitleBar";
 
-import { playBellChime } from "../../lib/audio";
+import { playBellChime, playCompletionChime } from "../../lib/audio";
 import { registerTerminal, unregisterTerminal } from "../../lib/terminalBufferRegistry";
 
 type TerminalNodeData = {
@@ -32,6 +32,8 @@ type TerminalNodeData = {
   sshConnectionId?: string;
   sshHost?: string;
   sshUser?: string;
+  sshPort?: number;
+  sshKeyPath?: string;
 };
 
 const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: NodeProps) {
@@ -51,6 +53,9 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [processTitle, setProcessTitle] = useState("");
+  const [isBusy, setIsBusy] = useState(false);
+  const busyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const busyStartRef = useRef<number>(0);
 
   const activeTerminalId = useFocusModeStore((s) => s.activeTerminalId);
   const enterTerminalMode = useFocusModeStore((s) => s.enterTerminalMode);
@@ -109,26 +114,72 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       if (useFocusModeStore.getState().activeTerminalId !== id) {
         setBellActive(id, true);
         playBellChime();
-        setTimeout(() => setBellActive(id, false), 5000);
       }
     });
+
+    // Activity tracking: detect busy terminals and play completion chime
+    // Delay setup to avoid triggering on buffer replay during restore
+    const activityTimerId = setTimeout(() => {
+      if (disposed) return;
+      term.onWriteParsed(() => {
+        if (!busyStartRef.current) {
+          busyStartRef.current = Date.now();
+          setIsBusy(true);
+        }
+        if (busyTimerRef.current) clearTimeout(busyTimerRef.current);
+        busyTimerRef.current = setTimeout(() => {
+          const duration = Date.now() - busyStartRef.current;
+          busyStartRef.current = 0;
+          setIsBusy(false);
+          // Notify if busy for threshold and terminal is not focused
+          const settings = useSettingsStore.getState();
+          if (duration > settings.busyThresholdSeconds * 1000 && useFocusModeStore.getState().activeTerminalId !== id) {
+            if (settings.completionChimeEnabled) {
+              playCompletionChime();
+            }
+            // Highlight in sidebar piles tab (stays until user clicks terminal)
+            setBellActive(id, true, "info");
+            // Badge on dock icon
+            import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
+              getCurrentWindow().setBadgeLabel("!").catch(() => {});
+            });
+            // macOS push notification (only when app window is not focused)
+            if (settings.notificationsEnabled && !document.hasFocus()) {
+              const termData = data as TerminalNodeData;
+              const title = termData.customName || termData.sshHost
+                ? `${termData.sshUser ?? ""}@${termData.sshHost ?? ""}`
+                : `Terminal ${id.slice(0, 6)}`;
+              new Notification("Task completed", {
+                body: title,
+                silent: true,
+              });
+            }
+          }
+        }, 2000);
+      });
+    }, 3000);
 
     // Use Canvas renderer (faster than DOM, avoids WebGL disposal crashes)
     // Defer both canvas addon loading AND initial fit to next frame so the
     // container has non-zero dimensions and the renderer is fully initialized.
-    let canvasAddon: CanvasAddon | null = null;
+    // Use DOM renderer (not Canvas) — CanvasAddon has broken mouse selection
+    // inside CSS-transformed containers (React Flow zoom/pan).
     let disposed = false;
     const rafId = requestAnimationFrame(() => {
       if (disposed || !termRef.current || termRef.current !== term) return;
-      try {
-        canvasAddon = new CanvasAddon();
-        term.loadAddon(canvasAddon);
-      } catch {
-        // Canvas not available, DOM renderer is fine
-        canvasAddon = null;
-      }
       try { fitAddon.fit(); } catch { /* renderer not ready yet */ }
     });
+
+    // On restore, React Flow may not have applied node dimensions yet.
+    // Re-fit after a short delay to pick up the correct container size.
+    const refitTimer = setTimeout(() => {
+      if (disposed || !termRef.current || termRef.current !== term) return;
+      try {
+        fitAddon.fit();
+        const resizeFn = isSsh ? ssh.resize : pty.resize;
+        resizeFn(term.cols, term.rows);
+      } catch { /* ignore */ }
+    }, 200);
 
     termRef.current = term;
     fitAddonRef.current = fitAddon;
@@ -144,8 +195,10 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     if (nodeData.sshConnectionId) {
       // SSH terminal — pass direct params so backend doesn't need stored connection
       const sshDirect = nodeData.sshHost && nodeData.sshUser
-        ? { host: nodeData.sshHost, port: 22, user: nodeData.sshUser }
+        ? { host: nodeData.sshHost, port: nodeData.sshPort ?? 22, user: nodeData.sshUser, keyPath: nodeData.sshKeyPath ?? null }
         : undefined;
+      console.log(`[SSH Terminal ${id}] nodeData: connectionId=${nodeData.sshConnectionId}, host=${nodeData.sshHost}, port=${nodeData.sshPort}, user=${nodeData.sshUser}, restored=${nodeData.restored}`);
+      console.log(`[SSH Terminal ${id}] sshDirect:`, sshDirect);
 
       if (nodeData.restored) {
         const userHost = `${nodeData.sshUser ?? "user"}@${nodeData.sshHost ?? "host"}`;
@@ -171,6 +224,13 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       } else {
         ssh
           .connect(nodeData.sshConnectionId, null, term.cols, term.rows, term, sshDirect)
+          .then(() => {
+            // Send startup command (e.g. cd into selected folder) after SSH connects
+            const cmd = nodeData.startupCommand;
+            if (cmd) {
+              setTimeout(() => ssh.write(cmd + "\n"), 500);
+            }
+          })
           .catch((err: unknown) => {
             const errMsg = err instanceof Error ? err.message : String(err);
             if (errMsg.toLowerCase().includes("password")) {
@@ -212,6 +272,9 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
 
     return () => {
       disposed = true;
+      clearTimeout(refitTimer);
+      clearTimeout(activityTimerId);
+      if (busyTimerRef.current) clearTimeout(busyTimerRef.current);
       console.log(`[TerminalNode ${id}] useEffect CLEANUP — pendingKill=${pendingKillRef.current}, ssh=${!!nodeData.sshConnectionId}`);
       if (nodeData.sshConnectionId) {
         ssh.disconnect();
@@ -223,11 +286,6 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         pty.detach();
       }
       cancelAnimationFrame(rafId);
-      // Dispose canvas addon before terminal to avoid render-after-dispose errors
-      if (canvasAddon) {
-        try { canvasAddon.dispose(); } catch { /* already disposed */ }
-        canvasAddon = null;
-      }
       unregisterTerminal(id);
       term.dispose();
       termRef.current = null;
@@ -244,6 +302,18 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
       termRef.current.options.theme = terminalSchemes[colorScheme];
     }
   }, [colorScheme]);
+
+  // Update terminal font settings in real-time
+  useEffect(() => {
+    if (termRef.current) {
+      termRef.current.options.fontFamily = fontFamily;
+      termRef.current.options.fontSize = fontSize;
+      // Re-fit after font change to recalculate character dimensions
+      if (fitAddonRef.current) {
+        try { fitAddonRef.current.fit(); } catch { /* ignore */ }
+      }
+    }
+  }, [fontFamily, fontSize]);
 
   // Focus/blur terminal based on focus mode
   useEffect(() => {
@@ -276,14 +346,34 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle click on terminal container
-  const handleTerminalClick = useCallback(() => {
+  // Counter-scale: keep terminal text at 1:1 pixel size regardless of canvas zoom.
+  // This also fixes mouse selection coordinates since there's no CSS scale mismatch.
+  const zoom = useCanvasStore((s) => s.viewport.zoom);
+  useEffect(() => {
+    // Re-fit terminal when zoom changes (available space in unscaled pixels changes)
+    if (fitAddonRef.current && termRef.current) {
+      try {
+        fitAddonRef.current.fit();
+        const resizeFn = isSsh ? ssh.resize : pty.resize;
+        resizeFn(termRef.current.cols, termRef.current.rows);
+      } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoom]);
+
+  // Handle mousedown on terminal container — enter focus mode but don't
+  // call term.focus() directly. xterm handles its own focus via mousedown
+  // on its internal textarea. Calling focus() here would interfere with
+  // selection by resetting xterm's internal mouse state.
+  const handleTerminalMouseDown = useCallback(() => {
     enterTerminalMode(id);
     bringToFront(id);
-    if (termRef.current) {
-      termRef.current.focus();
-    }
-  }, [id, enterTerminalMode, bringToFront]);
+    setBellActive(id, false);
+    // Clear dock badge when user interacts with a terminal
+    import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
+      getCurrentWindow().setBadgeLabel("").catch(() => {});
+    });
+  }, [id, enterTerminalMode, bringToFront, setBellActive]);
 
   // Handle close — mark for kill (not detach), then remove the node.
   // The cleanup effect checks pendingKillRef to decide kill vs detach.
@@ -295,6 +385,13 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
   // Copy/paste keyboard handler
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Auto-enter terminal mode on any key event in the container
+      if (!isFocused) {
+        enterTerminalMode(id);
+        bringToFront(id);
+        if (termRef.current) termRef.current.focus();
+      }
+
       const modProp = modKeyCode();
       if (!e[modProp]) return;
 
@@ -314,20 +411,11 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         }
         // If no selection, let it pass through to PTY as SIGINT (default xterm behavior)
       } else if (e.key === "v" || e.key === "V") {
-        e.preventDefault();
-        e.stopPropagation();
-        navigator.clipboard.readText().then((text) => {
-          if (text) {
-            if (isSsh && ssh.isAlive) {
-              ssh.write(text);
-            } else if (!isSsh && pty.isAlive) {
-              pty.write(text);
-            }
-          }
-        });
+        // Let xterm.js handle paste natively via the browser paste event.
+        // Using navigator.clipboard.readText() triggers macOS WebKit paste confirmation dialog.
       }
     },
-    [isSsh, pty, ssh],
+    [isSsh, pty, ssh, isFocused, enterTerminalMode, bringToFront, id],
   );
 
   // Context menu on terminal body for setting startup command
@@ -412,6 +500,19 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
 
   return (
     <>
+      {isBusy && !isFocused && (
+        <style>{`
+          @keyframes gradient-spin-${id.replace(/[^a-zA-Z0-9]/g, '')} {
+            0% { --gradient-angle: 0deg; }
+            100% { --gradient-angle: 360deg; }
+          }
+          @property --gradient-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+          }
+        `}</style>
+      )}
       <NodeResizer
         minWidth={320}
         minHeight={200}
@@ -421,6 +522,29 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         lineStyle={{ borderColor: "var(--accent)" }}
         handleStyle={{ backgroundColor: "var(--accent)", width: 8, height: 8 }}
       />
+      {/* Gradient border glow when busy */}
+      {isBusy && !isFocused && (
+        <div
+          style={{
+            position: "absolute",
+            inset: -2,
+            borderRadius: 10,
+            background: "conic-gradient(from var(--gradient-angle), #6366f1, #8b5cf6, #a78bfa, #c4b5fd, #8b5cf6, #6366f1)",
+            animation: "gradient-spin-" + id.replace(/[^a-zA-Z0-9]/g, '') + " 3s linear infinite",
+            opacity: 0.8,
+            zIndex: -1,
+          }}
+        />
+      )}
+      {/* Counter-scale wrapper: renders content at 1:1 pixel scale */}
+      <div
+        style={{
+          width: `${zoom * 100}%`,
+          height: `${zoom * 100}%`,
+          transform: `scale(${1 / zoom})`,
+          transformOrigin: "top left",
+        }}
+      >
       <div
         style={{
           width: "100%",
@@ -429,10 +553,12 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           flexDirection: "column",
           borderRadius: 8,
           overflow: "hidden",
-          border: `1px solid ${isFocused ? "var(--accent)" : "var(--border)"}`,
+          border: `1px solid ${isFocused ? "var(--accent)" : isBusy ? "transparent" : "var(--border)"}`,
           boxShadow: isFocused
             ? "0 0 0 2px var(--focus-glow)"
-            : "0 2px 8px rgba(0,0,0,0.3)",
+            : isBusy
+              ? "0 0 12px rgba(99, 102, 241, 0.3)"
+              : "0 2px 8px rgba(0,0,0,0.3)",
           background: "var(--bg-terminal)",
         }}
       >
@@ -475,7 +601,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
         <div
           ref={containerRef}
           className="nodrag nowheel nopan"
-          onClick={handleTerminalClick}
+          onMouseDown={handleTerminalMouseDown}
           onKeyDown={handleKeyDown}
           onWheel={handleWheel}
           onContextMenu={handleTerminalContextMenu}
@@ -485,6 +611,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
             overflow: "hidden",
           }}
         />
+      </div>
       </div>
     </>
   );

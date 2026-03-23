@@ -8,7 +8,7 @@ description = "Spatial terminal workspace"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
@@ -27,4 +27,5 @@ ssh2-config = "0.7"
 async-trait = "0.1"
 bytes = "1"
 tauri-plugin-updater = "2"
+tauri-plugin-autostart = "2"
 open = "5"

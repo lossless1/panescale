@@ -20,14 +20,14 @@ interface CanvasState {
   hydrated: boolean;
   snapLines: SnapLinePositions | null;
   panToNodeId: string | null;
-  bellActiveNodes: Set<string>;
+  bellActiveNodes: Map<string, "success" | "error" | "warning" | "info">;
   onNodesChange: (changes: NodeChange[]) => void;
   updateNodeData: (id: string, dataUpdate: Record<string, unknown>) => void;
   updateNodeStyle: (id: string, style: Record<string, unknown>) => void;
-  setBellActive: (id: string, active: boolean) => void;
+  setBellActive: (id: string, active: boolean, status?: "success" | "error" | "warning" | "info") => void;
   addTerminalNode: (position: { x: number; y: number }, cwd: string) => void;
   addContentNode: (position: { x: number; y: number }, tileType: ContentTileType, fileData: { path: string; name: string }) => void;
-  addSshTerminalNode: (position: { x: number; y: number }, connection: { id: string; host: string; user: string }) => void;
+  addSshTerminalNode: (position: { x: number; y: number }, connection: { id: string; host: string; user: string; port?: number; keyPath?: string }) => void;
   addWebViewNode: (position: { x: number; y: number }, url: string) => void;
   addNoteNode: (position: { x: number; y: number }) => void;
   addRegion: (position: { x: number; y: number }, size: { width: number; height: number }, name: string, color: string) => void;
@@ -46,7 +46,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   hydrated: false,
   snapLines: null,
   panToNodeId: null,
-  bellActiveNodes: new Set<string>(),
+  bellActiveNodes: new Map<string, "success" | "error" | "warning" | "info">(),
 
   updateNodeData: (id, dataUpdate) => {
     set((state) => ({
@@ -70,11 +70,11 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     forceSave();
   },
 
-  setBellActive: (id, active) => {
+  setBellActive: (id, active, status = "info") => {
     set((state) => {
-      const next = new Set(state.bellActiveNodes);
+      const next = new Map(state.bellActiveNodes);
       if (active) {
-        next.add(id);
+        next.set(id, status);
       } else {
         next.delete(id);
       }
@@ -126,6 +126,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   addSshTerminalNode: (position, connection) => {
+    console.log(`[canvasStore] addSshTerminalNode called:`, JSON.stringify(connection));
     const newZIndex = get().maxZIndex + 1;
     const id = crypto.randomUUID();
     const newNode: Node = {
@@ -138,6 +139,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         sshConnectionId: connection.id,
         sshHost: connection.host,
         sshUser: connection.user,
+        sshPort: connection.port ?? 22,
+        sshKeyPath: connection.keyPath ?? undefined,
       },
       dragHandle: ".drag-handle",
       style: { width: 640, height: 480 },

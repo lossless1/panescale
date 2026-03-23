@@ -150,7 +150,7 @@ type View = "list" | "connecting" | "browse";
 interface BrowseState {
   sessionId: string;
   hostLabel: string;
-  hostInfo: { id: string; host: string; user: string };
+  hostInfo: { id: string; host: string; user: string; port?: number; keyPath?: string };
 }
 
 export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
@@ -195,27 +195,34 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
   // Connect to host and show folder browser
   const connectAndBrowse = useCallback(async (
     hostname: string, port: number, user: string,
-    keyPath: string | null, hostLabel: string, hostInfo: { id: string; host: string; user: string },
+    keyPath: string | null, hostLabel: string, hostInfo: { id: string; host: string; user: string; port?: number; keyPath?: string },
     password?: string | null,
   ) => {
     setView("connecting");
     setConnectError(null);
+    console.log(`[SSH] Connecting to ${user}@${hostname}:${port}, keyPath=${keyPath}, hasPassword=${!!password}`);
     try {
       const sessionId = await sshConnectForBrowsing(hostname, port, user, keyPath, password ?? null);
+      console.log(`[SSH] Connected successfully, sessionId=${sessionId}`);
       setBrowseState({ sessionId, hostLabel, hostInfo });
       setView("browse");
     } catch (err) {
       const errStr = String(err);
+      console.error(`[SSH] Connection failed:`, errStr);
       // If key auth failed and no password was provided, prompt for password
       if (!password && errStr.toLowerCase().includes("password")) {
+        console.log(`[SSH] Key auth failed, prompting for password`);
         const pw = window.prompt(`Enter password for ${user}@${hostname}:`);
         if (pw) {
           try {
+            console.log(`[SSH] Retrying with password auth`);
             const sessionId = await sshConnectForBrowsing(hostname, port, user, null, pw);
+            console.log(`[SSH] Password auth succeeded, sessionId=${sessionId}`);
             setBrowseState({ sessionId, hostLabel, hostInfo });
             setView("browse");
             return;
           } catch (e2) {
+            console.error(`[SSH] Password auth also failed:`, String(e2));
             setConnectError(String(e2));
             setView("list");
             return;
@@ -231,17 +238,35 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
     const hostname = host.hostname || host.host_alias;
     const user = host.user || "root";
     const port = host.port || 22;
-    connectAndBrowse(hostname, port, user, host.identity_file, `${user}@${hostname}`, { id: host.host_alias, host: hostname, user });
+    console.log(`[SSH] Config host click: alias=${host.host_alias}, hostname=${hostname}, user=${user}, port=${port}, identityFile=${host.identity_file}`);
+    connectAndBrowse(hostname, port, user, host.identity_file, `${user}@${hostname}`, { id: host.host_alias, host: hostname, user, port, keyPath: host.identity_file ?? undefined });
   }, [connectAndBrowse]);
 
   const handleSavedConnectionClick = useCallback((conn: SshConnectionConfig) => {
+    console.log(`[SSH] Saved connection click: id=${conn.id}, host=${conn.host}, user=${conn.user}, port=${conn.port}, keyPath=${conn.keyPath}, authMode=${conn.authMode}`);
     let pw: string | null = null;
     if (conn.authMode === "password") {
       pw = window.prompt(`Enter password for ${conn.user}@${conn.host}:`);
       if (pw === null) return;
     }
-    connectAndBrowse(conn.host, conn.port, conn.user, conn.keyPath || null, `${conn.user}@${conn.host}`, { id: conn.id, host: conn.host, user: conn.user }, pw);
-  }, [connectAndBrowse]);
+    useSshStore.getState().touchConnection(conn.id);
+    // Fall back to SSH config for identity file and port
+    let keyPath = conn.keyPath || null;
+    let port = conn.port;
+    const configHost = configHosts.find((h) => h.host_alias === conn.id || h.hostname === conn.host);
+    if (configHost) {
+      if (!keyPath && configHost.identity_file) {
+        keyPath = configHost.identity_file;
+        console.log(`[SSH] Fell back to SSH config identity file: ${keyPath}`);
+      }
+      if (configHost.port && port === 22) {
+        port = configHost.port;
+        console.log(`[SSH] Fell back to SSH config port: ${port}`);
+      }
+    }
+    console.log(`[SSH] Resolved keyPath=${keyPath}, port=${port}, hasPassword=${!!pw}`);
+    connectAndBrowse(conn.host, port, conn.user, keyPath, `${conn.user}@${conn.host}`, { id: conn.id, host: conn.host, user: conn.user, port, keyPath: keyPath ?? undefined }, pw);
+  }, [connectAndBrowse, configHosts]);
 
   // User selected a folder in the browser
   const handleFolderSelect = useCallback((remotePath: string) => {
@@ -256,12 +281,13 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
         id: hostInfo.id,
         name: hostInfo.id,
         host: hostInfo.host,
-        port: 22,
+        port: hostInfo.port ?? 22,
         user: hostInfo.user,
-        keyPath: "",
+        keyPath: hostInfo.keyPath ?? "",
         group: "",
       });
     }
+    useSshStore.getState().touchConnection(hostInfo.id);
 
     // Spawn terminal tile at viewport center
     const { viewport } = useCanvasStore.getState();
@@ -382,31 +408,31 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
             </div>
           )}
 
-          {/* SSH Config Hosts */}
-          {configHosts.length > 0 && (
+          {/* Recent Connections (shown first) */}
+          {connections.length > 0 && (
             <>
               <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", padding: "6px 8px 2px" }}>
-                SSH Config
+                Recently Connected
               </div>
-              {configHosts.map((host) => (
-                <button key={host.host_alias} role="menuitem" style={itemStyle} onClick={() => handleConfigHostClick(host)} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
-                  <span style={{ fontWeight: 500 }}>{host.host_alias}</span>
-                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{host.hostname || host.host_alias}</span>
+              {[...connections].sort((a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0)).map((conn) => (
+                <button key={conn.id} role="menuitem" style={itemStyle} onClick={() => handleSavedConnectionClick(conn)} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                  <span style={{ fontWeight: 500 }}>{conn.name}</span>
+                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{conn.user}@{conn.host}</span>
                 </button>
               ))}
             </>
           )}
 
-          {/* Saved Connections */}
-          {connections.length > 0 && (
+          {/* SSH Config Hosts */}
+          {configHosts.length > 0 && (
             <>
               <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", padding: "6px 8px 2px" }}>
-                Saved
+                All Hosts
               </div>
-              {connections.map((conn) => (
-                <button key={conn.id} role="menuitem" style={itemStyle} onClick={() => handleSavedConnectionClick(conn)} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
-                  <span style={{ fontWeight: 500 }}>{conn.name}</span>
-                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{conn.user}@{conn.host}</span>
+              {configHosts.map((host) => (
+                <button key={host.host_alias} role="menuitem" style={itemStyle} onClick={() => handleConfigHostClick(host)} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+                  <span style={{ fontWeight: 500 }}>{host.host_alias}</span>
+                  <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{host.hostname || host.host_alias}</span>
                 </button>
               ))}
             </>

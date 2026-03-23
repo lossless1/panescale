@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Excalicode is a Tauri-based desktop application that combines an infinite spatial canvas with terminal emulation. Users open project folders in a sidebar (with full git integration), then spawn floating terminal windows, notes, images, and file previews onto a pannable/zoomable canvas — like Excalidraw meets a terminal multiplexer. It supports local terminals and remote SSH connections, with tmux-backed session persistence so the entire canvas layout and terminal state survives app restarts.
+Excalicode is a Tauri-based desktop application that combines an infinite spatial canvas with terminal emulation. Users open project folders in a sidebar (with full git integration), then spawn floating terminal windows, notes, images, and file previews onto a pannable/zoomable canvas — like Panescale meets a terminal multiplexer. It supports local terminals and remote SSH connections, with tmux-backed session persistence so the entire canvas layout and terminal state survives app restarts.
 
 ## Core Value
 
@@ -57,14 +57,15 @@ Users can visually organize and interact with multiple terminal sessions on an i
 
 ## Key Decisions
 
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Tauri over Electron | Smaller bundle, lower memory, Rust backend for performance | — Pending |
-| React for frontend | Large ecosystem, user familiarity, strong canvas library options | — Pending |
-| xterm.js for terminals | Industry standard terminal emulator for web, widely used | — Pending |
-| Automatic tmux (hidden from user) | Seamless persistence without requiring user to know tmux | — Pending |
-| Global canvas (not per-project) | Single workspace with project-tagged terminals | — Pending |
-| SSH connection manager (not ~/.ssh/config) | More user-friendly, in-app management of connections | — Pending |
+| Decision                                   | Rationale                                                        | Outcome   |
+| ------------------------------------------ | ---------------------------------------------------------------- | --------- |
+| Tauri over Electron                        | Smaller bundle, lower memory, Rust backend for performance       | — Pending |
+| React for frontend                         | Large ecosystem, user familiarity, strong canvas library options | — Pending |
+| xterm.js for terminals                     | Industry standard terminal emulator for web, widely used         | — Pending |
+| Automatic tmux (hidden from user)          | Seamless persistence without requiring user to know tmux         | — Pending |
+| Global canvas (not per-project)            | Single workspace with project-tagged terminals                   | — Pending |
+| SSH connection manager (not ~/.ssh/config) | More user-friendly, in-app management of connections             | — Pending |
 
 ---
-*Last updated: 2026-03-17 after initialization*
+
+_Last updated: 2026-03-17 after initialization_

@@ -170,7 +170,7 @@ export function Sidebar() {
               top: "calc(100% + 4px)",
               left: 0,
               right: 0,
-              minWidth: 220,
+              minWidth: 300,
               backgroundColor: "var(--bg-primary)",
               border: "1px solid var(--border)",
               borderRadius: 8,

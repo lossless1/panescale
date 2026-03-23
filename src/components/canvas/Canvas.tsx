@@ -12,7 +12,7 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { useCanvasStore } from "../../stores/canvasStore";
-import { useProjectStore } from "../../stores/projectStore";
+import { spawnTerminalAtPosition } from "../../lib/spawnTerminal";
 import { useFileDragStore } from "../../stores/fileDragStore";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useEscapeToCanvas } from "../../hooks/useFocusMode";
@@ -95,10 +95,8 @@ function CanvasInner() {
   const storedViewport = useCanvasStore((s) => s.viewport);
   const onNodesChange = useCanvasStore((s) => s.onNodesChange);
   const setViewport = useCanvasStore((s) => s.setViewport);
-  const addTerminalNode = useCanvasStore((s) => s.addTerminalNode);
   const addContentNode = useCanvasStore((s) => s.addContentNode);
   const addRegion = useCanvasStore((s) => s.addRegion);
-  const projectPath = useProjectStore((s) => s.projects[s.activeProjectIndex]?.path ?? null);
   const bringToFront = useCanvasStore((s) => s.bringToFront);
   const snapLines = useCanvasStore((s) => s.snapLines);
   const setSnapLines = useCanvasStore((s) => s.setSnapLines);
@@ -315,10 +313,9 @@ function CanvasInner() {
         x: event.clientX,
         y: event.clientY,
       });
-      const cwd = projectPath ?? "~";
-      addTerminalNode(position, cwd);
+      spawnTerminalAtPosition(position);
     },
-    [reactFlow, addTerminalNode, projectPath],
+    [reactFlow],
   );
 
   const handleNodeClick = useCallback(
@@ -348,9 +345,9 @@ function CanvasInner() {
       x: contextMenu.x,
       y: contextMenu.y,
     });
-    addTerminalNode(position, projectPath ?? "~");
+    spawnTerminalAtPosition(position);
     setContextMenu(null);
-  }, [contextMenu, reactFlow, addTerminalNode, projectPath]);
+  }, [contextMenu, reactFlow]);
 
   const handleGroupAsRegion = useCallback(() => {
     const selectedNodes = nodes.filter((n) => n.selected && n.type !== "region");

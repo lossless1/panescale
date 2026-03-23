@@ -17,8 +17,9 @@ The three highest-risk areas are: (1) terminal data streaming via Tauri's Channe
 ## User Constraints (from CONTEXT.md)
 
 ### Locked Decisions
+
 - Zoom range: 10% to 200% (wider than Collaborator's 33-100%)
-- Dot grid background with minor + major dots (Excalidraw/Collaborator style)
+- Dot grid background with minor + major dots (Panescale/Collaborator style)
 - Pan via trackpad two-finger scroll (primary method), Space+drag, and middle-click+drag all supported
 - Cmd+0 fits all tiles in view (zoom-to-fit)
 - Rubber-band effect at zoom limits
@@ -39,6 +40,7 @@ The three highest-risk areas are: (1) terminal data streaming via Tauri's Channe
 - Left sidebar, resizable via drag edge (sidebar content comes in Phase 2, but layout established now)
 
 ### Claude's Discretion
+
 - Exact grid dot spacing and sizing
 - Zoom animation easing curves
 - Terminal spawn animation (if any)
@@ -47,6 +49,7 @@ The three highest-risk areas are: (1) terminal data streaming via Tauri's Channe
 - Status bar content and layout
 
 ### Deferred Ideas (OUT OF SCOPE)
+
 None -- discussion stayed within phase scope
 
 </user_constraints>
@@ -55,26 +58,26 @@ None -- discussion stayed within phase scope
 
 ## Phase Requirements
 
-| ID | Description | Research Support |
-|----|-------------|-----------------|
-| CANV-01 | Pan via scroll wheel, Space+drag, middle-click+drag | React Flow `panOnScroll`, `panOnDrag` props + custom keyboard handler for Space+drag |
-| CANV-02 | Zoom via Cmd+/-, Ctrl+scroll, pinch-to-zoom | React Flow `minZoom`/`maxZoom` props (0.1 to 2.0), `zoomOnScroll`, `zoomOnPinch` |
-| CANV-03 | Dot grid background with minor/major dots | React Flow `<Background>` component with layered dots variant (two `<Background>` with different gap/size) |
-| TERM-01 | Double-click empty canvas spawns terminal at position | React Flow `onPaneClick`/double-click handler + `screenToFlowPosition` coordinate conversion |
-| TERM-02 | Terminal opens in active project working directory | Pass `cwd` to portable-pty `CommandBuilder::new()` |
-| TERM-03 | Drag terminal tiles by title bar | React Flow built-in node dragging + `dragHandle` selector targeting title bar |
-| TERM-04 | Resize with 8 handles (4 edges, 4 corners) | React Flow `<NodeResizer>` provides all 8 handles out of the box |
-| TERM-05 | Select text and copy/paste | xterm.js built-in selection + Cmd+C/V handling |
-| TERM-07 | Click brings to front (z-index) | Zustand z-index counter, update on node click via `onNodeClick` |
-| TERM-08 | Close via title bar | Kill PTY command + remove node from React Flow state |
-| TERM-14 | Configurable terminal font, size, color scheme | xterm.js `ITerminalOptions` (fontFamily, fontSize, theme) + CSS variable sync |
-| TERM-15 | Support user's default shell (bash, zsh, fish, PowerShell) | Detect shell via `$SHELL` env (Unix) / registry (Windows) in Rust |
-| PERS-01 | Canvas layout persists to disk and restores | Zustand + JSON file in app data dir, atomic write (temp file + rename) |
-| PERS-03 | Auto-save with 500ms debounce + immediate on create/close | Zustand `subscribe` + debounce utility + forced flush on tile create/close |
-| PLAT-01 | Runs on macOS, Linux, Windows | Tauri v2 cross-platform + portable-pty (Unix PTY + ConPTY) |
-| PLAT-02 | Platform-appropriate keyboard shortcuts | Detect platform via Tauri API, map Cmd (macOS) to Ctrl (Win/Linux) |
-| PLAT-03 | Native window chrome per platform | Custom title bar with `decorations: false` in tauri.conf.json + `data-tauri-drag-region` |
-| THEM-01 | Switch between dark and light themes | CSS custom properties on `:root`, Zustand theme store, sync to xterm.js theme object |
+| ID      | Description                                                | Research Support                                                                                           |
+| ------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| CANV-01 | Pan via scroll wheel, Space+drag, middle-click+drag        | React Flow `panOnScroll`, `panOnDrag` props + custom keyboard handler for Space+drag                       |
+| CANV-02 | Zoom via Cmd+/-, Ctrl+scroll, pinch-to-zoom                | React Flow `minZoom`/`maxZoom` props (0.1 to 2.0), `zoomOnScroll`, `zoomOnPinch`                           |
+| CANV-03 | Dot grid background with minor/major dots                  | React Flow `<Background>` component with layered dots variant (two `<Background>` with different gap/size) |
+| TERM-01 | Double-click empty canvas spawns terminal at position      | React Flow `onPaneClick`/double-click handler + `screenToFlowPosition` coordinate conversion               |
+| TERM-02 | Terminal opens in active project working directory         | Pass `cwd` to portable-pty `CommandBuilder::new()`                                                         |
+| TERM-03 | Drag terminal tiles by title bar                           | React Flow built-in node dragging + `dragHandle` selector targeting title bar                              |
+| TERM-04 | Resize with 8 handles (4 edges, 4 corners)                 | React Flow `<NodeResizer>` provides all 8 handles out of the box                                           |
+| TERM-05 | Select text and copy/paste                                 | xterm.js built-in selection + Cmd+C/V handling                                                             |
+| TERM-07 | Click brings to front (z-index)                            | Zustand z-index counter, update on node click via `onNodeClick`                                            |
+| TERM-08 | Close via title bar                                        | Kill PTY command + remove node from React Flow state                                                       |
+| TERM-14 | Configurable terminal font, size, color scheme             | xterm.js `ITerminalOptions` (fontFamily, fontSize, theme) + CSS variable sync                              |
+| TERM-15 | Support user's default shell (bash, zsh, fish, PowerShell) | Detect shell via `$SHELL` env (Unix) / registry (Windows) in Rust                                          |
+| PERS-01 | Canvas layout persists to disk and restores                | Zustand + JSON file in app data dir, atomic write (temp file + rename)                                     |
+| PERS-03 | Auto-save with 500ms debounce + immediate on create/close  | Zustand `subscribe` + debounce utility + forced flush on tile create/close                                 |
+| PLAT-01 | Runs on macOS, Linux, Windows                              | Tauri v2 cross-platform + portable-pty (Unix PTY + ConPTY)                                                 |
+| PLAT-02 | Platform-appropriate keyboard shortcuts                    | Detect platform via Tauri API, map Cmd (macOS) to Ctrl (Win/Linux)                                         |
+| PLAT-03 | Native window chrome per platform                          | Custom title bar with `decorations: false` in tauri.conf.json + `data-tauri-drag-region`                   |
+| THEM-01 | Switch between dark and light themes                       | CSS custom properties on `:root`, Zustand theme store, sync to xterm.js theme object                       |
 
 </phase_requirements>
 
@@ -82,39 +85,39 @@ None -- discussion stayed within phase scope
 
 ### Core
 
-| Library | Version | Purpose | Why Standard |
-|---------|---------|---------|--------------|
-| Tauri | ^2.9 | Desktop shell + Rust backend | Project requirement. Cross-platform, small bundle, Rust backend for PTY/git/SSH |
-| React | ^19 | Frontend UI | Project requirement. React Flow and xterm.js both integrate naturally |
-| TypeScript | ^5.7 | Type safety | Catches IPC contract mismatches at compile time |
-| Vite | ^6 | Build + HMR | Official Tauri recommendation, fast HMR |
-| @xyflow/react | ^12.10 | Infinite canvas | MIT licensed. Built-in pan/zoom/drag/resize/background/minimap. Custom nodes = any React component. 30k+ GitHub stars |
-| @xterm/xterm | 5.5.0 | Terminal rendering | Industry standard (VS Code uses it). Pin to v5.5.0 -- see xterm v5 vs v6 section |
-| @xterm/addon-fit | ^0.10 | Auto-resize terminal to container | Essential for responsive terminal nodes |
-| @xterm/addon-webgl | ^0.18 | GPU-accelerated rendering | Up to 900% faster than DOM renderer. Required for smooth multi-terminal performance |
-| portable-pty | ^0.9.0 | Cross-platform PTY | From WezTerm project. Unix PTY + Windows ConPTY. Battle-tested |
-| Zustand | ^5 | Frontend state management | Lightweight, no boilerplate, persist middleware, TypeScript-first |
-| Tailwind CSS | ^4 | Utility-first CSS | Fast UI development, CSS-first config in v4, dark mode support |
+| Library            | Version | Purpose                           | Why Standard                                                                                                          |
+| ------------------ | ------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Tauri              | ^2.9    | Desktop shell + Rust backend      | Project requirement. Cross-platform, small bundle, Rust backend for PTY/git/SSH                                       |
+| React              | ^19     | Frontend UI                       | Project requirement. React Flow and xterm.js both integrate naturally                                                 |
+| TypeScript         | ^5.7    | Type safety                       | Catches IPC contract mismatches at compile time                                                                       |
+| Vite               | ^6      | Build + HMR                       | Official Tauri recommendation, fast HMR                                                                               |
+| @xyflow/react      | ^12.10  | Infinite canvas                   | MIT licensed. Built-in pan/zoom/drag/resize/background/minimap. Custom nodes = any React component. 30k+ GitHub stars |
+| @xterm/xterm       | 5.5.0   | Terminal rendering                | Industry standard (VS Code uses it). Pin to v5.5.0 -- see xterm v5 vs v6 section                                      |
+| @xterm/addon-fit   | ^0.10   | Auto-resize terminal to container | Essential for responsive terminal nodes                                                                               |
+| @xterm/addon-webgl | ^0.18   | GPU-accelerated rendering         | Up to 900% faster than DOM renderer. Required for smooth multi-terminal performance                                   |
+| portable-pty       | ^0.9.0  | Cross-platform PTY                | From WezTerm project. Unix PTY + Windows ConPTY. Battle-tested                                                        |
+| Zustand            | ^5      | Frontend state management         | Lightweight, no boilerplate, persist middleware, TypeScript-first                                                     |
+| Tailwind CSS       | ^4      | Utility-first CSS                 | Fast UI development, CSS-first config in v4, dark mode support                                                        |
 
 ### Supporting
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| @tauri-apps/api | ^2 | Tauri IPC from frontend | All Rust backend communication, Channel API |
-| @tauri-apps/plugin-fs | ^2 | File system access | State persistence, project directory operations |
-| @tauri-apps/plugin-store | ^2 | Key-value settings | Simple preferences (theme, window size) |
-| serde / serde_json | ^1 | Rust serialization | All IPC data structures |
-| tokio | ^1 | Async runtime (Rust) | PTY management, async commands |
-| anyhow | ^1 | Error handling (Rust) | Simplify error propagation |
+| Library                  | Version | Purpose                 | When to Use                                     |
+| ------------------------ | ------- | ----------------------- | ----------------------------------------------- |
+| @tauri-apps/api          | ^2      | Tauri IPC from frontend | All Rust backend communication, Channel API     |
+| @tauri-apps/plugin-fs    | ^2      | File system access      | State persistence, project directory operations |
+| @tauri-apps/plugin-store | ^2      | Key-value settings      | Simple preferences (theme, window size)         |
+| serde / serde_json       | ^1      | Rust serialization      | All IPC data structures                         |
+| tokio                    | ^1      | Async runtime (Rust)    | PTY management, async commands                  |
+| anyhow                   | ^1      | Error handling (Rust)   | Simplify error propagation                      |
 
 ### Alternatives Considered
 
-| Instead of | Could Use | Tradeoff |
-|------------|-----------|----------|
-| @xterm/xterm 5.5.0 | @xterm/xterm 6.0.0 | v6 removed canvas addon, changed scrollbar internals. tauri-plugin-pty examples use v5 API. v5 is safer for Phase 1 |
+| Instead of                   | Could Use              | Tradeoff                                                                                                                           |
+| ---------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| @xterm/xterm 5.5.0           | @xterm/xterm 6.0.0     | v6 removed canvas addon, changed scrollbar internals. tauri-plugin-pty examples use v5 API. v5 is safer for Phase 1                |
 | Custom portable-pty commands | tauri-plugin-pty 0.1.1 | Plugin is v0.1, early-stage, no Channel API support (uses callbacks). Custom commands give full control over streaming via Channel |
-| Zustand | Redux Toolkit | Zustand is simpler, less boilerplate, sufficient for this use case |
-| CSS custom properties | styled-components | CSS vars work across xterm.js theme + Tailwind. No JS runtime overhead |
+| Zustand                      | Redux Toolkit          | Zustand is simpler, less boilerplate, sufficient for this use case                                                                 |
+| CSS custom properties        | styled-components      | CSS vars work across xterm.js theme + Tailwind. No JS runtime overhead                                                             |
 
 **Installation:**
 
@@ -146,17 +149,17 @@ uuid = { version = "1", features = ["v4"] }
 
 **Recommendation: Pin to `@xterm/xterm@5.5.0` for Phase 1.**
 
-| Aspect | v5.5.0 | v6.0.0 |
-|--------|--------|--------|
-| Release date | April 2024 | December 2024 |
-| DOM renderer | Built-in default | Built-in default |
-| Canvas addon | Available (`@xterm/addon-canvas`) | **Removed/deprecated** |
-| WebGL addon | Available (`@xterm/addon-webgl`) | Available |
-| `onData` API | Works | Works (unchanged) |
-| `write` API | Works | Works (unchanged) |
-| Scrollbar | Classic | **Redesigned** (breaking change -- VS Code internals adopted) |
-| tauri-plugin-pty compat | Tested in examples | **Untested** |
-| Risk level | LOW | MEDIUM-HIGH |
+| Aspect                  | v5.5.0                            | v6.0.0                                                        |
+| ----------------------- | --------------------------------- | ------------------------------------------------------------- |
+| Release date            | April 2024                        | December 2024                                                 |
+| DOM renderer            | Built-in default                  | Built-in default                                              |
+| Canvas addon            | Available (`@xterm/addon-canvas`) | **Removed/deprecated**                                        |
+| WebGL addon             | Available (`@xterm/addon-webgl`)  | Available                                                     |
+| `onData` API            | Works                             | Works (unchanged)                                             |
+| `write` API             | Works                             | Works (unchanged)                                             |
+| Scrollbar               | Classic                           | **Redesigned** (breaking change -- VS Code internals adopted) |
+| tauri-plugin-pty compat | Tested in examples                | **Untested**                                                  |
+| Risk level              | LOW                               | MEDIUM-HIGH                                                   |
 
 **Rationale:** v6 has breaking scrollbar changes and removed the canvas addon fallback. The core `onData`/`write` API is the same, but the internal changes create risk. Pin to v5.5.0 for stability in Phase 1. Upgrade to v6 can happen in a later phase after validation.
 
@@ -167,6 +170,7 @@ uuid = { version = "1", features = ["v4"] }
 **Recommendation: Write custom Tauri commands wrapping portable-pty directly. Do NOT use tauri-plugin-pty.**
 
 **Why:**
+
 1. `tauri-plugin-pty` is v0.1.1 -- early stage, "Developing! Welcome to contribute!" per its README
 2. The plugin uses a callback-based API (`pty.onData()`), NOT Tauri's Channel API
 3. Tauri's event system is "not designed for low latency or high throughput" (Tauri docs). Terminal output is exactly a high-throughput scenario
@@ -219,19 +223,19 @@ async fn pty_kill(pty_id: String, state: tauri::State<'_, PtyManager>) -> Result
 **Frontend usage:**
 
 ```typescript
-import { invoke, Channel } from '@tauri-apps/api/core';
+import { invoke, Channel } from "@tauri-apps/api/core";
 
 const onEvent = new Channel<PtyEvent>();
 onEvent.onmessage = (message) => {
-  if (message.event === 'data') {
+  if (message.event === "data") {
     xtermRef.current?.write(new Uint8Array(message.data.bytes));
-  } else if (message.event === 'exit') {
+  } else if (message.event === "exit") {
     // Handle terminal exit
   }
 };
 
-const ptyId = await invoke('pty_spawn', {
-  cwd: '/path/to/project',
+const ptyId = await invoke("pty_spawn", {
+  cwd: "/path/to/project",
   cols: 80,
   rows: 24,
   onEvent,
@@ -371,7 +375,7 @@ const TerminalNode = memo(({ data, selected }: NodeProps<TerminalNodeData>) => {
 
 ```typescript
 // Source: Collaborator bug #13 prevention pattern
-type FocusMode = 'canvas' | 'terminal';
+type FocusMode = "canvas" | "terminal";
 
 interface FocusState {
   mode: FocusMode;
@@ -381,16 +385,18 @@ interface FocusState {
 }
 
 const useFocusStore = create<FocusState>((set) => ({
-  mode: 'canvas',
+  mode: "canvas",
   activeTerminalId: null,
-  enterTerminalMode: (terminalId) => set({
-    mode: 'terminal',
-    activeTerminalId: terminalId,
-  }),
-  exitToCanvasMode: () => set({
-    mode: 'canvas',
-    activeTerminalId: null,
-  }),
+  enterTerminalMode: (terminalId) =>
+    set({
+      mode: "terminal",
+      activeTerminalId: terminalId,
+    }),
+  exitToCanvasMode: () =>
+    set({
+      mode: "canvas",
+      activeTerminalId: null,
+    }),
 }));
 
 // In TerminalNode: click handler
@@ -402,19 +408,19 @@ const handleTerminalClick = () => {
 // Global keyboard handler
 useEffect(() => {
   const handler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && focusStore.mode === 'terminal') {
+    if (e.key === "Escape" && focusStore.mode === "terminal") {
       focusStore.exitToCanvasMode();
       xtermRef.current?.blur();
     }
     // App shortcuts always win
-    if ((e.metaKey || e.ctrlKey) && ['k', '=', '-', '0'].includes(e.key)) {
+    if ((e.metaKey || e.ctrlKey) && ["k", "=", "-", "0"].includes(e.key)) {
       e.preventDefault();
       e.stopPropagation();
       handleAppShortcut(e);
     }
   };
-  window.addEventListener('keydown', handler, true); // capture phase
-  return () => window.removeEventListener('keydown', handler, true);
+  window.addEventListener("keydown", handler, true); // capture phase
+  return () => window.removeEventListener("keydown", handler, true);
 }, []);
 ```
 
@@ -431,15 +437,17 @@ let saveTimeout: ReturnType<typeof setTimeout>;
 canvasStore.subscribe((state) => {
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(() => {
-    invoke('state_save', { canvas: serializeCanvas(state) });
+    invoke("state_save", { canvas: serializeCanvas(state) });
   }, DEBOUNCE_MS);
 });
 
 // Force immediate save on create/close
 function createTerminalTile(position: { x: number; y: number }) {
-  const newNode = { /* ... */ };
+  const newNode = {
+    /* ... */
+  };
   canvasStore.getState().addNode(newNode);
-  invoke('state_save', { canvas: serializeCanvas(canvasStore.getState()) }); // immediate
+  invoke("state_save", { canvas: serializeCanvas(canvasStore.getState()) }); // immediate
 }
 ```
 
@@ -539,14 +547,18 @@ function Canvas() {
 ```tsx
 function TitleBar() {
   return (
-    <div className="h-8 flex items-center bg-[var(--bg-titlebar)] select-none"
-         data-tauri-drag-region>
+    <div
+      className="h-8 flex items-center bg-[var(--bg-titlebar)] select-none"
+      data-tauri-drag-region
+    >
       <div className="flex gap-1 ml-2">
         {/* macOS-style traffic lights or cross-platform buttons */}
         <WindowControls />
       </div>
-      <span className="flex-1 text-center text-sm text-[var(--text-secondary)]"
-            data-tauri-drag-region>
+      <span
+        className="flex-1 text-center text-sm text-[var(--text-secondary)]"
+        data-tauri-drag-region
+      >
         Excalicode
       </span>
     </div>
@@ -566,51 +578,57 @@ function TitleBar() {
 
 ## Don't Hand-Roll
 
-| Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
-| Infinite canvas pan/zoom | Custom CSS transform math | `@xyflow/react` | Handles viewport math, hit testing, virtualization, accessibility |
-| Node resize handles | Custom drag handlers on 8 points | `<NodeResizer>` component | Provides all 8 handles, min/max constraints, resize callbacks |
-| Dot grid background | Custom SVG/CSS pattern with viewport sync | `<Background variant="Dots">` | Automatically follows viewport transforms |
-| Terminal rendering | Custom character grid renderer | xterm.js | Handles VT100/ANSI, Unicode, ligatures, selection, scrollback |
-| PTY management | Raw `libc::forkpty` calls | portable-pty | Cross-platform (Unix PTY + Windows ConPTY), tested by WezTerm |
-| Terminal auto-fit | Manual cols/rows calculation | `@xterm/addon-fit` | Handles font metrics, DPR, container measurement |
-| Debounced writes | Custom timer logic | Lodash `debounce` or simple utility | Edge cases with leading/trailing, cancellation |
+| Problem                  | Don't Build                               | Use Instead                         | Why                                                               |
+| ------------------------ | ----------------------------------------- | ----------------------------------- | ----------------------------------------------------------------- |
+| Infinite canvas pan/zoom | Custom CSS transform math                 | `@xyflow/react`                     | Handles viewport math, hit testing, virtualization, accessibility |
+| Node resize handles      | Custom drag handlers on 8 points          | `<NodeResizer>` component           | Provides all 8 handles, min/max constraints, resize callbacks     |
+| Dot grid background      | Custom SVG/CSS pattern with viewport sync | `<Background variant="Dots">`       | Automatically follows viewport transforms                         |
+| Terminal rendering       | Custom character grid renderer            | xterm.js                            | Handles VT100/ANSI, Unicode, ligatures, selection, scrollback     |
+| PTY management           | Raw `libc::forkpty` calls                 | portable-pty                        | Cross-platform (Unix PTY + Windows ConPTY), tested by WezTerm     |
+| Terminal auto-fit        | Manual cols/rows calculation              | `@xterm/addon-fit`                  | Handles font metrics, DPR, container measurement                  |
+| Debounced writes         | Custom timer logic                        | Lodash `debounce` or simple utility | Edge cases with leading/trailing, cancellation                    |
 
 **Key insight:** React Flow provides ~80% of the canvas UX out of the box. The custom work is in: terminal node embedding, focus management, PTY wiring, and persistence.
 
 ## Common Pitfalls
 
 ### Pitfall 1: IPC Throughput Bottleneck (Terminal Data)
+
 **What goes wrong:** Terminal output (megabytes/sec during builds) saturates the IPC bridge, causing lag across all terminals.
 **Why it happens:** Using Tauri's event system instead of Channel API. Events are "not designed for low latency or high throughput" (Tauri docs).
 **How to avoid:** Use `tauri::ipc::Channel<PtyEvent>` for all PTY output. Batch PTY reads on the Rust side (e.g., every 16ms or 4KB, whichever first). Implement xterm.js flow control.
 **Warning signs:** Frame rate drops below 30fps with 5+ terminals running `yes`.
 
 ### Pitfall 2: Canvas/Terminal Event Conflicts
+
 **What goes wrong:** Scrolling inside a terminal pans the canvas. Clicking terminal starts a canvas drag. Keyboard shortcuts get swallowed.
 **Why it happens:** Both canvas and xterm.js need mouse/keyboard events on the same DOM.
 **How to avoid:** Two-mode focus system from day one. Use `nodrag` and `nowheel` CSS classes on terminal containers. `stopPropagation()` on terminal mouse/key events when focused. Escape returns to canvas mode.
 **Warning signs:** Can't type in terminal after panning, or can't pan after typing.
 
 ### Pitfall 3: State Persistence Race Conditions
+
 **What goes wrong:** Close terminal + debounced save races = corrupted state. App crash mid-write = empty file on next load.
 **Why it happens:** Multiple state changes + async persistence + no atomic writes.
 **How to avoid:** Atomic file writes (write to .tmp, rename). Force save on tile create/close. On app quit, force final save from `on_window_event(CloseRequested)`. Single source of truth in Zustand store.
 **Warning signs:** Blank canvas after force-quitting the app.
 
 ### Pitfall 4: PTY Resource Leaks
+
 **What goes wrong:** After opening/closing many terminals, new ones fail to spawn. File descriptor count grows.
 **Why it happens:** PTY file descriptors not properly closed. Child processes not killed/waited.
 **How to avoid:** Implement proper Drop/cleanup: close master FD, SIGHUP child, wait for exit. Use dedicated OS threads for PTY I/O (not tokio blocking pool). Set max concurrent terminals (~100).
 **Warning signs:** `lsof -p <pid> | wc -l` grows after open/close cycles.
 
 ### Pitfall 5: xterm.js Memory with Many Terminals
+
 **What goes wrong:** 50 terminals at 34MB each = 1.7GB just for terminal buffers.
 **Why it happens:** xterm.js allocates typed arrays for full scrollback upfront.
 **How to avoid:** Reduce default scrollback to 1000 lines. Plan for virtualization in Phase 2 (unmount off-screen xterm instances). Use WebGL addon for GPU-accelerated rendering.
 **Warning signs:** Memory exceeds 2GB with 20+ terminals.
 
 ### Pitfall 6: Custom Title Bar Resize Bug
+
 **What goes wrong:** Window cannot be resized when `decorations: false` on some platforms.
 **Why it happens:** Known Tauri v2 bug (issue #8519). Without native decorations, the resize hit zone may not work.
 **How to avoid:** Test early on all platforms. Fallback: add CSS border with resize hit zones, or use `decorations: true` with minimal native bar.
@@ -622,16 +640,25 @@ function TitleBar() {
 
 ```typescript
 // Source: Zustand v5 docs + React Flow integration
-import { create } from 'zustand';
-import { type Node, type Viewport, applyNodeChanges, type NodeChange } from '@xyflow/react';
-import { invoke } from '@tauri-apps/api/core';
+import { create } from "zustand";
+import {
+  type Node,
+  type Viewport,
+  applyNodeChanges,
+  type NodeChange,
+} from "@xyflow/react";
+import { invoke } from "@tauri-apps/api/core";
 
 interface CanvasState {
   nodes: Node[];
   viewport: Viewport;
   maxZIndex: number;
   onNodesChange: (changes: NodeChange[]) => void;
-  addTerminalNode: (position: { x: number; y: number }, ptyId: string, cwd: string) => void;
+  addTerminalNode: (
+    position: { x: number; y: number },
+    ptyId: string,
+    cwd: string,
+  ) => void;
   removeNode: (id: string) => void;
   bringToFront: (id: string) => void;
   setViewport: (viewport: Viewport) => void;
@@ -651,29 +678,27 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const newZ = get().maxZIndex + 1;
     const node: Node = {
       id: ptyId,
-      type: 'terminal',
+      type: "terminal",
       position,
       data: { ptyId, cwd, isFocused: false },
       style: { width: 640, height: 480 }, // ~80x24
       zIndex: newZ,
-      dragHandle: '.drag-handle',
+      dragHandle: ".drag-handle",
     };
     set({ nodes: [...get().nodes, node], maxZIndex: newZ });
     // Immediate save on create
-    invoke('state_save', { canvas: serializeState(get()) });
+    invoke("state_save", { canvas: serializeState(get()) });
   },
 
   removeNode: (id) => {
     set({ nodes: get().nodes.filter((n) => n.id !== id) });
-    invoke('state_save', { canvas: serializeState(get()) });
+    invoke("state_save", { canvas: serializeState(get()) });
   },
 
   bringToFront: (id) => {
     const newZ = get().maxZIndex + 1;
     set({
-      nodes: get().nodes.map((n) =>
-        n.id === id ? { ...n, zIndex: newZ } : n
-      ),
+      nodes: get().nodes.map((n) => (n.id === id ? { ...n, zIndex: newZ } : n)),
       maxZIndex: newZ,
     });
   },
@@ -681,9 +706,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   setViewport: (viewport) => set({ viewport }),
 
   loadFromDisk: async () => {
-    const saved = await invoke<SavedCanvas | null>('state_load');
+    const saved = await invoke<SavedCanvas | null>("state_load");
     if (saved) {
-      set({ nodes: saved.nodes, viewport: saved.viewport, maxZIndex: saved.maxZIndex });
+      set({
+        nodes: saved.nodes,
+        viewport: saved.viewport,
+        maxZIndex: saved.maxZIndex,
+      });
     }
   },
 }));
@@ -777,32 +806,32 @@ impl PtyManager {
 // Source: CSS custom properties pattern
 export const themes = {
   dark: {
-    '--bg-primary': '#1a1a2e',
-    '--bg-secondary': '#16213e',
-    '--bg-titlebar': '#0f0f23',
-    '--bg-sidebar': '#12122a',
-    '--bg-terminal': '#0d0d1a',
-    '--text-primary': '#e0e0e0',
-    '--text-secondary': '#8888aa',
-    '--border': '#2a2a4a',
-    '--accent': '#6366f1',
-    '--focus-glow': 'rgba(99, 102, 241, 0.4)',
-    '--grid-minor': '#1f1f3a',
-    '--grid-major': '#2a2a4a',
+    "--bg-primary": "#1a1a2e",
+    "--bg-secondary": "#16213e",
+    "--bg-titlebar": "#0f0f23",
+    "--bg-sidebar": "#12122a",
+    "--bg-terminal": "#0d0d1a",
+    "--text-primary": "#e0e0e0",
+    "--text-secondary": "#8888aa",
+    "--border": "#2a2a4a",
+    "--accent": "#6366f1",
+    "--focus-glow": "rgba(99, 102, 241, 0.4)",
+    "--grid-minor": "#1f1f3a",
+    "--grid-major": "#2a2a4a",
   },
   light: {
-    '--bg-primary': '#ffffff',
-    '--bg-secondary': '#f5f5f7',
-    '--bg-titlebar': '#e8e8ec',
-    '--bg-sidebar': '#f0f0f4',
-    '--bg-terminal': '#1e1e2e', // Terminal stays dark even in light theme
-    '--text-primary': '#1a1a2e',
-    '--text-secondary': '#666688',
-    '--border': '#d0d0e0',
-    '--accent': '#4f46e5',
-    '--focus-glow': 'rgba(79, 70, 229, 0.3)',
-    '--grid-minor': '#e8e8ec',
-    '--grid-major': '#d0d0e0',
+    "--bg-primary": "#ffffff",
+    "--bg-secondary": "#f5f5f7",
+    "--bg-titlebar": "#e8e8ec",
+    "--bg-sidebar": "#f0f0f4",
+    "--bg-terminal": "#1e1e2e", // Terminal stays dark even in light theme
+    "--text-primary": "#1a1a2e",
+    "--text-secondary": "#666688",
+    "--border": "#d0d0e0",
+    "--accent": "#4f46e5",
+    "--focus-glow": "rgba(79, 70, 229, 0.3)",
+    "--grid-minor": "#e8e8ec",
+    "--grid-major": "#d0d0e0",
   },
 } as const;
 
@@ -810,9 +839,9 @@ export const themes = {
 function getXtermTheme(): ITheme {
   const style = getComputedStyle(document.documentElement);
   return {
-    background: style.getPropertyValue('--bg-terminal').trim(),
-    foreground: style.getPropertyValue('--text-primary').trim(),
-    cursor: style.getPropertyValue('--accent').trim(),
+    background: style.getPropertyValue("--bg-terminal").trim(),
+    foreground: style.getPropertyValue("--text-primary").trim(),
+    cursor: style.getPropertyValue("--accent").trim(),
     // ... standard terminal colors
   };
 }
@@ -820,15 +849,16 @@ function getXtermTheme(): ITheme {
 
 ## State of the Art
 
-| Old Approach | Current Approach | When Changed | Impact |
-|--------------|------------------|--------------|--------|
-| Tauri events for streaming | `tauri::ipc::Channel<T>` | Tauri v2 (Oct 2024) | 10x+ throughput for terminal data |
-| xterm.js canvas addon (default) | WebGL addon (recommended) or DOM (default) | xterm v5+ / v6 | WebGL is 900% faster than canvas renderer |
-| Single `AppState` Mutex | Per-domain state managers | Architecture pattern | Prevents cross-domain locking |
-| `reactflow` package | `@xyflow/react` package | v12 (2024) | Renamed, scoped packages, server-side rendering |
-| JSON event payloads for binary | Raw byte payloads via Channel | Tauri v2 | Eliminates base64 overhead for terminal data |
+| Old Approach                    | Current Approach                           | When Changed         | Impact                                          |
+| ------------------------------- | ------------------------------------------ | -------------------- | ----------------------------------------------- |
+| Tauri events for streaming      | `tauri::ipc::Channel<T>`                   | Tauri v2 (Oct 2024)  | 10x+ throughput for terminal data               |
+| xterm.js canvas addon (default) | WebGL addon (recommended) or DOM (default) | xterm v5+ / v6       | WebGL is 900% faster than canvas renderer       |
+| Single `AppState` Mutex         | Per-domain state managers                  | Architecture pattern | Prevents cross-domain locking                   |
+| `reactflow` package             | `@xyflow/react` package                    | v12 (2024)           | Renamed, scoped packages, server-side rendering |
+| JSON event payloads for binary  | Raw byte payloads via Channel              | Tauri v2             | Eliminates base64 overhead for terminal data    |
 
 **Deprecated/outdated:**
+
 - `tauri::event::emit()` for high-throughput data (use Channel instead)
 - `xterm-addon-canvas` (deprecated in v6, WebGL or DOM renderer instead)
 - `reactflow` npm package (renamed to `@xyflow/react`)
@@ -855,42 +885,44 @@ function getXtermTheme(): ITheme {
 
 ### Test Framework
 
-| Property | Value |
-|----------|-------|
-| Framework | Vitest (frontend) + `cargo test` (Rust backend) |
-| Config file | None -- needs Wave 0 setup |
-| Quick run command | `npx vitest run --reporter=verbose` |
-| Full suite command | `npx vitest run && cd src-tauri && cargo test` |
+| Property           | Value                                           |
+| ------------------ | ----------------------------------------------- |
+| Framework          | Vitest (frontend) + `cargo test` (Rust backend) |
+| Config file        | None -- needs Wave 0 setup                      |
+| Quick run command  | `npx vitest run --reporter=verbose`             |
+| Full suite command | `npx vitest run && cd src-tauri && cargo test`  |
 
 ### Phase Requirements -> Test Map
 
-| Req ID | Behavior | Test Type | Automated Command | File Exists? |
-|--------|----------|-----------|-------------------|-------------|
-| CANV-01 | Pan via scroll, Space+drag, middle-click | integration | Manual (webview interaction) | -- Wave 0 |
-| CANV-02 | Zoom via Cmd+/-, Ctrl+scroll, pinch | integration | Manual (webview interaction) | -- Wave 0 |
-| CANV-03 | Dot grid background renders | unit | `npx vitest run src/__tests__/canvas.test.tsx` | -- Wave 0 |
-| TERM-01 | Double-click spawns terminal | integration | Manual (needs PTY + webview) | -- Wave 0 |
-| TERM-02 | Terminal opens in project CWD | unit (Rust) | `cargo test pty::tests::spawn_with_cwd` | -- Wave 0 |
-| TERM-03 | Drag terminal by title bar | integration | Manual (webview interaction) | -- Wave 0 |
-| TERM-04 | 8 resize handles work | unit | `npx vitest run src/__tests__/terminal-node.test.tsx` | -- Wave 0 |
-| TERM-05 | Copy/paste in terminal | integration | Manual (needs running terminal) | -- Wave 0 |
-| TERM-07 | Click brings to front | unit | `npx vitest run src/__tests__/canvas-store.test.ts` | -- Wave 0 |
-| TERM-08 | Close via title bar kills PTY | unit (Rust) | `cargo test pty::tests::kill_session` | -- Wave 0 |
-| TERM-14 | Configurable font/size/scheme | unit | `npx vitest run src/__tests__/theme.test.ts` | -- Wave 0 |
-| TERM-15 | Detects user's default shell | unit (Rust) | `cargo test pty::tests::detect_shell` | -- Wave 0 |
-| PERS-01 | Layout persists + restores | unit (Rust) | `cargo test state::tests::save_and_load` | -- Wave 0 |
-| PERS-03 | Debounced auto-save | unit | `npx vitest run src/__tests__/persistence.test.ts` | -- Wave 0 |
-| PLAT-01 | Cross-platform builds | smoke | CI: `cargo tauri build` on macOS/Linux/Windows | -- Wave 0 |
-| PLAT-02 | Platform-appropriate shortcuts | unit | `npx vitest run src/__tests__/shortcuts.test.ts` | -- Wave 0 |
-| PLAT-03 | Custom title bar works | integration | Manual (visual check per platform) | -- Wave 0 |
-| THEM-01 | Dark/light theme switch | unit | `npx vitest run src/__tests__/theme.test.ts` | -- Wave 0 |
+| Req ID  | Behavior                                 | Test Type   | Automated Command                                     | File Exists? |
+| ------- | ---------------------------------------- | ----------- | ----------------------------------------------------- | ------------ |
+| CANV-01 | Pan via scroll, Space+drag, middle-click | integration | Manual (webview interaction)                          | -- Wave 0    |
+| CANV-02 | Zoom via Cmd+/-, Ctrl+scroll, pinch      | integration | Manual (webview interaction)                          | -- Wave 0    |
+| CANV-03 | Dot grid background renders              | unit        | `npx vitest run src/__tests__/canvas.test.tsx`        | -- Wave 0    |
+| TERM-01 | Double-click spawns terminal             | integration | Manual (needs PTY + webview)                          | -- Wave 0    |
+| TERM-02 | Terminal opens in project CWD            | unit (Rust) | `cargo test pty::tests::spawn_with_cwd`               | -- Wave 0    |
+| TERM-03 | Drag terminal by title bar               | integration | Manual (webview interaction)                          | -- Wave 0    |
+| TERM-04 | 8 resize handles work                    | unit        | `npx vitest run src/__tests__/terminal-node.test.tsx` | -- Wave 0    |
+| TERM-05 | Copy/paste in terminal                   | integration | Manual (needs running terminal)                       | -- Wave 0    |
+| TERM-07 | Click brings to front                    | unit        | `npx vitest run src/__tests__/canvas-store.test.ts`   | -- Wave 0    |
+| TERM-08 | Close via title bar kills PTY            | unit (Rust) | `cargo test pty::tests::kill_session`                 | -- Wave 0    |
+| TERM-14 | Configurable font/size/scheme            | unit        | `npx vitest run src/__tests__/theme.test.ts`          | -- Wave 0    |
+| TERM-15 | Detects user's default shell             | unit (Rust) | `cargo test pty::tests::detect_shell`                 | -- Wave 0    |
+| PERS-01 | Layout persists + restores               | unit (Rust) | `cargo test state::tests::save_and_load`              | -- Wave 0    |
+| PERS-03 | Debounced auto-save                      | unit        | `npx vitest run src/__tests__/persistence.test.ts`    | -- Wave 0    |
+| PLAT-01 | Cross-platform builds                    | smoke       | CI: `cargo tauri build` on macOS/Linux/Windows        | -- Wave 0    |
+| PLAT-02 | Platform-appropriate shortcuts           | unit        | `npx vitest run src/__tests__/shortcuts.test.ts`      | -- Wave 0    |
+| PLAT-03 | Custom title bar works                   | integration | Manual (visual check per platform)                    | -- Wave 0    |
+| THEM-01 | Dark/light theme switch                  | unit        | `npx vitest run src/__tests__/theme.test.ts`          | -- Wave 0    |
 
 ### Sampling Rate
+
 - **Per task commit:** `npx vitest run` (frontend) + `cargo test` (backend)
 - **Per wave merge:** Full suite: `npx vitest run && cd src-tauri && cargo test`
 - **Phase gate:** Full suite green before `/gsd:verify-work`
 
 ### Wave 0 Gaps
+
 - [ ] `vitest.config.ts` -- Vitest configuration for React + TypeScript
 - [ ] `src/__tests__/canvas-store.test.ts` -- Zustand store unit tests (add/remove/z-index)
 - [ ] `src/__tests__/persistence.test.ts` -- Debounce + serialization tests
@@ -903,6 +935,7 @@ function getXtermTheme(): ITheme {
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - [React Flow Custom Nodes](https://reactflow.dev/learn/customization/custom-nodes) -- custom node pattern, `nodrag` class
 - [React Flow NodeResizer API](https://reactflow.dev/api-reference/components/node-resizer) -- 8 resize handles, min/max constraints
 - [React Flow Background API](https://reactflow.dev/api-reference/components/background) -- dot variant, layered backgrounds
@@ -917,17 +950,20 @@ function getXtermTheme(): ITheme {
 - [tauri-plugin-pty GitHub](https://github.com/Tnze/tauri-plugin-pty) -- API review, maturity assessment
 
 ### Secondary (MEDIUM confidence)
+
 - [Tauri custom titlebar resize bug #8519](https://github.com/tauri-apps/tauri/issues/8519) -- known issue with decorations: false
 - [xterm.js canvas addon deprecated in v6](https://github.com/cockpit-project/cockpit/issues/22509) -- confirms canvas removal
 - [Zustand v5 persist middleware](https://github.com/pmndrs/zustand) -- persist, TypeScript patterns
 
 ### Tertiary (LOW confidence)
+
 - [Tauri IPC binary data feature #7127](https://github.com/tauri-apps/tauri/issues/7127) -- raw binary in Channel (needs testing)
 - WebGL context limits per platform (8-16 typically) -- needs per-platform verification
 
 ## Metadata
 
 **Confidence breakdown:**
+
 - Standard stack: HIGH -- React Flow, xterm.js, portable-pty all verified via official docs
 - Architecture: HIGH -- Tauri Channel API, custom nodes, focus system patterns are well-documented
 - xterm.js version choice: MEDIUM -- v5 is safer, but v6 migration path is clear

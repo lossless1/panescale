@@ -20,15 +20,17 @@ pub async fn ssh_connect(
     on_event: Channel<SshEvent>,
     ssh_state: tauri::State<'_, SshManager>,
 ) -> Result<String, String> {
-    // Try to load from saved connections first, fall back to direct params
+    // Prefer direct params (from frontend) over stored config, since stored config may be stale
     let (conn_host, conn_port, conn_user, conn_key) = {
-        let store = ssh_state.get_config_store().await;
-        if let Some(config) = store.get_connection(&connection_id) {
-            (config.host.clone(), config.port, config.user.clone(), config.key_path.clone())
-        } else if let (Some(h), Some(u)) = (&host, &user) {
+        if let (Some(h), Some(u)) = (&host, &user) {
             (h.clone(), port.unwrap_or(22), u.clone(), key_path.clone())
         } else {
-            return Err(format!("Connection '{}' not found and no direct params provided", connection_id));
+            let store = ssh_state.get_config_store().await;
+            if let Some(config) = store.get_connection(&connection_id) {
+                (config.host.clone(), config.port, config.user.clone(), config.key_path.clone())
+            } else {
+                return Err(format!("Connection '{}' not found and no direct params provided", connection_id));
+            }
         }
     };
 

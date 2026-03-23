@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { SettingsModal } from "./SettingsModal";
 
 export function StatusBar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Open settings from macOS menu bar (Panescale > Preferences)
+  useEffect(() => {
+    const unlisten = listen("open-settings", () => setSettingsOpen(true));
+    return () => { unlisten.then((fn) => fn()); };
+  }, []);
 
   return (
     <>

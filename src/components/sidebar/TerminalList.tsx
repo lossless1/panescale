@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useCanvasStore } from "../../stores/canvasStore";
+import { useFocusModeStore } from "../../hooks/useFocusMode";
 
 /** Truncate a path to its last 2 segments for display. */
 function truncateCwd(cwd: string): string {
@@ -13,6 +14,7 @@ const bellPulseKeyframes = `
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
+.pile-row:hover .pile-close { opacity: 1 !important; }
 `;
 
 export function TerminalList() {
@@ -23,6 +25,18 @@ export function TerminalList() {
   const setBellActive = useCanvasStore((s) => s.setBellActive);
   const removeNode = useCanvasStore((s) => s.removeNode);
   const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+  const activeTerminalId = useFocusModeStore((s) => s.activeTerminalId);
+  const enterTerminalMode = useFocusModeStore((s) => s.enterTerminalMode);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+  // Sync selection with active terminal — clear stale sidebar selection
+  useEffect(() => {
+    if (!activeTerminalId) {
+      setSelectedNodeId(null);
+    } else if (activeTerminalId !== selectedNodeId) {
+      setSelectedNodeId(null);
+    }
+  }, [activeTerminalId, selectedNodeId]);
 
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [renaming, setRenaming] = useState<{ nodeId: string; x: number; y: number } | null>(null);
@@ -104,18 +118,29 @@ export function TerminalList() {
         const customName = nodeData.customName as string | undefined;
         const badgeColor = nodeData.badgeColor as string | undefined;
         const cwd = (nodeData.cwd as string) ?? "~";
-        const displayName = customName || label || `Terminal ${node.id.slice(0, 6)}`;
+        const isSsh = !!nodeData.sshConnectionId;
+        const sshHost = nodeData.sshHost as string | undefined;
+        const sshUser = nodeData.sshUser as string | undefined;
+        const displayName = customName || label || (isSsh ? `${sshUser ?? ""}@${sshHost ?? "ssh"}` : `Terminal ${node.id.slice(0, 6)}`);
         const isBellActive = bellActiveNodes.has(node.id);
+        const bellColor = { bg: "rgba(99, 102, 241, 0.15)", hover: "rgba(99, 102, 241, 0.25)" };
 
         return (
           <div
             key={node.id}
+            className="pile-row"
             onClick={() => {
               if (isBellActive) {
                 setBellActive(node.id, false);
+                // Clear dock badge
+                import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
+                  getCurrentWindow().setBadgeLabel("").catch(() => {});
+                });
               }
+              setSelectedNodeId(node.id);
               setPanToNode(node.id);
               bringToFront(node.id);
+              enterTerminalMode(node.id);
             }}
             onContextMenu={(e) => {
               e.preventDefault();
@@ -129,25 +154,30 @@ export function TerminalList() {
               fontSize: 13,
               cursor: "pointer",
               userSelect: "none",
+              borderRadius: 4,
               ...(isBellActive
                 ? {
                     animation: "bell-pulse 1s ease-in-out infinite",
-                    backgroundColor: badgeColor
-                      ? `${badgeColor}26`
-                      : "rgba(99, 102, 241, 0.15)",
+                    backgroundColor: bellColor.bg,
                   }
-                : {}),
+                : (selectedNodeId === node.id || activeTerminalId === node.id)
+                  ? {
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    }
+                  : {}),
             }}
             onMouseEnter={(e) => {
-              if (!isBellActive) {
+              const isActive = selectedNodeId === node.id || activeTerminalId === node.id;
+              if (!isActive) {
                 (e.currentTarget as HTMLElement).style.backgroundColor =
-                  "var(--bg-secondary)";
+                  isBellActive ? bellColor.hover : "var(--bg-secondary)";
               }
             }}
             onMouseLeave={(e) => {
-              if (!isBellActive) {
+              const isActive = selectedNodeId === node.id || activeTerminalId === node.id;
+              if (!isActive) {
                 (e.currentTarget as HTMLElement).style.backgroundColor =
-                  "transparent";
+                  isBellActive ? bellColor.bg : "transparent";
               }
             }}
           >
@@ -167,14 +197,16 @@ export function TerminalList() {
             {/* Terminal icon */}
             <span
               style={{
-                fontSize: 14,
-                color: "var(--text-secondary)",
+                fontSize: isSsh ? 10 : 14,
+                color: isSsh ? "var(--accent)" : "var(--text-secondary)",
                 flexShrink: 0,
                 width: 18,
                 textAlign: "center",
+                fontWeight: isSsh ? 700 : 400,
+                letterSpacing: isSsh ? -0.5 : 0,
               }}
             >
-              {">_"}
+              {isSsh ? "SSH" : ">_"}
             </span>
 
             <div style={{ overflow: "hidden", flex: 1 }}>
@@ -200,6 +232,37 @@ export function TerminalList() {
                 {truncateCwd(cwd)}
               </div>
             </div>
+
+            {/* Close button */}
+            <button
+              className="pile-close"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeNode(node.id);
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                fontSize: 16,
+                padding: "2px 4px",
+                lineHeight: 1,
+                borderRadius: 3,
+                flexShrink: 0,
+                opacity: 0,
+                transition: "opacity 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "#ef4444";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+              }}
+              title="Close terminal"
+            >
+              &#x2715;
+            </button>
           </div>
         );
       })}

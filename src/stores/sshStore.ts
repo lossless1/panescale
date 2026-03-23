@@ -21,6 +21,7 @@ interface SshState {
   addConnection: (conn: Omit<SshConnectionConfig, "id"> & { id?: string }) => void;
   updateConnection: (id: string, updates: Partial<SshConnectionConfig>) => void;
   removeConnection: (id: string) => void;
+  touchConnection: (id: string) => void;
 
   // Group management
   addGroup: (name: string) => void;
@@ -59,6 +60,7 @@ export const useSshStore = create<SshState>()(
         const full: SshConnectionConfig = {
           ...conn,
           id: conn.id || generateId(),
+          lastUsedAt: Date.now(),
         };
         set((state) => {
           const next = [...state.connections, full];
@@ -86,6 +88,16 @@ export const useSshStore = create<SshState>()(
           }));
           saveToBackend(next);
           return { connections: next, groups };
+        });
+      },
+
+      touchConnection: (id) => {
+        set((state) => {
+          const next = state.connections.map((c) =>
+            c.id === id ? { ...c, lastUsedAt: Date.now() } : c,
+          );
+          saveToBackend(next);
+          return { connections: next };
         });
       },
 

@@ -22,6 +22,7 @@ The stack is well-settled with versions verified on 2026-03-17. Tauri v2.9 (CLI 
 One version risk exists: xterm.js v6 removed the WebGL addon and changed its event system. The tauri-plugin-pty examples target v5 APIs. Either pin to `@xterm/xterm@5.5.0` or verify plugin compatibility with v6 before finalizing the terminal stack. This is flagged as the highest-priority gap for Phase 1 research.
 
 **Core technologies:**
+
 - Tauri v2.9: Desktop shell, Rust backend — smaller bundle and lower memory than Electron; native PTY/SSH/git without Node.js
 - @xyflow/react 12.10.1 (MIT): Infinite canvas with drag/resize/pan/zoom nodes — custom nodes accept any React component, maps directly to "floating windows on canvas"
 - @xterm/xterm (v5.5.0 or v6, needs verification): Terminal rendering — industry standard (used by VS Code)
@@ -37,6 +38,7 @@ One version risk exists: xterm.js v6 removed the WebGL addon and changed its eve
 Research identifies a four-phase MVP progression based on feature dependencies. The canvas + terminal combination is the core value proposition and must ship first. Git UI is the second major differentiator (large scope, warrants its own phase). SSH is the third pillar.
 
 **Must have (table stakes):**
+
 - Infinite pan and zoom with smooth scroll/drag/pinch — the defining UX paradigm
 - Terminal tiles: double-click to spawn, drag/resize freely (8 handles), z-index layering — core value
 - Terminal text selection, copy/paste, scrollback buffer, URL detection — every terminal app has these
@@ -48,6 +50,7 @@ Research identifies a four-phase MVP progression based on feature dependencies. 
 - tmux-backed session persistence transparent to the user — core differentiator promise
 
 **Should have (competitive differentiators):**
+
 - Git status panel with staged/unstaged/untracked, file-level stage/unstage, diff preview
 - Git diff viewer (inline or side-by-side with hunk-level controls)
 - Branch management: create, switch, delete, visual indicator
@@ -60,6 +63,7 @@ Research identifies a four-phase MVP progression based on feature dependencies. 
 - Stash management
 
 **Defer (v2+):**
+
 - Split panes within a single terminal tile (complex interaction with canvas resize)
 - Merge conflict resolution UI
 - CLI tool (`excalicode open .`)
@@ -69,6 +73,7 @@ Research identifies a four-phase MVP progression based on feature dependencies. 
 - Cloud sync or collaboration
 
 **Anti-features (explicitly out of scope):**
+
 - Code editor / IDE — competes with VS Code, massive complexity, PROJECT.md excludes it
 - AI chat integration — dilutes the product; users run AI CLI tools in terminal tiles
 - Cloud sync — auth, conflict resolution, servers not in scope
@@ -79,6 +84,7 @@ Research identifies a four-phase MVP progression based on feature dependencies. 
 The architecture is a clean two-process split dictated by Tauri: Rust backend owns all system resources; React frontend owns all rendering and user interaction; Tauri IPC bridge (Commands for request/response, Channels for high-throughput streaming) is the only communication channel. The frontend never touches system resources directly. CSS transforms on a container div (not HTML Canvas) power the canvas engine, which allows xterm.js and other live DOM elements to be embedded as tiles. Platform differences (tmux on Unix vs. direct ConPTY on Windows) are abstracted behind a `SessionBackend` trait.
 
 **Major components:**
+
 1. Canvas Engine (Frontend) — pan/zoom/grid via CSS transform on a wrapper div; tile layout and coordinate transforms; GPU-accelerated via `will-change: transform`
 2. Tile System (Frontend) — renders terminal, note, image, file-preview tiles; drag/resize/z-index/focus management; memoized with `React.memo`
 3. Sidebar (Frontend) — three panels (file browser, Git UI, SSH manager); all data fetched via Tauri IPC commands, rendered in React
@@ -89,6 +95,7 @@ The architecture is a clean two-process split dictated by Tauri: Rust backend ow
 8. State Store (Rust Backend) — JSON files in `~/.excalicode/`; debounced 500ms saves; atomic writes (temp file + rename); force-save on `CloseRequested` window event
 
 **Critical IPC decisions:**
+
 - Use `tauri::ipc::Channel` (not the event system) for PTY output streaming — Channels are optimized for ordered, high-throughput delivery
 - Use raw byte payloads for terminal data — avoid base64 JSON encoding (33% overhead, CPU cost)
 - Separate state managers per domain (PTY, git, SSH, state) each with their own lock — never one giant `Mutex<AppState>`
@@ -110,12 +117,14 @@ The architecture is a clean two-process split dictated by Tauri: Rust backend ow
 Based on research, suggested phase structure:
 
 ### Phase 1: Foundation, Canvas, and Terminal Core
+
 **Rationale:** You cannot build the product without these pieces. Canvas must exist before tiles; tiles must exist before terminals. Four architectural commitments that cannot be cheaply changed later must be made here: IPC Channel pattern for terminal data, two-mode focus system, atomic state persistence, and `SessionBackend` trait abstraction. Getting any of these wrong means a rewrite.
 **Delivers:** Working infinite canvas with live terminal tiles, canvas layout persistence, basic sidebar file browser, dark/light theming, cross-platform CI setup.
 **Addresses:** All table-stakes canvas features, terminal tile spawning/drag/resize, direct PTY (no tmux yet), cross-platform CI from day one.
 **Avoids:** Pitfalls 1 (IPC throughput), 2 (event conflicts), 3 (state races), 4 (Windows/tmux abstraction), 6 (startup deadlock), 7 (navigation loss), 10 (PTY resource leaks), 13 (tmux config isolation), 14 (Windows cmd flash), 15 (TERM env var).
 
 ### Phase 2: Session Persistence, Terminal Polish, and File System
+
 **Rationale:** Once raw terminals work, layer the persistence that makes them survive restarts. The file tree sidebar is a prerequisite for drag-to-canvas and git UI. Terminal power features (search, URL detection) are quick wins on top of the working terminal foundation.
 **Delivers:** tmux-backed session restore on Unix, file tree sidebar with file operations and Cmd+K fuzzy search, terminal search addon, URL/filepath detection, tile snapping and alignment guides.
 **Uses:** tauri-plugin-shell (tmux lifecycle), @xterm/addon-search, @tauri-apps/plugin-fs, notify crate for fs watching.
@@ -123,6 +132,7 @@ Based on research, suggested phase structure:
 **Avoids:** Pitfall 5 (xterm.js memory explosion — implement viewport culling and off-screen terminal virtualization), Pitfall 11 (cross-platform webview differences), Pitfall 12 (symlinks and special paths in file tree).
 
 ### Phase 3: Git UI
+
 **Rationale:** Git is the second major differentiator, large in scope (status, diff, stage/unstage, commit, branch management, log, stash), and warrants its own dedicated phase. It depends on the file tree sidebar and file watching infrastructure from Phase 2. The unresolved tension between git2 (STACK recommendation) and git CLI (PITFALLS recommendation for performance) must be resolved here based on target repo sizes.
 **Delivers:** Git status panel with stage/unstage, diff viewer (hunk-level controls), commit workflow, branch management (create/switch/delete), commit log, stash management.
 **Uses:** git2 crate (or git CLI sidecar — resolve during planning), notify crate for fs-watcher-triggered refresh.
@@ -130,6 +140,7 @@ Based on research, suggested phase structure:
 **Avoids:** Pitfall 8 (libgit2 performance — background threads, caching, pagination for log, stream large diffs).
 
 ### Phase 4: SSH and Content Tiles
+
 **Rationale:** SSH reuses the terminal tile IPC interface already built. Remote terminal tiles are identical to local ones from the frontend's perspective. Content tiles (markdown notes, images, file preview) are lower-complexity canvas additions that fill out the full workspace concept.
 **Delivers:** SSH connection manager (save connections, connect button spawns remote terminal tile), remote terminal tiles on canvas, markdown note tiles, image tiles, file-preview tiles (drag from sidebar to canvas).
 **Uses:** russh, OS keychain for SSH credential storage, TipTap v2 (markdown notes), react-syntax-highlighter (file preview).
@@ -137,6 +148,7 @@ Based on research, suggested phase structure:
 **Avoids:** Pitfall 9 (SSH connection lifecycle — keepalive detection, reconnection overlay on disconnect, OS keychain for credentials, never plaintext key storage).
 
 ### Phase 5: Polish, Performance, and Cross-Platform Release
+
 **Rationale:** Performance optimization before having 50 real terminals in a real workflow is premature. Cross-platform packaging and Windows-specific fixes belong at the end once the full feature set is stable and tested.
 **Delivers:** Viewport culling and xterm.js virtualization for 50+ terminals, Windows packaging and ConPTY testing, macOS .dmg, Linux .AppImage/.deb, Windows .msi, performance profiling.
 **Uses:** Platform-specific Tauri build pipeline, intersection-based tile visibility detection.
@@ -163,19 +175,20 @@ Phases likely needing deeper research during planning:
 - **Phase 3 — git2 vs. git CLI for large repos:** STACK.md recommends git2; PITFALLS.md documents its 6x performance gap on large repos. Resolve explicitly during Phase 3 planning: if target repos include monorepos (50K+ files), lean toward git CLI sidecar with structured output parsing.
 
 Phases with standard patterns (skip deeper research):
-- **Phase 1 — Canvas engine:** CSS transforms for infinite canvas is a well-documented pattern used by Excalidraw, tldraw, and Collaborator.
+
+- **Phase 1 — Canvas engine:** CSS transforms for infinite canvas is a well-documented pattern used by Panescale, tldraw, and Collaborator.
 - **Phase 1 — React Flow integration:** Extensive official documentation and examples. Standard integration patterns apply.
 - **Phase 4 — Markdown note tiles:** TipTap v2 integration is well-documented with clear examples.
 - **Phase 5 — Packaging:** Tauri v2 packaging is thoroughly documented with official guides for all three platforms.
 
 ## Confidence Assessment
 
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Stack | HIGH | All versions verified against npm registry, crates.io, and docs.rs on 2026-03-17. One open question: xterm.js v5 vs. v6 with tauri-plugin-pty. |
-| Features | HIGH | Derived from direct competitive analysis (Warp, WezTerm, iTerm2, Termius, GitKraken, Mesa) plus Collaborator feature requests. Feature scope is clear. |
-| Architecture | HIGH | Two-process Tauri architecture is well-documented. IPC patterns verified against Tauri v2 official docs. CSS transform canvas pattern confirmed in multiple reference implementations. |
-| Pitfalls | HIGH | Majority are corroborated by Collaborator's live bug tracker (7 bugs directly mapped) or official library documentation (xterm.js flow control guide, Tauri IPC docs, libgit2 issue tracker). |
+| Area         | Confidence | Notes                                                                                                                                                                                         |
+| ------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stack        | HIGH       | All versions verified against npm registry, crates.io, and docs.rs on 2026-03-17. One open question: xterm.js v5 vs. v6 with tauri-plugin-pty.                                                |
+| Features     | HIGH       | Derived from direct competitive analysis (Warp, WezTerm, iTerm2, Termius, GitKraken, Mesa) plus Collaborator feature requests. Feature scope is clear.                                        |
+| Architecture | HIGH       | Two-process Tauri architecture is well-documented. IPC patterns verified against Tauri v2 official docs. CSS transform canvas pattern confirmed in multiple reference implementations.        |
+| Pitfalls     | HIGH       | Majority are corroborated by Collaborator's live bug tracker (7 bugs directly mapped) or official library documentation (xterm.js flow control guide, Tauri IPC docs, libgit2 issue tracker). |
 
 **Overall confidence:** HIGH
 
@@ -191,6 +204,7 @@ Phases with standard patterns (skip deeper research):
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - [Tauri v2 Official Docs](https://v2.tauri.app/) — architecture, IPC, state management, plugins, webview versions
 - [Tauri IPC Documentation](https://v2.tauri.app/concept/inter-process-communication/) — Channel vs. event patterns
 - [Tauri Calling Frontend from Rust](https://v2.tauri.app/develop/calling-frontend/) — Channel API for streaming
@@ -207,6 +221,7 @@ Phases with standard patterns (skip deeper research):
 - Collaborator project bug tracker — direct evidence for Pitfalls 2, 3, 4, 6, 7, 12, 13
 
 ### Secondary (MEDIUM confidence)
+
 - [Mesa - Canvas for Code](https://www.getmesa.dev/) — competitive context, nearest direct competitor
 - [Warp Features](https://www.warp.dev/all-features) — terminal feature table stakes
 - [WezTerm Features](https://wezterm.org/features.html) — multiplexing patterns
@@ -218,9 +233,11 @@ Phases with standard patterns (skip deeper research):
 - [tldraw SDK pricing](https://tldraw.dev/pricing) — $6k/yr commercial license confirmed
 
 ### Tertiary (LOW confidence / needs validation)
+
 - [psmux](https://psmux.pages.dev/) — Windows tmux alternative; rejected as too immature for v1
 - [tauri-plugin-pty examples](https://github.com/Tnze/tauri-plugin-pty) — v5 API examples; v6 compatibility unverified
 
 ---
-*Research completed: 2026-03-17*
-*Ready for roadmap: yes*
+
+_Research completed: 2026-03-17_
+_Ready for roadmap: yes_

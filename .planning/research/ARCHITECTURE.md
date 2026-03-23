@@ -59,17 +59,17 @@ Excalicode follows a clean two-process architecture dictated by Tauri: a Rust ba
 
 ### Component Boundaries
 
-| Component | Process | Responsibility | Communicates With |
-|-----------|---------|---------------|-------------------|
-| Canvas Engine | Frontend | Pan/zoom, tile layout, coordinate transforms | Tile components, State Store (via IPC) |
-| Tile System | Frontend | Render individual tiles (terminal, note, image, preview) | Canvas Engine, PTY Manager (via IPC) |
-| Sidebar | Frontend | File browser, Git UI, SSH manager | Git Engine (via IPC), SSH Client (via IPC) |
-| Theme Manager | Frontend | Dark/light theme, CSS variables | All frontend components |
-| PTY Manager | Backend | Spawn/kill PTYs, route I/O, resize | Platform Layer, Frontend (via events) |
-| Git Engine | Backend | All git operations via libgit2 | Filesystem, Frontend (via commands) |
-| SSH Client | Backend | SSH connections, remote PTY sessions | PTY Manager, Frontend (via commands/events) |
-| State Store | Backend | Persist canvas layout, config, window state | Filesystem, Frontend (via commands) |
-| Platform Layer | Backend | Abstract OS differences (PTY, tmux, ConPTY) | PTY Manager |
+| Component      | Process  | Responsibility                                           | Communicates With                           |
+| -------------- | -------- | -------------------------------------------------------- | ------------------------------------------- |
+| Canvas Engine  | Frontend | Pan/zoom, tile layout, coordinate transforms             | Tile components, State Store (via IPC)      |
+| Tile System    | Frontend | Render individual tiles (terminal, note, image, preview) | Canvas Engine, PTY Manager (via IPC)        |
+| Sidebar        | Frontend | File browser, Git UI, SSH manager                        | Git Engine (via IPC), SSH Client (via IPC)  |
+| Theme Manager  | Frontend | Dark/light theme, CSS variables                          | All frontend components                     |
+| PTY Manager    | Backend  | Spawn/kill PTYs, route I/O, resize                       | Platform Layer, Frontend (via events)       |
+| Git Engine     | Backend  | All git operations via libgit2                           | Filesystem, Frontend (via commands)         |
+| SSH Client     | Backend  | SSH connections, remote PTY sessions                     | PTY Manager, Frontend (via commands/events) |
+| State Store    | Backend  | Persist canvas layout, config, window state              | Filesystem, Frontend (via commands)         |
+| Platform Layer | Backend  | Abstract OS differences (PTY, tmux, ConPTY)              | PTY Manager                                 |
 
 ## IPC Layer Design
 
@@ -81,26 +81,26 @@ Commands are Tauri's primary IPC primitive. The frontend invokes a Rust function
 
 **Use commands for:**
 
-| Command Group | Examples | Returns |
-|--------------|---------|---------|
-| `pty_spawn` | Create new terminal | `{ pty_id: string }` |
-| `pty_resize` | Change terminal dimensions | `void` |
-| `pty_kill` | Destroy a terminal | `void` |
-| `git_status` | Get working tree status | `{ files: FileStatus[] }` |
-| `git_commit` | Create a commit | `{ oid: string }` |
-| `git_branches` | List branches | `{ branches: Branch[] }` |
-| `git_diff` | Get diff for file/commit | `{ hunks: DiffHunk[] }` |
-| `git_log` | Commit history | `{ commits: Commit[] }` |
-| `git_stage` / `git_unstage` | Stage/unstage files | `void` |
-| `git_merge` / `git_stash` | Merge, stash operations | Result types |
-| `ssh_connect` | Open SSH connection | `{ session_id: string }` |
-| `ssh_disconnect` | Close SSH connection | `void` |
-| `ssh_list_connections` | Saved connections | `{ connections: SshConfig[] }` |
-| `ssh_save_connection` | Persist connection config | `void` |
-| `state_save` | Persist canvas/config | `void` |
-| `state_load` | Load canvas/config | `{ canvas: CanvasState, config: AppConfig }` |
-| `fs_read_dir` | List directory contents | `{ entries: DirEntry[] }` |
-| `fs_watch` | Start watching a path | `{ watcher_id: string }` |
+| Command Group               | Examples                   | Returns                                      |
+| --------------------------- | -------------------------- | -------------------------------------------- |
+| `pty_spawn`                 | Create new terminal        | `{ pty_id: string }`                         |
+| `pty_resize`                | Change terminal dimensions | `void`                                       |
+| `pty_kill`                  | Destroy a terminal         | `void`                                       |
+| `git_status`                | Get working tree status    | `{ files: FileStatus[] }`                    |
+| `git_commit`                | Create a commit            | `{ oid: string }`                            |
+| `git_branches`              | List branches              | `{ branches: Branch[] }`                     |
+| `git_diff`                  | Get diff for file/commit   | `{ hunks: DiffHunk[] }`                      |
+| `git_log`                   | Commit history             | `{ commits: Commit[] }`                      |
+| `git_stage` / `git_unstage` | Stage/unstage files        | `void`                                       |
+| `git_merge` / `git_stash`   | Merge, stash operations    | Result types                                 |
+| `ssh_connect`               | Open SSH connection        | `{ session_id: string }`                     |
+| `ssh_disconnect`            | Close SSH connection       | `void`                                       |
+| `ssh_list_connections`      | Saved connections          | `{ connections: SshConfig[] }`               |
+| `ssh_save_connection`       | Persist connection config  | `void`                                       |
+| `state_save`                | Persist canvas/config      | `void`                                       |
+| `state_load`                | Load canvas/config         | `{ canvas: CanvasState, config: AppConfig }` |
+| `fs_read_dir`               | List directory contents    | `{ entries: DirEntry[] }`                    |
+| `fs_watch`                  | Start watching a path      | `{ watcher_id: string }`                     |
 
 ### Events (Fire-and-Forget Streams) -- Use for Continuous Data
 
@@ -108,14 +108,14 @@ Events are one-way messages suitable for streaming data and state change notific
 
 **Use events for:**
 
-| Event | Direction | Payload | Purpose |
-|-------|-----------|---------|---------|
-| `pty:data:{pty_id}` | Backend -> Frontend | `Vec<u8>` (raw bytes) | Terminal output stream |
-| `pty:exit:{pty_id}` | Backend -> Frontend | `{ code: i32 }` | Process exited |
-| `pty:input:{pty_id}` | Frontend -> Backend | `Vec<u8>` (raw bytes) | User keystrokes |
-| `git:fs-changed` | Backend -> Frontend | `{ path: string }` | File watcher notification |
-| `ssh:disconnected:{id}` | Backend -> Frontend | `{ reason: string }` | Connection lost |
-| `state:auto-save` | Internal (Backend) | -- | Trigger debounced save |
+| Event                   | Direction           | Payload               | Purpose                   |
+| ----------------------- | ------------------- | --------------------- | ------------------------- |
+| `pty:data:{pty_id}`     | Backend -> Frontend | `Vec<u8>` (raw bytes) | Terminal output stream    |
+| `pty:exit:{pty_id}`     | Backend -> Frontend | `{ code: i32 }`       | Process exited            |
+| `pty:input:{pty_id}`    | Frontend -> Backend | `Vec<u8>` (raw bytes) | User keystrokes           |
+| `git:fs-changed`        | Backend -> Frontend | `{ path: string }`    | File watcher notification |
+| `ssh:disconnected:{id}` | Backend -> Frontend | `{ reason: string }`  | Connection lost           |
+| `state:auto-save`       | Internal (Backend)  | --                    | Trigger debounced save    |
 
 **Critical performance note:** Terminal I/O (pty:data and pty:input) is the highest-throughput IPC path. Tauri v2 added raw payload support to avoid JSON serialization overhead for binary data. Use raw bytes for terminal data, not base64-encoded JSON strings.
 
@@ -165,11 +165,13 @@ pub struct PtySession {
 ```
 
 **Data flow for PTY output:**
+
 1. Background thread reads from `MasterPty` in a loop
 2. Each chunk is emitted as a Tauri event (`pty:data:{id}`) with raw bytes
 3. Frontend xterm.js instance receives and renders
 
 **Data flow for PTY input:**
+
 1. Frontend listens to xterm.js `onData` callback
 2. Emits Tauri event (`pty:input:{id}`) with raw bytes
 3. Backend listener writes bytes to `MasterPty`
@@ -183,6 +185,7 @@ pub struct PtySession {
 On Unix, tmux provides session persistence -- if the app crashes or restarts, terminal sessions survive because tmux owns the actual PTY.
 
 Architecture:
+
 - On `pty_spawn`: create a tmux session (`tmux new-session -d -s {id}`)
 - The app's PTY connects to that tmux session (`tmux attach -t {id}`)
 - On app restart: enumerate existing tmux sessions, reconnect
@@ -200,14 +203,15 @@ App PTY (portable-pty) <---> tmux session <---> actual shell (bash/zsh)
 
 tmux does not exist on Windows natively. The options considered:
 
-| Option | Verdict | Reason |
-|--------|---------|--------|
-| WSL tmux | REJECTED | Requires WSL installed, adds complexity, user may not have it |
-| psmux (Rust tmux for Windows) | REJECTED | Too new (2025), not battle-tested, adds a dependency |
-| Cygwin/MSYS2 tmux | REJECTED | Heavy dependency, fragile, poor UX |
-| **Direct ConPTY + app-managed persistence** | **CHOSEN** | Native, no dependencies, portable-pty handles it |
+| Option                                      | Verdict    | Reason                                                        |
+| ------------------------------------------- | ---------- | ------------------------------------------------------------- |
+| WSL tmux                                    | REJECTED   | Requires WSL installed, adds complexity, user may not have it |
+| psmux (Rust tmux for Windows)               | REJECTED   | Too new (2025), not battle-tested, adds a dependency          |
+| Cygwin/MSYS2 tmux                           | REJECTED   | Heavy dependency, fragile, poor UX                            |
+| **Direct ConPTY + app-managed persistence** | **CHOSEN** | Native, no dependencies, portable-pty handles it              |
 
 **Windows strategy:** On Windows, Excalicode manages terminal persistence itself:
+
 - ConPTY (via portable-pty) spawns terminals directly
 - Terminal sessions do NOT survive app crashes on Windows (acceptable tradeoff)
 - Canvas layout and scroll history are persisted to disk, so on restart the user gets fresh terminals in the same positions
@@ -238,12 +242,14 @@ pub trait SessionBackend: Send + Sync {
 The Git Engine wraps git2 behind a clean command interface. All operations are synchronous within the Rust side but exposed as async Tauri commands (which run on the thread pool automatically).
 
 **Key design decisions:**
+
 - Open `Repository` lazily and cache per-workspace (don't re-open on every command)
 - File watching triggers `git:fs-changed` events so the sidebar can refresh status
 - Diff computation happens in Rust and sends structured data (not raw diff text) -- the frontend renders it
 - Branch operations, merge, and stash all go through git2, never shell out to `git` CLI
 
 **Why git2 over shelling out to git CLI:**
+
 - No dependency on system git installation
 - Structured error handling
 - No subprocess spawning overhead
@@ -255,12 +261,14 @@ The Git Engine wraps git2 behind a clean command interface. All operations are s
 **Confidence:** MEDIUM -- russh is actively maintained (used by Eugeny/Tabby SSH client) but has a steeper API than ssh2.
 
 **Why russh over ssh2:**
+
 - `russh` is pure Rust (no C dependency on libssh2/OpenSSL)
 - Async/Tokio-native (Tauri v2 uses Tokio internally)
 - Cross-platform without OpenSSL build headaches on Windows
 - Active maintenance by the Tabby/Eugeny team
 
 **SSH terminal flow:**
+
 1. User creates connection in SSH Manager (frontend)
 2. `ssh_connect` command: russh establishes session, authenticates
 3. `ssh_spawn_pty` command: opens a channel, requests PTY
@@ -268,6 +276,7 @@ The Git Engine wraps git2 behind a clean command interface. All operations are s
 5. The frontend terminal tile doesn't know if it's local or remote -- the IPC interface is identical
 
 **Connection persistence:**
+
 - SSH configs (host, port, user, key path) stored in app state JSON
 - Passwords/keys NOT stored in plain text -- use OS keychain (Tauri plugin: `tauri-plugin-os` or system keyring crate)
 - Connections re-established on demand, not automatically on app restart
@@ -277,6 +286,7 @@ The Git Engine wraps git2 behind a clean command interface. All operations are s
 **Pattern:** JSON files in `~/.excalicode/` (mirroring Collaborator's approach)
 
 **Files:**
+
 ```
 ~/.excalicode/
   canvas-state.json    # tiles, positions, sizes, viewport
@@ -286,12 +296,14 @@ The Git Engine wraps git2 behind a clean command interface. All operations are s
 ```
 
 **Persistence strategy:**
+
 - Debounced save: 500ms after last change (same as Collaborator)
 - Immediate save on: tile create, tile close, SSH connection save
 - Load on startup, merge with defaults for missing fields
 - File locking via `fs2` crate to prevent corruption if multiple instances
 
 **State flows:**
+
 - Frontend dispatches state changes via commands (`state_save_canvas`, `state_save_config`)
 - Backend debounces and writes to disk
 - On startup, frontend calls `state_load` to hydrate
@@ -299,20 +311,22 @@ The Git Engine wraps git2 behind a clean command interface. All operations are s
 ### 6. React Frontend: Canvas Engine
 
 **Approach:** CSS transforms on a container div (not HTML Canvas or WebGL)
-**Confidence:** HIGH -- this is how Excalidraw, tldraw, and Collaborator implement their canvases.
+**Confidence:** HIGH -- this is how Panescale, tldraw, and Collaborator implement their canvases.
 
 **Why CSS transforms over Canvas/WebGL:**
+
 - Terminal tiles contain live DOM elements (xterm.js, markdown renderers, images)
 - You cannot embed interactive DOM content inside a `<canvas>` element
 - CSS `transform: translate(x, y) scale(z)` on a wrapper div is simple, performant, and composable
 - GPU-accelerated by default via `will-change: transform`
 
 **Canvas coordinate system:**
+
 ```typescript
 interface Viewport {
-  panX: number;   // world X offset
-  panY: number;   // world Y offset
-  zoom: number;   // scale factor (0.25 - 3.0)
+  panX: number; // world X offset
+  panY: number; // world Y offset
+  zoom: number; // scale factor (0.25 - 3.0)
 }
 
 // Screen coords -> World coords
@@ -325,6 +339,7 @@ function screenToWorld(screenX: number, screenY: number, viewport: Viewport) {
 ```
 
 **Rendering strategy:**
+
 - Single `<div className="canvas-world">` with CSS transform
 - All tiles are children of this div, positioned with `position: absolute; left: {x}px; top: {y}px`
 - Pan: mouse drag on empty space updates `panX/panY`, applied via transform
@@ -332,6 +347,7 @@ function screenToWorld(screenX: number, screenY: number, viewport: Viewport) {
 - Dot grid background: CSS repeating pattern, moves with the transform
 
 **Performance for 50+ terminals:**
+
 - Only render tiles visible in the viewport (intersection-based culling)
 - xterm.js instances for off-screen tiles can be detached (pause rendering) and reattached on scroll
 - Use `React.memo` aggressively on tile components
@@ -344,7 +360,7 @@ Tiles are the fundamental UI unit. Every item on the canvas is a tile.
 ```typescript
 interface Tile {
   id: string;
-  type: 'terminal' | 'note' | 'image' | 'file-preview';
+  type: "terminal" | "note" | "image" | "file-preview";
   x: number;
   y: number;
   width: number;
@@ -355,14 +371,15 @@ interface Tile {
 }
 
 interface TerminalMeta {
-  ptyId: string;        // links to backend PTY
-  projectPath: string;  // which project this terminal belongs to
+  ptyId: string; // links to backend PTY
+  projectPath: string; // which project this terminal belongs to
   isRemote: boolean;
   sshConnectionId?: string;
 }
 ```
 
 **Tile interactions:**
+
 - Drag: update x/y, debounce state save
 - Resize: update width/height, send `pty_resize` for terminals
 - Focus: bring to front (update zIndex), focus xterm.js
@@ -374,12 +391,14 @@ interface TerminalMeta {
 Three panels, switchable via tabs or accordion:
 
 **File Browser:**
+
 - Tree view of active workspace directory
 - Uses `fs_read_dir` command to load directories lazily
 - `fs_watch` command to get real-time updates
 - Drag file onto canvas to create a file preview tile
 
 **Git UI:**
+
 - Status panel: staged/unstaged files (from `git_status`)
 - Diff viewer: inline diff rendering (from `git_diff`)
 - Branch panel: list, create, switch, merge (from `git_branches`)
@@ -388,6 +407,7 @@ Three panels, switchable via tabs or accordion:
 - All data fetched via Tauri commands, rendered in React
 
 **SSH Manager:**
+
 - List saved connections
 - Add/edit connection form (host, port, user, auth method)
 - Connect button spawns remote terminal tile on canvas
@@ -405,17 +425,17 @@ Three panels, switchable via tabs or accordion:
 
 const themes = {
   dark: {
-    '--bg-primary': '#1a1a2e',
-    '--bg-secondary': '#16213e',
-    '--text-primary': '#e0e0e0',
-    '--border': '#2a2a4a',
+    "--bg-primary": "#1a1a2e",
+    "--bg-secondary": "#16213e",
+    "--text-primary": "#e0e0e0",
+    "--border": "#2a2a4a",
     // ...
   },
   light: {
-    '--bg-primary': '#ffffff',
-    '--bg-secondary': '#f5f5f5',
-    '--text-primary': '#1a1a1a',
-    '--border': '#e0e0e0',
+    "--bg-primary": "#ffffff",
+    "--bg-secondary": "#f5f5f5",
+    "--text-primary": "#1a1a1a",
+    "--border": "#e0e0e0",
     // ...
   },
 };
@@ -477,6 +497,7 @@ Organize Tauri commands into Rust modules by domain. Each module owns its state.
 ```
 
 Register all commands in main.rs:
+
 ```rust
 tauri::Builder::default()
     .manage(PtyManager::new())
@@ -519,6 +540,7 @@ User drags tile -> React state updates immediately -> UI re-renders
 ### Pattern 4: Lazy Loading for Git
 
 Git operations can be expensive on large repos. Load data on demand:
+
 - `git_status` only when Git panel is visible
 - `git_log` with pagination (first 50 commits, load more on scroll)
 - `git_diff` only for the selected file
@@ -527,39 +549,44 @@ Git operations can be expensive on large repos. Load data on demand:
 ## Anti-Patterns to Avoid
 
 ### Anti-Pattern 1: Polling for Terminal Data
+
 **What:** Using setInterval to repeatedly call a `pty_read` command.
 **Why bad:** Adds latency (minimum = poll interval), wastes CPU, terrible UX for interactive terminals.
 **Instead:** Use Tauri events. The backend pushes data as soon as it's available.
 
 ### Anti-Pattern 2: Storing PTY Bytes in JSON Events
+
 **What:** Base64-encoding terminal output into JSON event payloads.
 **Why bad:** ~33% size overhead, encoding/decoding CPU cost, especially painful at high throughput.
 **Instead:** Use Tauri v2 raw payload support for binary terminal data.
 
 ### Anti-Pattern 3: One Giant State Object
+
 **What:** A single Rust `AppState` struct behind one `Mutex<>` holding everything.
 **Why bad:** Any operation locks all state. Git status blocks PTY spawn.
 **Instead:** Separate state managers per domain, each with their own lock.
 
 ### Anti-Pattern 4: Shelling Out for Git
+
 **What:** Using `std::process::Command` to run `git status`, `git diff`, etc.
 **Why bad:** Depends on system git, parsing CLI output is fragile, no structured errors.
 **Instead:** Use git2 crate for all git operations.
 
 ### Anti-Pattern 5: Re-rendering Entire Canvas on Tile Move
+
 **What:** Canvas state change triggers re-render of all tiles.
 **Why bad:** 50+ terminals re-rendering kills performance.
 **Instead:** Individual tile components are memoized. Only the moved tile re-renders. Canvas transform is a CSS change on the wrapper, not a React re-render.
 
 ## Scalability Considerations
 
-| Concern | 10 terminals | 50 terminals | 100+ terminals |
-|---------|-------------|-------------|----------------|
-| PTY threads | 10 read threads, fine | 50 threads, consider thread pool | Use async I/O with tokio, batch events |
-| Canvas rendering | All visible, no culling needed | Cull off-screen, memo all tiles | Virtualize: unmount far-away xterm.js |
-| Memory (xterm.js) | ~5MB each = 50MB total | ~250MB, watch scrollback buffer size | Limit scrollback to 5000 lines, page older |
-| IPC throughput | No concern | Batch events if needed | Consider shared memory or raw channel |
-| State persistence | Instant JSON write | Debounce critical, ~50KB file | Consider splitting state per-workspace |
+| Concern           | 10 terminals                   | 50 terminals                         | 100+ terminals                             |
+| ----------------- | ------------------------------ | ------------------------------------ | ------------------------------------------ |
+| PTY threads       | 10 read threads, fine          | 50 threads, consider thread pool     | Use async I/O with tokio, batch events     |
+| Canvas rendering  | All visible, no culling needed | Cull off-screen, memo all tiles      | Virtualize: unmount far-away xterm.js      |
+| Memory (xterm.js) | ~5MB each = 50MB total         | ~250MB, watch scrollback buffer size | Limit scrollback to 5000 lines, page older |
+| IPC throughput    | No concern                     | Batch events if needed               | Consider shared memory or raw channel      |
+| State persistence | Instant JSON write             | Debounce critical, ~50KB file        | Consider splitting state per-workspace     |
 
 ## Suggested Build Order
 
@@ -598,6 +625,7 @@ Phase 7: Cross-Platform + Release
 ```
 
 **Build order rationale:**
+
 - Canvas before terminals: you need somewhere to put terminals before you build them
 - Note/image tiles before terminal tiles: simpler tiles validate the canvas system without PTY complexity
 - Direct PTY before tmux: get terminals working first, add persistence layer after

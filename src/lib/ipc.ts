@@ -403,6 +403,7 @@ export interface SshConnectionConfig {
   keyPath?: string;
   authMode?: "key" | "password";
   group?: string;
+  lastUsedAt?: number;
 }
 
 export interface SshGroup {
@@ -453,8 +454,18 @@ export async function sshDisconnect(sessionId: string): Promise<void> {
 export async function sshSaveConnections(
   connections: SshConnectionConfig[],
 ): Promise<void> {
+  // Transform to match Rust SshConnection struct (snake_case, no extra fields)
+  const rustConnections = connections.map((c) => ({
+    id: c.id,
+    name: c.name,
+    host: c.host,
+    port: c.port,
+    user: c.user,
+    key_path: c.keyPath || null,
+    group: c.group || null,
+  }));
   return invoke("ssh_save_connections", {
-    connectionsJson: JSON.stringify(connections),
+    connectionsJson: JSON.stringify({ connections: rustConnections, groups: [] }),
   });
 }
 

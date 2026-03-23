@@ -14,13 +14,15 @@ Deliver the foundational Tauri v2 + React application with an infinite pan/zoom 
 ## Implementation Decisions
 
 ### Canvas Feel
+
 - Zoom range: 10% to 200% (wider than Collaborator's 33-100%)
-- Dot grid background with minor + major dots (Excalidraw/Collaborator style)
+- Dot grid background with minor + major dots (Panescale/Collaborator style)
 - Pan via trackpad two-finger scroll (primary method), Space+drag, and middle-click+drag all supported
 - Cmd+0 fits all tiles in view (zoom-to-fit)
 - Rubber-band effect at zoom limits
 
 ### Terminal Tiles
+
 - Default spawn size: 80x24 characters (classic terminal standard)
 - Rich title bar: close button, minimize/collapse, working directory path, shell type indicator
 - Minimum size enforced (~40x10 characters) — prevent unusably small terminals
@@ -28,6 +30,7 @@ Deliver the foundational Tauri v2 + React application with an infinite pan/zoom 
 - 8 resize handles (4 edges, 4 corners) per Collaborator reference
 
 ### Focus & Input
+
 - Click terminal tile to enter typing mode, click empty canvas to exit back to canvas mode
 - Escape key exits terminal focus and returns to canvas mode (single press)
 - Scroll over terminal = scroll terminal output; Shift+scroll = pan canvas
@@ -35,6 +38,7 @@ Deliver the foundational Tauri v2 + React application with an infinite pan/zoom 
 - Visual indicator: focused terminal gets visible border glow/highlight
 
 ### Theme & Visual Style
+
 - VS Code-like structured UI: activity bar concept, status bar, panel structure — developer-familiar
 - Deep dark theme default (#1a1a2e range) — high contrast, good for terminal readability
 - Light theme also available from launch
@@ -42,6 +46,7 @@ Deliver the foundational Tauri v2 + React application with an infinite pan/zoom 
 - Left sidebar, resizable via drag edge (sidebar content comes in Phase 2, but layout established now)
 
 ### Claude's Discretion
+
 - Exact grid dot spacing and sizing
 - Zoom animation easing curves
 - Terminal spawn animation (if any)
@@ -56,18 +61,21 @@ Deliver the foundational Tauri v2 + React application with an infinite pan/zoom 
 
 - "Like Collaborator" for the canvas + terminal spatial metaphor — see https://github.com/collaborator-ai/collab-public for reference spec
 - VS Code visual language for the chrome/panels, not Collaborator's minimal style
-- The canvas should feel responsive like Excalidraw — smooth pan/zoom is critical to the UX
+- The canvas should feel responsive like Panescale — smooth pan/zoom is critical to the UX
 - Terminals are the primary content type — they must feel first-class, not embedded widgets
 
 </specifics>
 
 <code_context>
+
 ## Existing Code Insights
 
 ### Reusable Assets
+
 - None — greenfield project, no existing code
 
 ### Established Patterns
+
 - None yet — Phase 1 establishes all foundational patterns:
   - Tauri IPC pattern (Commands + Channels)
   - React state management approach
@@ -76,6 +84,7 @@ Deliver the foundational Tauri v2 + React application with an infinite pan/zoom 
   - Theme system architecture (CSS variables / Tailwind)
 
 ### Integration Points
+
 - Tauri v2 scaffolding: `src-tauri/` (Rust) + `src/` (React)
 - IPC bridge: Rust commands ↔ React frontend
 - Terminal data: Rust PTY → Tauri Channel → xterm.js
@@ -91,5 +100,5 @@ None — discussion stayed within phase scope
 
 ---
 
-*Phase: 01-canvas-terminal-core*
-*Context gathered: 2026-03-17*
+_Phase: 01-canvas-terminal-core_
+_Context gathered: 2026-03-17_

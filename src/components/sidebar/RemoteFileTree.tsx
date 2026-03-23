@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useProjectStore } from "../../stores/projectStore";
+import { useSshStore } from "../../stores/sshStore";
 import {
   sshReadRemoteDir,
   sshConnectForBrowsing,
   sshDisconnect,
+  sshListConfigHosts,
   type RemoteFileEntry,
 } from "../../lib/ipc";
 
@@ -72,8 +74,14 @@ export function RemoteFileTree() {
 
   useEffect(() => {
     if (!activeProject?.isRemote || !activeProject?.sshSessionId) {
-      setError("Not connected. Click 'Reconnect' to establish SSH session.");
-      setLoading(false);
+      // Auto-reconnect if remote project has no session
+      if (activeProject?.isRemote && activeProject?.sshHost) {
+        setError("Reconnecting...");
+        autoReconnect();
+      } else {
+        setError("Not connected.");
+        setLoading(false);
+      }
       return;
     }
 
@@ -89,11 +97,12 @@ export function RemoteFileTree() {
         setExpandedDirs(new Set([rPath]));
         setLoading(false);
       })
-      .catch((err) => {
-        setError(`Connection lost: ${err}. `);
-        setLoading(false);
+      .catch(() => {
+        // Auto-reconnect on connection loss
+        setError("Reconnecting...");
+        autoReconnect();
       });
-  }, [activeProject?.path, activeProject?.sshSessionId]);
+  }, [activeProject?.path, activeProject?.sshSessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleDir = useCallback(
     async (dirPath: string) => {
@@ -123,22 +132,62 @@ export function RemoteFileTree() {
     [expandedDirs, dirContents, activeProject?.sshSessionId],
   );
 
-  const handleReconnect = useCallback(async () => {
-    if (!activeProject?.isRemote || !activeProject?.sshHost) return;
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 3;
 
-    setLoading(true);
-    setError(null);
+  const doReconnect = useCallback(async () => {
+    if (!activeProject?.isRemote || !activeProject?.sshHost) return false;
 
     try {
       const [user, host] = activeProject.sshHost.split("@");
-      const sessionId = await sshConnectForBrowsing(host, 22, user, null, null);
+      let port = 22;
+      let keyPath: string | null = null;
+      const configHosts = await sshListConfigHosts();
+      const configHost = configHosts.find((h) => h.hostname === host || h.host_alias === host);
+      if (configHost) {
+        if (configHost.port) port = configHost.port;
+        if (configHost.identity_file) keyPath = configHost.identity_file;
+      }
+      const savedConn = useSshStore.getState().connections.find((c) => c.host === host);
+      if (savedConn) {
+        if (savedConn.port && savedConn.port !== 22) port = savedConn.port;
+        if (savedConn.keyPath) keyPath = savedConn.keyPath;
+      }
+      console.log(`[SSH RemoteTree] Reconnecting to ${user}@${host}:${port} (attempt ${reconnectAttempts.current + 1})`);
+      const sessionId = await sshConnectForBrowsing(host, port, user, keyPath, null);
       const rPath = extractRemotePath(activeProject.path);
       useProjectStore.getState().openRemoteProject(rPath, sessionId, activeProject.sshHost);
+      reconnectAttempts.current = 0;
+      return true;
     } catch (err) {
-      setError(`Reconnection failed: ${err}`);
-      setLoading(false);
+      console.error(`[SSH RemoteTree] Reconnect failed:`, err);
+      return false;
     }
   }, [activeProject?.isRemote, activeProject?.sshHost, activeProject?.path]);
+
+  const autoReconnect = useCallback(async () => {
+    reconnectAttempts.current += 1;
+    setLoading(true);
+
+    const success = await doReconnect();
+    if (!success) {
+      if (reconnectAttempts.current < maxReconnectAttempts) {
+        const delay = reconnectAttempts.current * 2000;
+        setError(`Reconnecting (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})...`);
+        setTimeout(autoReconnect, delay);
+      } else {
+        setError("Connection lost. ");
+        setLoading(false);
+        reconnectAttempts.current = 0;
+      }
+    }
+  }, [doReconnect]);
+
+  const handleReconnect = useCallback(async () => {
+    reconnectAttempts.current = 0;
+    setError(null);
+    autoReconnect();
+  }, [autoReconnect]);
 
   const handleDisconnect = useCallback(async () => {
     if (!activeProject) return;
