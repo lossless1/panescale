@@ -36,6 +36,8 @@ interface CanvasState {
   setViewport: (viewport: Viewport) => void;
   setSnapLines: (snapLines: SnapLinePositions | null) => void;
   setPanToNode: (id: string | null) => void;
+  pileOrder: string[];
+  setPileOrder: (order: string[]) => void;
   loadFromDisk: () => Promise<void>;
 }
 
@@ -47,6 +49,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   snapLines: null,
   panToNodeId: null,
   bellActiveNodes: new Map<string, "success" | "error" | "warning" | "info">(),
+  pileOrder: [],
+  setPileOrder: (order) => set({ pileOrder: order }),
 
   updateNodeData: (id, dataUpdate) => {
     set((state) => ({
@@ -108,11 +112,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   addTerminalNode: (position, cwd) => {
     const newZIndex = get().maxZIndex + 1;
     const id = crypto.randomUUID();
+    const dirName = cwd.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "~";
+    const hash = id.slice(0, 6);
     const newNode: Node = {
       id,
       type: "terminal",
       position,
-      data: { cwd, shellType: "shell" },
+      data: { cwd, shellType: "shell", label: `${dirName} ${hash}` },
       dragHandle: ".drag-handle",
       style: { width: 640, height: 480 },
       zIndex: newZIndex,
@@ -129,6 +135,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     console.log(`[canvasStore] addSshTerminalNode called:`, JSON.stringify(connection));
     const newZIndex = get().maxZIndex + 1;
     const id = crypto.randomUUID();
+    const hash = id.slice(0, 6);
     const newNode: Node = {
       id,
       type: "terminal",
@@ -136,6 +143,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       data: {
         cwd: "~",
         shellType: "ssh",
+        label: `${connection.user}@${connection.host} ${hash}`,
         sshConnectionId: connection.id,
         sshHost: connection.host,
         sshUser: connection.user,

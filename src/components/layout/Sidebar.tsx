@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
+import { listen } from "@tauri-apps/api/event";
 import * as path from "@tauri-apps/api/path";
 import { useProjectStore } from "../../stores/projectStore";
 import { useCanvasStore } from "../../stores/canvasStore";
@@ -12,6 +13,7 @@ import { FuzzySearch } from "../sidebar/FuzzySearch";
 import { GitPanel } from "../sidebar/git/GitPanel";
 import { SshQuickConnect } from "../sidebar/SshQuickConnect";
 import { RemoteFileTree } from "../sidebar/RemoteFileTree";
+import { SettingsModal } from "./SettingsModal";
 
 const DEFAULT_WIDTH = 240;
 const MIN_WIDTH = 180;
@@ -21,6 +23,7 @@ export function Sidebar() {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [activeTab, setActiveTab] = useState<"files" | "terminals" | "git">("files");
   const [sshDropdownOpen, setSshDropdownOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const sshButtonRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const startX = useRef(0);
@@ -35,6 +38,12 @@ export function Sidebar() {
   const openProject = useProjectStore((s) => s.openProject);
   const [showProjects, setShowProjects] = useState(false);
   const projectsRef = useRef<HTMLDivElement>(null);
+
+  // Open settings from macOS menu bar (Panescale > Preferences)
+  useEffect(() => {
+    const unlisten = listen("open-settings", () => setSettingsOpen(true));
+    return () => { unlisten.then((fn) => fn()); };
+  }, []);
 
   useEffect(() => {
     if (!showProjects) return;
@@ -407,6 +416,44 @@ export function Sidebar() {
 
       {/* Fuzzy search overlay (manages own visibility via Cmd+K) */}
       <FuzzySearch onNavigateToFile={handleOpenFile} />
+
+      {/* Settings button at bottom */}
+      <div
+        style={{
+          flexShrink: 0,
+          borderTop: "1px solid var(--border)",
+          padding: "6px 12px",
+        }}
+      >
+        <button
+          onClick={() => setSettingsOpen(true)}
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "6px 8px",
+            fontSize: 12,
+            color: "var(--text-secondary)",
+            background: "none",
+            border: "none",
+            borderRadius: 6,
+            cursor: "pointer",
+            transition: "background-color 0.15s",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-secondary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+            <path d="M8 10a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.2"/>
+            <path d="M13.5 8a5.5 5.5 0 01-.4 2.1l1.2 1.2a.5.5 0 010 .7l-1 1a.5.5 0 01-.7 0l-1.2-1.2A5.5 5.5 0 018 13.5a5.5 5.5 0 01-2.1-.4L4.7 14.3a.5.5 0 01-.7 0l-1-1a.5.5 0 010-.7l1.2-1.2A5.5 5.5 0 012.5 8c0-.7.1-1.4.4-2.1L1.7 4.7a.5.5 0 010-.7l1-1a.5.5 0 01.7 0l1.2 1.2A5.5 5.5 0 018 2.5c.7 0 1.4.1 2.1.4l1.2-1.2a.5.5 0 01.7 0l1 1a.5.5 0 010 .7l-1.2 1.2c.3.7.4 1.4.4 2.1z" stroke="currentColor" strokeWidth="1.2"/>
+          </svg>
+          Settings
+        </button>
+      </div>
+
+      {/* Settings modal */}
+      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* Resize handle */}
       <div
