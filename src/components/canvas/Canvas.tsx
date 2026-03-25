@@ -102,6 +102,9 @@ function CanvasInner() {
   const setSnapLines = useCanvasStore((s) => s.setSnapLines);
   const panToNodeId = useCanvasStore((s) => s.panToNodeId);
   const setPanToNode = useCanvasStore((s) => s.setPanToNode);
+  const beautifyLayout = useCanvasStore((s) => s.beautifyLayout);
+  const autoGroupByCwd = useCanvasStore((s) => s.autoGroupByCwd);
+  const removeNode = useCanvasStore((s) => s.removeNode);
 
   const reactFlow = useReactFlow();
   const spaceHeldRef = useRef(false);
@@ -225,11 +228,41 @@ function CanvasInner() {
     [onNodesChange, setSnapLines, nodes],
   );
 
-  const handleNodeDragStop = useCallback(() => {
-    setSnapLines(null);
-    setAlignGuides([]);
-    regionDragRef.current = null;
-  }, [setSnapLines]);
+  const handleNodeDragStop = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      setSnapLines(null);
+      setAlignGuides([]);
+      regionDragRef.current = null;
+
+      // Auto-dissolve: if a non-region node was dragged, check if any region now has < 2 contained nodes
+      if (node.type !== "region") {
+        const currentNodes = useCanvasStore.getState().nodes;
+        for (const rn of currentNodes) {
+          if (rn.type !== "region") continue;
+          const rx = rn.position.x;
+          const ry = rn.position.y;
+          const rw = (rn.style?.width as number) ?? 400;
+          const rh = (rn.style?.height as number) ?? 300;
+          let containedCount = 0;
+          for (const cn of currentNodes) {
+            if (cn.id === rn.id || cn.type === "region") continue;
+            if (
+              cn.position.x >= rx &&
+              cn.position.y >= ry &&
+              cn.position.x < rx + rw &&
+              cn.position.y < ry + rh
+            ) {
+              containedCount++;
+            }
+          }
+          if (containedCount < 2) {
+            removeNode(rn.id);
+          }
+        }
+      }
+    },
+    [setSnapLines, removeNode],
+  );
 
   // Cmd/Ctrl+scroll = stepped zoom (snap to ZOOM_STEP increments)
   const handleWheel = useCallback(
@@ -366,6 +399,17 @@ function CanvasInner() {
     setContextMenu(null);
   }, [contextMenu, reactFlow]);
 
+  const handleBeautify = useCallback(() => {
+    if (!window.confirm("Rearrange all tiles on the canvas?")) return;
+    beautifyLayout();
+    setContextMenu(null);
+  }, [beautifyLayout]);
+
+  const handleAutoGroupByCwd = useCallback(() => {
+    autoGroupByCwd();
+    setContextMenu(null);
+  }, [autoGroupByCwd]);
+
   const handleGroupAsRegion = useCallback(() => {
     const selectedNodes = nodes.filter((n) => n.selected && n.type !== "region");
     if (selectedNodes.length < 2) return;
@@ -497,6 +541,46 @@ function CanvasInner() {
           />
         )}
       </ReactFlow>
+      {/* Layout toolbar */}
+      <div style={{
+        position: "absolute",
+        bottom: 16,
+        right: 16,
+        zIndex: 1000,
+        display: "flex",
+        gap: 4,
+      }}>
+        <button
+          onClick={handleAutoGroupByCwd}
+          title="Auto-group terminals by directory"
+          style={{
+            background: "var(--bg-secondary)",
+            border: "1px solid var(--border)",
+            borderRadius: 6,
+            padding: "6px 12px",
+            cursor: "pointer",
+            color: "var(--text-primary)",
+            fontSize: 12,
+          }}
+        >
+          Group
+        </button>
+        <button
+          onClick={handleBeautify}
+          title="Auto-arrange all tiles"
+          style={{
+            background: "var(--bg-secondary)",
+            border: "1px solid var(--border)",
+            borderRadius: 6,
+            padding: "6px 12px",
+            cursor: "pointer",
+            color: "var(--text-primary)",
+            fontSize: 12,
+          }}
+        >
+          Beautify
+        </button>
+      </div>
       {contextMenu && (
         <div
           style={{
@@ -559,6 +643,55 @@ function CanvasInner() {
             }}
           >
             New Browser
+          </button>
+          <hr style={{ margin: "4px 0", border: "none", borderTop: "1px solid var(--border)" }} />
+          <button
+            onClick={handleBeautify}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              background: "none",
+              border: "none",
+              color: "var(--text-primary)",
+              padding: "6px 12px",
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.background = "var(--accent)";
+              (e.target as HTMLElement).style.color = "#fff";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.background = "none";
+              (e.target as HTMLElement).style.color = "var(--text-primary)";
+            }}
+          >
+            Beautify Layout
+          </button>
+          <button
+            onClick={handleAutoGroupByCwd}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              background: "none",
+              border: "none",
+              color: "var(--text-primary)",
+              padding: "6px 12px",
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.background = "var(--accent)";
+              (e.target as HTMLElement).style.color = "#fff";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.background = "none";
+              (e.target as HTMLElement).style.color = "var(--text-primary)";
+            }}
+          >
+            Auto-group by Directory
           </button>
           {contextMenu.hasSelection && (
             <button

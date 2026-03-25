@@ -34,6 +34,7 @@ export function serializeCanvas(state: {
       startupCommand: (n.data as Record<string, unknown>).startupCommand as string | undefined,
       regionName: (n.data as Record<string, unknown>).regionName as string | undefined,
       regionColor: (n.data as Record<string, unknown>).regionColor as string | undefined,
+      autoGroup: (n.data as Record<string, unknown>).autoGroup as boolean | undefined,
       // Content tile fields
       markdownContent: (n.data as Record<string, unknown>).markdownContent as string | undefined,
       filePath: (n.data as Record<string, unknown>).filePath as string | undefined,

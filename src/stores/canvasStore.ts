@@ -7,6 +7,10 @@ import {
 } from "@xyflow/react";
 import { stateLoad, ptyDefaultShell, type ContentTileType } from "../lib/ipc";
 import { deserializeCanvas, forceSave } from "../lib/persistence";
+import { computeGridLayout } from "../lib/autoLayout";
+import { detectCwdGroups, computeRegionBounds } from "../lib/grouping";
+
+const REGION_COLORS = ["#3b82f6", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4"];
 
 export interface SnapLinePositions {
   x: number | null;
@@ -38,6 +42,8 @@ interface CanvasState {
   setPanToNode: (id: string | null) => void;
   pileOrder: string[];
   setPileOrder: (order: string[]) => void;
+  beautifyLayout: () => void;
+  autoGroupByCwd: () => void;
   loadFromDisk: () => Promise<void>;
 }
 
@@ -270,6 +276,50 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   setPanToNode: (id) => {
     set({ panToNodeId: id });
+  },
+
+  beautifyLayout: () => {
+    const { nodes, pileOrder, onNodesChange } = get();
+    const positions = computeGridLayout(nodes, pileOrder);
+    const changes: NodeChange[] = [];
+    for (const [id, pos] of positions) {
+      changes.push({ type: "position", id, position: pos, dragging: false });
+    }
+    onNodesChange(changes);
+    forceSave();
+  },
+
+  autoGroupByCwd: () => {
+    const { nodes } = get();
+    // Remove existing auto-generated regions
+    const filteredNodes = nodes.filter(
+      (n) => !(n.type === "region" && (n.data as Record<string, unknown>).autoGroup === true),
+    );
+    // Detect groups by cwd
+    const groups = detectCwdGroups(filteredNodes);
+    const newRegions: Node[] = [];
+    let colorIdx = 0;
+    for (const [cwd, members] of groups) {
+      const bounds = computeRegionBounds(members);
+      const dirName = cwd.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "~";
+      const id = crypto.randomUUID();
+      newRegions.push({
+        id,
+        type: "region",
+        position: { x: bounds.x, y: bounds.y },
+        data: {
+          regionName: dirName,
+          regionColor: REGION_COLORS[colorIdx % REGION_COLORS.length],
+          autoGroup: true,
+        },
+        dragHandle: ".region-drag-handle",
+        style: { width: bounds.width, height: bounds.height },
+        zIndex: -1,
+      });
+      colorIdx++;
+    }
+    set({ nodes: [...filteredNodes, ...newRegions] });
+    forceSave();
   },
 
   loadFromDisk: async () => {
