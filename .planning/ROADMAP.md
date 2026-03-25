@@ -169,8 +169,8 @@ Plans:
   2. User can click Auto-group to create colored region containers around terminals sharing the same working directory
   3. Regions auto-dissolve when a tile is dragged out and fewer than 2 children remain
   4. Both features accessible via floating buttons and right-click context menu
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 09-01-PLAN.md — TDD: Grid-packing layout algorithm (autoLayout.ts) and CWD grouping logic (grouping.ts) with unit tests
+- [x] 09-01-PLAN.md — TDD: Grid-packing layout algorithm (autoLayout.ts) and CWD grouping logic (grouping.ts) with unit tests
 - [ ] 09-02-PLAN.md — Wire UI: Beautify/Group buttons, context menu entries, store actions, auto-dissolve, persistence

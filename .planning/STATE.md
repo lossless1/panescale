@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 08-03-PLAN.md (all phases complete)
-last_updated: "2026-03-20T22:43:43.114Z"
-last_activity: 2026-03-20 -- Completed Plan 08-03 Remote file tree
+status: executing
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-25T17:00:28.385Z"
+last_activity: 2026-03-25 -- Completed Plan 09-01 Auto-layout and CWD grouping logic
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 8
-  total_plans: 28
-  completed_plans: 28
-  percent: 100
+  total_plans: 30
+  completed_plans: 29
+  percent: 97
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-17)
 
 **Core value:** Users can visually organize and interact with multiple terminal sessions on an infinite canvas, with layout and session state persisting across restarts via tmux.
-**Current focus:** Phase 8: Enhanced SSH Connection Integration
+**Current focus:** Phase 9: Auto-layout, auto-group, manual group containers
 
 ## Current Position
 
-Phase: 8 of 8 (Enhanced SSH Connection Integration)
-Plan: 3 of 3 in current phase (08-03 complete)
-Status: Complete
-Last activity: 2026-03-20 -- Completed Plan 08-03 Remote file tree
+Phase: 9 of 9 (Auto-layout beautify button, auto-group by path, manual group containers)
+Plan: 1 of 2 in current phase (09-01 complete)
+Status: In Progress
+Last activity: 2026-03-25 -- Completed Plan 09-01 Auto-layout and CWD grouping logic
 
-Progress: [██████████] 100%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [██████████] 100%
 | Phase 07 P02 | 1 | 2 tasks | 1 files |
 | Phase 08 P01 | 5 | 2 tasks | 6 files |
 | Phase 08 P02 | 3 | 2 tasks | 4 files |
+| Phase 09 P01 | 13 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -162,6 +163,8 @@ Recent decisions affecting current work:
 - [Phase 08-03]: Reconnect handler uses sshConnectForBrowsing then openRemoteProject to refresh session
 - [Phase 08]: Config hosts loaded fresh on dropdown open via IPC, not persisted in localStorage
 - [Phase 08]: SSH connection flow: addSshTerminalNode + sshConnectForBrowsing + openRemoteProject for full file browsing
+- [Phase 09]: Row-based grid packing with maxRowWidth = max(1200, sqrt(N)*700) for adaptive layout density
+- [Phase 09]: Pure-logic utility modules (no React/store deps) for testability
 
 ### Roadmap Evolution
 
@@ -195,6 +198,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T22:36:10Z
-Stopped at: Completed 08-03-PLAN.md (all phases complete)
+Last session: 2026-03-25T17:00:27.435Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
