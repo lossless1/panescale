@@ -5,7 +5,7 @@ import {
   type NodeChange,
   applyNodeChanges,
 } from "@xyflow/react";
-import { stateLoad, type ContentTileType } from "../lib/ipc";
+import { stateLoad, ptyDefaultShell, type ContentTileType } from "../lib/ipc";
 import { deserializeCanvas, forceSave } from "../lib/persistence";
 
 export interface SnapLinePositions {
@@ -118,7 +118,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       id,
       type: "terminal",
       position,
-      data: { cwd, shellType: "shell", label: `${dirName} ${hash}` },
+      data: { cwd, shellType: "terminal", label: `${dirName} ${hash}` },
       dragHandle: ".drag-handle",
       style: { width: 640, height: 480 },
       zIndex: newZIndex,
@@ -127,7 +127,11 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       nodes: [...state.nodes, newNode],
       maxZIndex: newZIndex,
     }));
-    // Immediate save on tile create (PERS-03)
+    // Detect actual shell name and update
+    ptyDefaultShell().then((shellName) => {
+      const updateNodeData = get().updateNodeData;
+      updateNodeData(id, { shellType: shellName });
+    }).catch(() => {});
     forceSave();
   },
 

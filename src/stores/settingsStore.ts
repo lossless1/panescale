@@ -14,6 +14,8 @@ interface SettingsState {
   notificationsEnabled: boolean;
   completionChimeEnabled: boolean;
   busyThresholdSeconds: number;
+  autoUpdate: boolean;
+  skippedVersion: string | null;
   setFontFamily: (fontFamily: string) => void;
   setFontSize: (fontSize: number) => void;
   setScrollback: (scrollback: number) => void;
@@ -23,6 +25,8 @@ interface SettingsState {
   setNotificationsEnabled: (enabled: boolean) => void;
   setCompletionChimeEnabled: (enabled: boolean) => void;
   setBusyThresholdSeconds: (seconds: number) => void;
+  setAutoUpdate: (enabled: boolean) => void;
+  setSkippedVersion: (version: string | null) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -37,6 +41,8 @@ export const useSettingsStore = create<SettingsState>()(
       notificationsEnabled: true,
       completionChimeEnabled: true,
       busyThresholdSeconds: 5,
+      autoUpdate: true,
+      skippedVersion: null,
 
       setFontFamily: (fontFamily) => set({ fontFamily }),
       setFontSize: (fontSize) => set({ fontSize }),
@@ -47,6 +53,8 @@ export const useSettingsStore = create<SettingsState>()(
       setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
       setCompletionChimeEnabled: (completionChimeEnabled) => set({ completionChimeEnabled }),
       setBusyThresholdSeconds: (busyThresholdSeconds) => set({ busyThresholdSeconds }),
+      setAutoUpdate: (autoUpdate) => set({ autoUpdate }),
+      setSkippedVersion: (skippedVersion) => set({ skippedVersion }),
     }),
     {
       name: "panescale-settings",

@@ -106,7 +106,7 @@ export const TerminalTitleBar = React.memo(function TerminalTitleBar({
   const displayText = customName
     ? customName
     : isSsh
-      ? sshLabel
+      ? (processTitle || sshLabel)
       : processTitle
         ? processTitle
         : truncateCwd(cwd);
@@ -165,7 +165,7 @@ export const TerminalTitleBar = React.memo(function TerminalTitleBar({
             }}
           />
         )}
-        {shellType}
+        {isSsh ? "ssh" : (processTitle || shellType)}
       </span>
 
       {/* Center: custom name or cwd (double-click to edit) */}

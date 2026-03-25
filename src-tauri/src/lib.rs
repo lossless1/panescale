@@ -4,14 +4,32 @@ use tauri::menu::{MenuBuilder, SubmenuBuilder, PredefinedMenuItem, MenuItemBuild
 mod fs;
 mod git;
 mod platform;
+mod proxy;
 mod pty;
 mod ssh;
 mod state;
+
+struct ProxyPort(std::sync::Arc<std::sync::atomic::AtomicU16>);
+
+#[tauri::command]
+fn get_proxy_port(state: tauri::State<'_, ProxyPort>) -> u16 {
+    state.0.load(std::sync::atomic::Ordering::Relaxed)
+}
 
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .setup(|app| {
+            // Start local proxy for iframe embedding
+            let proxy_port = std::sync::Arc::new(std::sync::atomic::AtomicU16::new(0));
+            let proxy_port_clone = proxy_port.clone();
+            app.manage(ProxyPort(proxy_port.clone()));
+            tauri::async_runtime::spawn(async move {
+                let port = proxy::start_proxy().await;
+                proxy_port_clone.store(port, std::sync::atomic::Ordering::Relaxed);
+                eprintln!("[proxy] Listening on http://127.0.0.1:{}", port);
+            });
+
             // Build native macOS menu bar
             let preferences = MenuItemBuilder::with_id("preferences", "Preferences…")
                 .accelerator("CmdOrCtrl+,")
@@ -133,7 +151,8 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        // .plugin(tauri_plugin_updater::Builder::new().build()) // Disabled until signing keys are configured
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .on_window_event(|window, event| {
             // macOS behavior: hide window on close instead of quitting the app
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -154,6 +173,7 @@ pub fn run() {
             pty::commands::pty_detach,
             pty::commands::pty_reattach,
             pty::commands::pty_tmux_available,
+            pty::commands::pty_default_shell,
             pty::commands::pty_tmux_list_sessions,
             pty::commands::pty_tmux_cleanup,
             pty::commands::pty_ensure_tmux,
@@ -195,6 +215,7 @@ pub fn run() {
             ssh::commands::ssh_read_remote_dir,
             ssh::commands::ssh_connect_for_browsing,
             ssh::commands::ssh_open_config_in_editor,
+            get_proxy_port,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

@@ -14,6 +14,10 @@ export async function ptySpawn(
   return invoke<string>("pty_spawn", { nodeId, cwd, cols, rows, onEvent });
 }
 
+export async function ptyDefaultShell(): Promise<string> {
+  return invoke<string>("pty_default_shell");
+}
+
 export async function ptyWrite(
   ptyId: string,
   data: Uint8Array,

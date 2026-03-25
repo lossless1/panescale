@@ -55,7 +55,10 @@ jobs:
       - run: npm ci
 
       - name: Build Tauri app (universal macOS)
-        run: npx tauri build --target universal-apple-darwin --bundles dmg
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npx tauri build --target universal-apple-darwin --bundles dmg,updater
 
       - name: Upload macOS artifacts
         env:
@@ -66,11 +69,14 @@ jobs:
           echo "=== Finding bundle artifacts ==="
           find src-tauri/target -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.app" -type d 2>/dev/null | head -20
           echo "=== Uploading ==="
-          find src-tauri/target -name "*.dmg" | while read f; do
-            echo "Uploading: $f"
-            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+          for ext in dmg app.tar.gz app.tar.gz.sig; do
+            find src-tauri/target -name "*.$ext" | while read f; do
+              echo "Uploading: $f"
+              gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+            done
           done
-          find src-tauri/target -name "*.app.tar.gz" | while read f; do
+          # Upload latest.json for updater
+          find src-tauri/target -name "latest.json" | while read f; do
             echo "Uploading: $f"
             gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
           done
@@ -106,7 +112,10 @@ jobs:
       - run: npm ci
 
       - name: Build Tauri app (Linux)
-        run: npx tauri build --bundles deb,appimage
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npx tauri build --bundles deb,appimage,updater
 
       - name: Upload Linux artifacts
         env:
@@ -148,7 +157,10 @@ jobs:
       - run: npm ci
 
       - name: Build Tauri app (Windows)
-        run: npx tauri build --bundles msi,nsis
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npx tauri build --bundles msi,nsis,updater
 
       - name: Upload Windows artifacts
         env:

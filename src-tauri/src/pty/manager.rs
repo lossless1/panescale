@@ -60,8 +60,12 @@ impl PtyManager {
         cols: u16,
         rows: u16,
         channel: Channel<PtyEvent>,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let shell = detect_default_shell();
+        let shell_name = std::path::Path::new(&shell)
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "shell".to_string());
 
         // Resolve ~ to home directory
         let cwd = if cwd == "~" || cwd.starts_with("~/") {
@@ -164,9 +168,9 @@ impl PtyManager {
         self.sessions
             .lock()
             .map_err(|e| format!("Lock poisoned: {}", e))?
-            .insert(id, session);
+            .insert(id.clone(), session);
 
-        Ok(())
+        Ok(id)
     }
 
     /// Reattach to an existing tmux session.

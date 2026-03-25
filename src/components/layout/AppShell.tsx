@@ -2,6 +2,7 @@ import { type ReactNode, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { Sidebar } from "./Sidebar";
 import { StatusBar } from "./StatusBar";
+import { UpdateToast } from "./UpdateToast";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { spawnTerminalAtPosition } from "../../lib/spawnTerminal";
 
@@ -65,6 +66,7 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </div>
       <StatusBar />
+      <UpdateToast />
     </div>
   );
 }

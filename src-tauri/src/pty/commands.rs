@@ -78,6 +78,16 @@ pub async fn pty_reattach(
         .map_err(|e| e.to_string())
 }
 
+/// Get the default shell name (e.g. "zsh", "bash").
+#[tauri::command]
+pub fn pty_default_shell() -> String {
+    let shell = crate::platform::shell::detect_default_shell();
+    std::path::Path::new(&shell)
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| "shell".to_string())
+}
+
 /// Check if tmux is available on this system.
 #[tauri::command]
 pub async fn pty_tmux_available(

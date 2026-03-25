@@ -276,6 +276,10 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           <ToggleSwitch checked={launchAtLogin} onChange={handleAutostart} />
         </SettingRow>
 
+        <SettingRow label="Auto-update" description="Check for updates and notify when a new version is available">
+          <ToggleSwitch checked={useSettingsStore((s) => s.autoUpdate)} onChange={useSettingsStore((s) => s.setAutoUpdate)} />
+        </SettingRow>
+
         <SettingRow label={t("settings.language")} description={t("settings.languageDesc")}>
           <select
             value={language}

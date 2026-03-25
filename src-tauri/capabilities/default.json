@@ -13,6 +13,20 @@
     "core:window:allow-set-size",
     "core:window:allow-set-badge-count",
     "core:window:allow-set-badge-label",
+    "core:webview:allow-create-webview",
+    "core:webview:allow-create-webview-window",
+    "core:webview:allow-set-webview-size",
+    "core:webview:allow-set-webview-position",
+    "core:webview:allow-set-webview-focus",
+    "core:webview:allow-webview-close",
+    "core:webview:allow-webview-hide",
+    "core:webview:allow-webview-show",
+    "core:webview:allow-internal-toggle-devtools",
+    "core:webview:allow-set-webview-zoom",
+    "core:window:allow-create",
+    "core:window:allow-set-focus",
+    "core:window:allow-show",
+    "core:window:allow-hide",
     "fs:default",
     {
       "identifier": "fs:allow-read-file",
@@ -60,6 +74,8 @@
     "shell:allow-execute",
     "shell:allow-spawn",
     "store:default",
-    "autostart:default"
+    "autostart:default",
+    "updater:default",
+    "process:default"
   ]
 }

@@ -291,6 +291,13 @@ function CanvasInner() {
     [handleKeyDown, handleKeyUp],
   );
 
+  const handleMove = useCallback(
+    (_event: unknown, viewport: Viewport) => {
+      setViewport(viewport);
+    },
+    [setViewport],
+  );
+
   const handleMoveEnd = useCallback(
     (_event: unknown, viewport: Viewport) => {
       setViewport(viewport);
@@ -346,6 +353,16 @@ function CanvasInner() {
       y: contextMenu.y,
     });
     spawnTerminalAtPosition(position);
+    setContextMenu(null);
+  }, [contextMenu, reactFlow]);
+
+  const handleContextMenuNewBrowser = useCallback(() => {
+    if (!contextMenu) return;
+    const position = reactFlow.screenToFlowPosition({
+      x: contextMenu.x,
+      y: contextMenu.y,
+    });
+    useCanvasStore.getState().addWebViewNode(position, "");
     setContextMenu(null);
   }, [contextMenu, reactFlow]);
 
@@ -445,6 +462,7 @@ function CanvasInner() {
         selectionOnDrag={false}
         fitView={false}
         defaultViewport={storedViewport}
+        onMove={handleMove}
         onMoveEnd={handleMoveEnd}
         onPaneClick={undefined}
         onDoubleClick={handlePaneDoubleClick}
@@ -517,6 +535,30 @@ function CanvasInner() {
             }}
           >
             New Terminal
+          </button>
+          <button
+            onClick={handleContextMenuNewBrowser}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              background: "none",
+              border: "none",
+              color: "var(--text-primary)",
+              padding: "6px 12px",
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.background = "var(--accent)";
+              (e.target as HTMLElement).style.color = "#fff";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.background = "none";
+              (e.target as HTMLElement).style.color = "var(--text-primary)";
+            }}
+          >
+            New Browser
           </button>
           {contextMenu.hasSelection && (
             <button
