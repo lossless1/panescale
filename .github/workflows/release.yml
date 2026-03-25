@@ -12,7 +12,22 @@ permissions:
   contents: write
 
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --draft \
+            --title "Panescale ${{ github.ref_name }}" \
+            --target "${{ github.sha }}" \
+            --repo "${{ github.repository }}" || true
+
   build-macos:
+    needs: create-release
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,13 +41,17 @@ jobs:
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.6
+
       - uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
             src-tauri/target
-          key: macos-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          key: macos-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}-v2
           restore-keys: |
             macos-cargo-
 
@@ -42,21 +61,20 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          RUSTC_WRAPPER: sccache
         run: npx tauri build --target universal-apple-darwin --bundles dmg
 
       - name: Upload macOS artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "=== Finding artifacts ==="
-          find src-tauri/target -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.app.tar.gz.sig" 2>/dev/null | head -20
-          echo "=== Uploading ==="
           for f in $(find src-tauri/target -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.app.tar.gz.sig" 2>/dev/null); do
             echo "Uploading: $f"
             gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}" || true
           done
 
   build-linux:
+    needs: create-release
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +86,9 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.6
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -76,10 +97,11 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
             src-tauri/target
-          key: linux-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          key: linux-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}-v2
           restore-keys: |
             linux-cargo-
 
@@ -89,21 +111,20 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          RUSTC_WRAPPER: sccache
         run: npx tauri build --bundles deb,appimage
 
       - name: Upload Linux artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "=== Finding artifacts ==="
-          find src-tauri/target/release/bundle -type f 2>/dev/null || echo "No bundle dir"
-          echo "=== Uploading ==="
           for f in $(find src-tauri/target/release/bundle -name "*.deb" -o -name "*.AppImage" -o -name "*.AppImage.tar.gz" -o -name "*.AppImage.tar.gz.sig" 2>/dev/null); do
             echo "Uploading: $f"
             gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}" || true
           done
 
   build-windows:
+    needs: create-release
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -115,13 +136,17 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.6
+
       - uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
             src-tauri/target
-          key: windows-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          key: windows-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}-v2
           restore-keys: |
             windows-cargo-
 
@@ -131,6 +156,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          RUSTC_WRAPPER: sccache
         run: npx tauri build --bundles msi,nsis
 
       - name: Upload Windows artifacts
@@ -139,9 +165,6 @@ jobs:
         shell: bash
         run: |
           BUNDLE_DIR="src-tauri/target/release/bundle"
-          echo "=== Finding artifacts ==="
-          find "$BUNDLE_DIR" -type f 2>/dev/null | head -20 || echo "No bundle dir"
-          echo "=== Uploading ==="
           for f in $(find "$BUNDLE_DIR" -name "*.msi" 2>/dev/null) $(find "$BUNDLE_DIR/nsis" -name "*.exe" 2>/dev/null); do
             echo "Uploading: $f"
             gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}" || true
