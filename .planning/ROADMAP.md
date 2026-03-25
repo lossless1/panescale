@@ -161,10 +161,16 @@ Plans:
 
 ### Phase 9: Auto-layout beautify button, auto-group by path, manual group containers with drag support
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Users can auto-arrange tiles with a Beautify button, auto-group terminals by working directory into labeled regions, and have regions auto-dissolve when tiles are dragged out
+**Requirements**: LAYOUT-01, LAYOUT-02, GROUP-01, GROUP-02, GROUP-03
 **Depends on:** Phase 8
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. User can click a Beautify button to auto-arrange all canvas tiles into a neat grid respecting Piles tab ordering
+  2. User can click Auto-group to create colored region containers around terminals sharing the same working directory
+  3. Regions auto-dissolve when a tile is dragged out and fewer than 2 children remain
+  4. Both features accessible via floating buttons and right-click context menu
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 9 to break down)
+- [ ] 09-01-PLAN.md — TDD: Grid-packing layout algorithm (autoLayout.ts) and CWD grouping logic (grouping.ts) with unit tests
+- [ ] 09-02-PLAN.md — Wire UI: Beautify/Group buttons, context menu entries, store actions, auto-dissolve, persistence
