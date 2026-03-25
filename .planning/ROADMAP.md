@@ -158,3 +158,13 @@ Plans:
 - [ ] 08-01-PLAN.md — Rust backend: ssh2-config parsing, exec_command on SshManager, IPC commands and frontend wrappers
 - [ ] 08-02-PLAN.md — Sidebar restructure: remove SSH tab, add SSH header button, SshQuickConnect dropdown, sshStore configHosts
 - [ ] 08-03-PLAN.md — Remote file tree: RemoteFileTree component, projectStore remote fields, sidebar wiring, visual indicators
+
+### Phase 9: Auto-layout beautify button, auto-group by path, manual group containers with drag support
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 9 to break down)

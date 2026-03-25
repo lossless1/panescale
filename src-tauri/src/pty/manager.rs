@@ -62,7 +62,7 @@ impl PtyManager {
         channel: Channel<PtyEvent>,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let shell = detect_default_shell();
-        let shell_name = std::path::Path::new(&shell)
+        let _shell_name = std::path::Path::new(&shell)
             .file_name()
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_else(|| "shell".to_string());

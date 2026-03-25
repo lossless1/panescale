@@ -156,6 +156,7 @@ impl TmuxBridge {
     }
 
     /// Capture the visible pane content for instant restore display
+    #[allow(dead_code)]
     pub fn capture_pane(session_name: &str) -> Result<String, String> {
         let output = Self::tmux_cmd()?
             .args(["capture-pane", "-t", session_name, "-p", "-S", "-"])
