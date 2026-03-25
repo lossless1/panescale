@@ -94,6 +94,7 @@ jobs:
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
+          args: --bundles deb,appimage
 
   build-windows:
     runs-on: windows-latest
