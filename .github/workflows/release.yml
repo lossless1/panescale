@@ -55,7 +55,7 @@ jobs:
       - run: npm ci
 
       - name: Build Tauri app (universal macOS)
-        run: npx tauri build --target universal-apple-darwin
+        run: npx tauri build --target universal-apple-darwin --bundles dmg
 
       - name: Upload macOS artifacts
         env:
@@ -106,7 +106,7 @@ jobs:
       - run: npm ci
 
       - name: Build Tauri app (Linux)
-        run: npx tauri build
+        run: npx tauri build --bundles deb,appimage
 
       - name: Upload Linux artifacts
         env:
@@ -148,24 +148,25 @@ jobs:
       - run: npm ci
 
       - name: Build Tauri app (Windows)
-        run: npx tauri build
+        run: npx tauri build --bundles msi,nsis
 
       - name: Upload Windows artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          set +e
           BUNDLE_DIR="src-tauri/target/release/bundle"
-          echo "=== Bundle directory contents ==="
-          ls -la "$BUNDLE_DIR"/msi/ "$BUNDLE_DIR"/nsis/ 2>/dev/null || true
+          echo "=== Full bundle tree ==="
+          find "$BUNDLE_DIR" -type f 2>/dev/null || echo "No bundle directory found"
           echo "=== Uploading ==="
-          for f in "$BUNDLE_DIR"/msi/*.msi; do
-            [ -f "$f" ] && echo "Uploading: $f" && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
+          uploaded=0
+          for f in $(find "$BUNDLE_DIR" -name "*.msi" -o -name "*.exe" 2>/dev/null); do
+            # Skip build script executables
+            case "$f" in *build_script*|*build-script*) continue;; esac
+            echo "Uploading: $f"
+            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}" && uploaded=$((uploaded+1))
           done
-          for f in "$BUNDLE_DIR"/nsis/*setup*.exe "$BUNDLE_DIR"/nsis/*Panescale*.exe; do
-            [ -f "$f" ] && echo "Uploading: $f" && gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
-          done
+          echo "Uploaded $uploaded artifacts"
 
   publish:
     runs-on: ubuntu-latest
