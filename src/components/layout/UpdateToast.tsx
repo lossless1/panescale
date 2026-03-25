@@ -23,10 +23,15 @@ export function UpdateToast() {
 
     const checkForUpdate = async () => {
       try {
-        const update = await check();
+        console.log("[Update] Checking for updates...");
+        const update = await check().catch(() => null);
+        console.log("[Update] Check result:", update ? `v${update.version} available` : "up to date or check failed");
         if (update) {
           const version = update.version;
-          if (version === skippedVersion) return;
+          if (version === skippedVersion) {
+            console.log("[Update] Skipping version:", version);
+            return;
+          }
           setState({ status: "available", version });
           setDismissed(false);
         }

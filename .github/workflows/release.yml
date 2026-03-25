@@ -1,5 +1,4 @@
 # Panescale Release Workflow
-# Builds for macOS (universal), Linux (AppImage + deb), and Windows (MSI + NSIS)
 # Triggered by pushing a version tag: git tag v1.0.0 && git push --tags
 
 name: Release
@@ -13,22 +12,7 @@ permissions:
   contents: write
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create draft release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ github.ref_name }}" \
-            --draft \
-            --title "Panescale ${{ github.ref_name }}" \
-            --target "${{ github.sha }}" \
-            --repo "${{ github.repository }}" || true
-
   build-macos:
-    needs: create-release
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,35 +38,22 @@ jobs:
 
       - run: npm ci
 
-      - name: Build Tauri app (universal macOS)
+      - uses: tauri-apps/tauri-action@v0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: npx tauri build --target universal-apple-darwin --bundles dmg,updater
-
-      - name: Upload macOS artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set +e
-          echo "=== Finding bundle artifacts ==="
-          find src-tauri/target -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.app" -type d 2>/dev/null | head -20
-          echo "=== Uploading ==="
-          for ext in dmg app.tar.gz app.tar.gz.sig; do
-            find src-tauri/target -name "*.$ext" | while read f; do
-              echo "Uploading: $f"
-              gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
-            done
-          done
-          # Upload latest.json for updater
-          find src-tauri/target -name "latest.json" | while read f; do
-            echo "Uploading: $f"
-            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
-          done
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Panescale ${{ github.ref_name }}'
+          releaseBody: ''
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
+          updaterJsonKeepUniversal: true
+          args: --target universal-apple-darwin
 
   build-linux:
-    needs: create-release
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -111,28 +82,20 @@ jobs:
 
       - run: npm ci
 
-      - name: Build Tauri app (Linux)
+      - uses: tauri-apps/tauri-action@v0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: npx tauri build --bundles deb,appimage,updater
-
-      - name: Upload Linux artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set +e
-          echo "=== Finding bundle artifacts ==="
-          find src-tauri/target -name "*.AppImage" -o -name "*.deb" 2>/dev/null | head -20
-          echo "=== Uploading ==="
-          find src-tauri/target -name "*.AppImage" -o -name "*.deb" | while read f; do
-            echo "Uploading: $f"
-            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}"
-          done
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Panescale ${{ github.ref_name }}'
+          releaseBody: ''
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
 
   build-windows:
-    needs: create-release
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -156,29 +119,18 @@ jobs:
 
       - run: npm ci
 
-      - name: Build Tauri app (Windows)
+      - uses: tauri-apps/tauri-action@v0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: npx tauri build --bundles msi,nsis,updater
-
-      - name: Upload Windows artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          BUNDLE_DIR="src-tauri/target/release/bundle"
-          echo "=== Full bundle tree ==="
-          find "$BUNDLE_DIR" -type f 2>/dev/null || echo "No bundle directory found"
-          echo "=== Uploading ==="
-          uploaded=0
-          for f in $(find "$BUNDLE_DIR" -name "*.msi" -o -name "*.exe" 2>/dev/null); do
-            # Skip build script executables
-            case "$f" in *build_script*|*build-script*) continue;; esac
-            echo "Uploading: $f"
-            gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}" && uploaded=$((uploaded+1))
-          done
-          echo "Uploaded $uploaded artifacts"
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Panescale ${{ github.ref_name }}'
+          releaseBody: ''
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
 
   publish:
     runs-on: ubuntu-latest
