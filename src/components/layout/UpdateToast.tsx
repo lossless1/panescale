@@ -24,8 +24,11 @@ export function UpdateToast() {
     const checkForUpdate = async () => {
       try {
         console.log("[Update] Checking for updates...");
-        const update = await check().catch(() => null);
-        console.log("[Update] Check result:", update ? `v${update.version} available` : "up to date or check failed");
+        const update = await check().catch((err) => {
+          console.error("[Update] Check error detail:", err);
+          return null;
+        });
+        console.log("[Update] Check result:", update ? `v${update.version} available` : "no update found");
         if (update) {
           const version = update.version;
           if (version === skippedVersion) {

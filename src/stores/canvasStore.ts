@@ -257,6 +257,9 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   bringToFront: (id) => {
+    const node = get().nodes.find((n) => n.id === id);
+    // Keep regions on background layer
+    if (node?.type === "region") return;
     const newZIndex = get().maxZIndex + 1;
     set((state) => ({
       nodes: state.nodes.map((n) =>
@@ -279,13 +282,17 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   beautifyLayout: () => {
-    const { nodes, pileOrder, onNodesChange } = get();
-    const positions = computeGridLayout(nodes, pileOrder);
-    const changes: NodeChange[] = [];
-    for (const [id, pos] of positions) {
-      changes.push({ type: "position", id, position: pos, dragging: false });
-    }
-    onNodesChange(changes);
+    const { nodes, pileOrder } = get();
+    // Remove auto-generated regions (they'll be stale after rearranging)
+    const cleanedNodes = nodes.filter(
+      (n) => !(n.type === "region" && (n.data as Record<string, unknown>).autoGroup === true),
+    );
+    const positions = computeGridLayout(cleanedNodes, pileOrder);
+    const updatedNodes = cleanedNodes.map((n) => {
+      const newPos = positions.get(n.id);
+      return newPos ? { ...n, position: newPos } : n;
+    });
+    set({ nodes: updatedNodes });
     forceSave();
   },
 

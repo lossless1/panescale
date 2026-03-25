@@ -164,6 +164,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
   const completionChimeEnabled = useSettingsStore((s) => s.completionChimeEnabled);
   const busyThresholdSeconds = useSettingsStore((s) => s.busyThresholdSeconds);
+  const autoUpdate = useSettingsStore((s) => s.autoUpdate);
 
   const setFontFamily = useSettingsStore((s) => s.setFontFamily);
   const setFontSize = useSettingsStore((s) => s.setFontSize);
@@ -174,6 +175,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
   const setCompletionChimeEnabled = useSettingsStore((s) => s.setCompletionChimeEnabled);
   const setBusyThresholdSeconds = useSettingsStore((s) => s.setBusyThresholdSeconds);
+  const setAutoUpdate = useSettingsStore((s) => s.setAutoUpdate);
 
   useEffect(() => {
     if (!open) return;
@@ -277,7 +279,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         </SettingRow>
 
         <SettingRow label="Auto-update" description="Check for updates and notify when a new version is available">
-          <ToggleSwitch checked={useSettingsStore((s) => s.autoUpdate)} onChange={useSettingsStore((s) => s.setAutoUpdate)} />
+          <ToggleSwitch checked={autoUpdate} onChange={setAutoUpdate} />
         </SettingRow>
 
         <SettingRow label={t("settings.language")} description={t("settings.languageDesc")}>

@@ -5,7 +5,8 @@ interface LayoutNode {
   type?: string;
   position: { x: number; y: number };
   data: Record<string, unknown>;
-  style?: { width?: number; height?: number; [key: string]: unknown };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  style?: any;
   measured?: { width?: number; height?: number };
   width?: number;
   height?: number;
@@ -14,15 +15,15 @@ interface LayoutNode {
 interface GridLayoutOptions {
   gap?: number;
   padding?: number;
+  rowGap?: number;
 }
 
 /**
- * Compute a grid-based layout for canvas nodes.
+ * Compute a grid-based layout grouped by working directory.
  *
- * Places tiles left-to-right in rows, wrapping when the row exceeds maxRowWidth.
+ * Each unique cwd gets its own row. Terminals with the same cwd sit side-by-side.
+ * Non-terminal nodes (browser, note, file-preview, image) go in a final row.
  * Positions are snapped to GRID_SIZE multiples. Region nodes are skipped.
- * Tiles are ordered according to orderedIds (pile order); nodes not in orderedIds
- * are appended at the end in their original array order.
  */
 export function computeGridLayout(
   nodes: LayoutNode[],
@@ -31,6 +32,7 @@ export function computeGridLayout(
 ): Map<string, { x: number; y: number }> {
   const gap = options?.gap ?? 40;
   const padding = options?.padding ?? 40;
+  const rowGap = options?.rowGap ?? 60;
 
   // Filter out region nodes
   const contentNodes = nodes.filter((n) => n.type !== "region");
@@ -43,35 +45,68 @@ export function computeGridLayout(
     return aIdx - bIdx;
   });
 
-  // Calculate maxRowWidth based on node count
-  const maxRowWidth = Math.max(1200, Math.sqrt(sorted.length) * 700);
-
-  const result = new Map<string, { x: number; y: number }>();
-
-  let cursorX = padding;
-  let cursorY = padding;
-  let rowHeight = 0;
+  // Group terminals by cwd, keep non-terminals separate
+  const cwdGroups = new Map<string, LayoutNode[]>();
+  const nonTerminals: LayoutNode[] = [];
 
   for (const node of sorted) {
-    const w = node.style?.width ?? node.measured?.width ?? node.width ?? 640;
-    const h = node.style?.height ?? node.measured?.height ?? node.height ?? 480;
+    if (node.type === "terminal") {
+      const cwd = (node.data?.cwd as string) ?? "~";
+      const group = cwdGroups.get(cwd);
+      if (group) {
+        group.push(node);
+      } else {
+        cwdGroups.set(cwd, [node]);
+      }
+    } else {
+      nonTerminals.push(node);
+    }
+  }
 
-    // Wrap to next row if this tile would exceed maxRowWidth
-    if (cursorX + w > maxRowWidth && cursorX > padding) {
-      cursorX = padding;
-      cursorY += rowHeight + gap;
-      rowHeight = 0;
+  // Sort groups: largest groups first for visual balance
+  const sortedGroups = [...cwdGroups.entries()].sort((a, b) => b[1].length - a[1].length);
+
+  const result = new Map<string, { x: number; y: number }>();
+  let cursorY = padding;
+
+  // Layout each cwd group as a row
+  for (const [, members] of sortedGroups) {
+    let cursorX = padding;
+    let rowHeight = 0;
+
+    for (const node of members) {
+      const w = (node.style?.width ?? node.measured?.width ?? node.width ?? 640) as number;
+      const h = (node.style?.height ?? node.measured?.height ?? node.height ?? 480) as number;
+
+      const snappedX = Math.round(cursorX / GRID_SIZE) * GRID_SIZE;
+      const snappedY = Math.round(cursorY / GRID_SIZE) * GRID_SIZE;
+
+      result.set(node.id, { x: snappedX, y: snappedY });
+
+      cursorX += w + gap;
+      rowHeight = Math.max(rowHeight, h);
     }
 
-    // Snap position to grid
-    const snappedX = Math.round(cursorX / GRID_SIZE) * GRID_SIZE;
-    const snappedY = Math.round(cursorY / GRID_SIZE) * GRID_SIZE;
+    cursorY += rowHeight + rowGap;
+  }
 
-    result.set(node.id, { x: snappedX, y: snappedY });
+  // Layout non-terminal nodes in a final row
+  if (nonTerminals.length > 0) {
+    let cursorX = padding;
+    let rowHeight = 0;
 
-    // Advance cursor
-    cursorX += w + gap;
-    rowHeight = Math.max(rowHeight, h);
+    for (const node of nonTerminals) {
+      const w = (node.style?.width ?? node.measured?.width ?? node.width ?? 500) as number;
+      const h = (node.style?.height ?? node.measured?.height ?? node.height ?? 400) as number;
+
+      const snappedX = Math.round(cursorX / GRID_SIZE) * GRID_SIZE;
+      const snappedY = Math.round(cursorY / GRID_SIZE) * GRID_SIZE;
+
+      result.set(node.id, { x: snappedX, y: snappedY });
+
+      cursorX += w + gap;
+      rowHeight = Math.max(rowHeight, h);
+    }
   }
 
   return result;

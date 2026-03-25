@@ -400,7 +400,6 @@ function CanvasInner() {
   }, [contextMenu, reactFlow]);
 
   const handleBeautify = useCallback(() => {
-    if (!window.confirm("Rearrange all tiles on the canvas?")) return;
     beautifyLayout();
     setContextMenu(null);
   }, [beautifyLayout]);
@@ -541,44 +540,59 @@ function CanvasInner() {
           />
         )}
       </ReactFlow>
-      {/* Layout toolbar */}
+      {/* Layout toolbar — joined icon buttons */}
       <div style={{
         position: "absolute",
         bottom: 16,
         right: 16,
         zIndex: 1000,
         display: "flex",
-        gap: 4,
+        background: "var(--bg-secondary)",
+        border: "1px solid var(--border)",
+        borderRadius: 8,
+        overflow: "hidden",
       }}>
         <button
           onClick={handleAutoGroupByCwd}
           title="Auto-group terminals by directory"
           style={{
-            background: "var(--bg-secondary)",
-            border: "1px solid var(--border)",
-            borderRadius: 6,
-            padding: "6px 12px",
+            background: "none",
+            border: "none",
+            borderRight: "1px solid var(--border)",
+            padding: "8px 10px",
             cursor: "pointer",
-            color: "var(--text-primary)",
-            fontSize: 12,
+            color: "var(--text-secondary)",
+            display: "flex",
+            alignItems: "center",
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-primary)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
         >
-          Group
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+          </svg>
         </button>
         <button
           onClick={handleBeautify}
           title="Auto-arrange all tiles"
           style={{
-            background: "var(--bg-secondary)",
-            border: "1px solid var(--border)",
-            borderRadius: 6,
-            padding: "6px 12px",
+            background: "none",
+            border: "none",
+            padding: "8px 10px",
             cursor: "pointer",
-            color: "var(--text-primary)",
-            fontSize: 12,
+            color: "var(--text-secondary)",
+            display: "flex",
+            alignItems: "center",
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-primary)"; (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
         >
-          Beautify
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 3h12M2 6.5h8M2 10h10M2 13.5h6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
         </button>
       </div>
       {contextMenu && (

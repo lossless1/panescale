@@ -3,7 +3,8 @@ interface GroupNode {
   type?: string;
   position: { x: number; y: number };
   data: Record<string, unknown>;
-  style?: { width?: number; height?: number; [key: string]: unknown };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  style?: any;
   measured?: { width?: number; height?: number };
   width?: number;
   height?: number;
@@ -49,8 +50,8 @@ export function detectCwdGroups(nodes: GroupNode[]): Map<string, GroupNode[]> {
  */
 export function computeRegionBounds(
   members: GroupNode[],
-  padding = 20,
-  headerHeight = 32,
+  padding = 30,
+  headerHeight = 44,
 ): { x: number; y: number; width: number; height: number } {
   let minX = Infinity;
   let minY = Infinity;
