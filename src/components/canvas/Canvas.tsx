@@ -475,6 +475,19 @@ function CanvasInner() {
     <div
       ref={handleWrapperRef}
       onWheel={handleWheel}
+      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+      onDrop={(e) => {
+        e.preventDefault();
+        const fileData = e.dataTransfer.getData("application/excalicode-file");
+        if (!fileData) return;
+        try {
+          const { path, name } = JSON.parse(fileData);
+          const position = reactFlow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+          const ext = name.includes(".") ? name.split(".").pop()?.toLowerCase() ?? "" : "";
+          const tileType = extensionToTileType(ext) || "file-preview";
+          addContentNode(position, tileType, { path, name });
+        } catch { /* ignore bad data */ }
+      }}
       style={{ width: "100%", height: "100%" }}
     >
       <style>{`

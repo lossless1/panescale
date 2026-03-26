@@ -15,12 +15,14 @@ import { SshQuickConnect } from "../sidebar/SshQuickConnect";
 import { RemoteFileTree } from "../sidebar/RemoteFileTree";
 import { SettingsModal } from "./SettingsModal";
 
-const DEFAULT_WIDTH = 240;
-const MIN_WIDTH = 180;
-const MAX_WIDTH = 480;
+const DEFAULT_WIDTH = 260;
+const MIN_WIDTH = 220;
+const MAX_WIDTH = 520;
 
 export function Sidebar() {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const [collapsed, setCollapsed] = useState(false);
+  const [hoverReveal, setHoverReveal] = useState(false);
   const [activeTab, setActiveTab] = useState<"files" | "terminals" | "git">("files");
   const [sshDropdownOpen, setSshDropdownOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -102,35 +104,143 @@ export function Sidebar() {
     }
   }, [openProject]);
 
+  // Detect if window is in fullscreen (no traffic lights)
+  // macOS native fullscreen doesn't trigger document.fullscreenElement,
+  // so we check window dimensions vs screen dimensions
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const fs = !!document.fullscreenElement ||
+        (window.innerWidth === screen.width && window.innerHeight === screen.height);
+      setIsFullscreen(fs);
+    };
+    check();
+    window.addEventListener("resize", check);
+    document.addEventListener("fullscreenchange", check);
+    return () => {
+      window.removeEventListener("resize", check);
+      document.removeEventListener("fullscreenchange", check);
+    };
+  }, []);
+
+  // When collapsed: fixed toggle icon at window level + thin hover zone
+  if (collapsed && !hoverReveal) {
+    return (
+      <>
+        {/* Toggle icon — fixed at window level, near traffic lights or top-left if fullscreen */}
+        <button
+          onClick={() => setCollapsed(false)}
+          title="Show sidebar"
+          style={{
+            position: "fixed",
+            top: isFullscreen ? 6 : 5,
+            left: isFullscreen ? 6 : 80,
+            zIndex: 9999,
+            background: "none",
+            border: "none",
+            color: "#888",
+            cursor: "pointer",
+            padding: "2px",
+            borderRadius: 4,
+            display: "flex",
+            alignItems: "center",
+            opacity: 0.7,
+            transition: "opacity 0.15s",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
+        >
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+            <line x1="5.5" y1="2.5" x2="5.5" y2="13.5" stroke="currentColor" strokeWidth="1.2"/>
+          </svg>
+        </button>
+        {/* Thin hover zone on left edge — hover to reveal floating sidebar */}
+        <div
+          onMouseEnter={() => setHoverReveal(true)}
+          style={{
+            width: 8,
+            height: "100%",
+            backgroundColor: "transparent",
+            flexShrink: 0,
+          }}
+        />
+        <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      </>
+    );
+  }
+
   return (
     <div
       onContextMenu={(e) => {
-        // Prevent default browser context menu unless a child handles it
         if (!(e.target as HTMLElement).closest("[data-custom-context]")) {
           e.preventDefault();
         }
       }}
+      onMouseLeave={() => { if (collapsed) setHoverReveal(false); }}
       style={{
         width,
         minWidth: MIN_WIDTH,
         maxWidth: MAX_WIDTH,
         backgroundColor: "var(--bg-sidebar)",
-        borderRight: "1px solid var(--border)",
+        borderRight: collapsed ? "none" : "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
-        position: "relative",
+        position: collapsed ? "absolute" : "relative",
+        left: collapsed ? 8 : 0,
+        top: collapsed ? 36 : 0,
+        bottom: collapsed ? 8 : 0,
+        zIndex: collapsed ? 9998 : undefined,
         flexShrink: 0,
         overflow: "hidden",
+        borderRadius: collapsed ? 12 : 0,
+        border: collapsed ? "1px solid var(--border)" : undefined,
+        boxShadow: collapsed ? "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)" : "none",
         userSelect: "none",
         WebkitUserSelect: "none",
       }}
     >
+      {/* Sidebar toggle — fixed at window level near traffic lights */}
+      <div style={{
+        position: "fixed",
+        top: isFullscreen ? 6 : 5,
+        left: isFullscreen ? 6 : 80,
+        zIndex: 9999,
+      }}>
+        <button
+          onClick={() => {
+            if (collapsed) {
+              // Floating → dock it
+              setCollapsed(false);
+              setHoverReveal(false);
+            } else {
+              // Docked → collapse
+              setCollapsed(true);
+              setHoverReveal(false);
+            }
+          }}
+          title={collapsed ? "Pin sidebar" : "Collapse sidebar"}
+          style={{
+            background: "none", border: "none", color: "#888",
+            cursor: "pointer", padding: "2px", borderRadius: 4, display: "flex",
+            alignItems: "center", opacity: 0.7,
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
+        >
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+            <line x1="5.5" y1="2.5" x2="5.5" y2="13.5" stroke="currentColor" strokeWidth="1.2"/>
+          </svg>
+        </button>
+      </div>
+
       {/* Header — draggable for window movement, padded for macOS traffic lights */}
       <div
         data-tauri-drag-region
         style={{
           padding: "8px 8px 8px 16px",
-          paddingTop: 40,
+          paddingTop: collapsed ? 8 : 40,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -150,7 +260,9 @@ export function Sidebar() {
               gap: 6,
               borderRadius: 4,
               color: "var(--text-primary)",
-              maxWidth: 180,
+              flex: 1,
+              minWidth: 0,
+              overflow: "hidden",
             }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-secondary)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
@@ -206,8 +318,12 @@ export function Sidebar() {
                       background: isActive ? "var(--bg-secondary)" : "transparent",
                       color: "var(--text-primary)",
                     }}
-                    onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "var(--bg-secondary)"; }}
-                    onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.background = "var(--bg-secondary)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.background = "transparent";
+                    }}
                   >
                     {/* Active dot */}
                     <span style={{
@@ -292,7 +408,7 @@ export function Sidebar() {
           )}
         </div>
         {/* Header actions */}
-        <div style={{ display: "flex", gap: 2 }}>
+        <div style={{ display: "flex", gap: 2, flexShrink: 0, alignItems: "center" }}>
           {/* SSH quick connect button */}
           <div style={{ position: "relative" }} ref={sshButtonRef}>
             <button
@@ -417,18 +533,21 @@ export function Sidebar() {
       {/* Fuzzy search overlay (manages own visibility via Cmd+K) */}
       <FuzzySearch onNavigateToFile={handleOpenFile} />
 
-      {/* Settings button at bottom */}
+      {/* Bottom bar: Settings + Collapse */}
       <div
         style={{
           flexShrink: 0,
           borderTop: "1px solid var(--border)",
           padding: "6px 12px",
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
         }}
       >
         <button
           onClick={() => setSettingsOpen(true)}
           style={{
-            width: "100%",
+            flex: 1,
             display: "flex",
             alignItems: "center",
             gap: 8,

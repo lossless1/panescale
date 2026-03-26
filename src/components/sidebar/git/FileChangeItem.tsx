@@ -67,8 +67,19 @@ export function FileChangeItem({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    const fullPath = repoPath.endsWith("/") ? repoPath + entry.path : repoPath + "/" + entry.path;
+    e.dataTransfer.setData("application/excalicode-file", JSON.stringify({
+      path: fullPath,
+      name: basename(entry.path),
+    }));
+    e.dataTransfer.effectAllowed = "copy";
+  };
+
   return (
     <div
+      draggable
+      onDragStart={handleDragStart}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
