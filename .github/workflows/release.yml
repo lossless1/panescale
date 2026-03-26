@@ -62,7 +62,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           RUSTC_WRAPPER: sccache
-        run: npx tauri build --target universal-apple-darwin --bundles dmg
+        run: npx tauri build --target universal-apple-darwin --bundles dmg,updater
 
       - name: Upload macOS artifacts
         env:
@@ -72,6 +72,37 @@ jobs:
             echo "Uploading: $f"
             gh release upload "${{ github.ref_name }}" "$f" --clobber --repo "${{ github.repository }}" || true
           done
+          # Generate latest.json for the updater
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          SIG_FILE=$(find src-tauri/target -name "*.app.tar.gz.sig" | head -1)
+          TAR_FILE=$(find src-tauri/target -name "*.app.tar.gz" | head -1)
+          if [ -n "$SIG_FILE" ] && [ -n "$TAR_FILE" ]; then
+            SIG=$(cat "$SIG_FILE")
+            TAR_NAME=$(basename "$TAR_FILE")
+            cat > /tmp/latest.json << ENDJSON
+          {
+            "version": "${VERSION}",
+            "notes": "See https://github.com/lossless1/panescale/releases/tag/v${VERSION}",
+            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "platforms": {
+              "darwin-aarch64": {
+                "url": "https://github.com/lossless1/panescale/releases/download/v${VERSION}/${TAR_NAME}",
+                "signature": "${SIG}"
+              },
+              "darwin-x86_64": {
+                "url": "https://github.com/lossless1/panescale/releases/download/v${VERSION}/${TAR_NAME}",
+                "signature": "${SIG}"
+              }
+            }
+          }
+          ENDJSON
+            echo "Uploading latest.json"
+            gh release upload "${{ github.ref_name }}" /tmp/latest.json --clobber --repo "${{ github.repository }}" || true
+          else
+            echo "WARNING: No .app.tar.gz or .sig found — updater bundle may not have been generated"
+            find src-tauri/target/release/bundle -type f 2>/dev/null | head -20
+          fi
 
   build-linux:
     needs: create-release
