@@ -132,7 +132,7 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             src-tauri/target
-          key: linux-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}-v2
+          key: linux-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}-v3
           restore-keys: |
             linux-cargo-
 
@@ -143,6 +143,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           RUSTC_WRAPPER: sccache
+          OPENSSL_NO_VENDOR: 1
         run: npx tauri build --bundles deb,appimage
 
       - name: Upload Linux artifacts
