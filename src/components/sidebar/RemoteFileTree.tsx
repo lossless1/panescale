@@ -143,12 +143,17 @@ export function RemoteFileTree() {
       let port = 22;
       let keyPath: string | null = null;
       const configHosts = await sshListConfigHosts();
-      const configHost = configHosts.find((h) => h.hostname === host || h.host_alias === host);
+      // Prioritize alias match, then hostname+user, then hostname only
+      const configHost = configHosts.find((h) => h.hostname === host && h.user === user)
+        ?? configHosts.find((h) => h.host_alias === host)
+        ?? configHosts.find((h) => h.hostname === host);
       if (configHost) {
         if (configHost.port) port = configHost.port;
         if (configHost.identity_file) keyPath = configHost.identity_file;
       }
-      const savedConn = useSshStore.getState().connections.find((c) => c.host === host);
+      // Also check saved connections — match by host+user for accuracy
+      const savedConn = useSshStore.getState().connections.find((c) => c.host === host && c.user === user)
+        ?? useSshStore.getState().connections.find((c) => c.host === host);
       if (savedConn) {
         if (savedConn.port && savedConn.port !== 22) port = savedConn.port;
         if (savedConn.keyPath) keyPath = savedConn.keyPath;
@@ -219,6 +224,17 @@ export function RemoteFileTree() {
       return (
         <div key={entry.path}>
           <div
+            draggable={!entry.is_dir}
+            onDragStart={!entry.is_dir ? (e) => {
+              e.dataTransfer.setData("application/excalicode-file", JSON.stringify({
+                path: entry.path,
+                name: entry.name,
+                remote: true,
+                sshHost: activeProject?.sshHost,
+                sshSessionId: activeProject?.sshSessionId,
+              }));
+              e.dataTransfer.effectAllowed = "copy";
+            } : undefined}
             onClick={entry.is_dir ? () => toggleDir(entry.path) : undefined}
             style={{
               display: "flex",

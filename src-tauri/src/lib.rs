@@ -215,6 +215,7 @@ pub fn run() {
             ssh::commands::ssh_read_remote_dir,
             ssh::commands::ssh_connect_for_browsing,
             ssh::commands::ssh_open_config_in_editor,
+            ssh::commands::ssh_read_remote_file,
             get_proxy_port,
         ])
         .build(tauri::generate_context!())

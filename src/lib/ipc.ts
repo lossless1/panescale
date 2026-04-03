@@ -494,6 +494,10 @@ export interface RemoteFileEntry {
   path: string;
 }
 
+export async function sshReadRemoteFile(sessionId: string, remotePath: string): Promise<string> {
+  return invoke<string>("ssh_read_remote_file", { sessionId, remotePath });
+}
+
 export async function sshListConfigHosts(): Promise<SshConfigHost[]> {
   return invoke<SshConfigHost[]>("ssh_list_config_hosts");
 }

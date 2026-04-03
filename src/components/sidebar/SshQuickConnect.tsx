@@ -180,11 +180,14 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) onClose();
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+        && !(anchorRef?.current && anchorRef.current.contains(e.target as Node))) {
+        onClose();
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [onClose]);
+  }, [onClose, anchorRef]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -253,7 +256,10 @@ export function SshQuickConnect({ onClose, anchorRef }: SshQuickConnectProps) {
     // Fall back to SSH config for identity file and port
     let keyPath = conn.keyPath || null;
     let port = conn.port;
-    const configHost = configHosts.find((h) => h.host_alias === conn.id || h.hostname === conn.host);
+    // Prioritize exact alias match, then match by hostname+user to avoid picking wrong key
+    const configHost = configHosts.find((h) => h.host_alias === conn.id)
+      ?? configHosts.find((h) => h.hostname === conn.host && h.user === conn.user)
+      ?? configHosts.find((h) => h.hostname === conn.host);
     if (configHost) {
       if (!keyPath && configHost.identity_file) {
         keyPath = configHost.identity_file;

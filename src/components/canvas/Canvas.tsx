@@ -399,6 +399,17 @@ function CanvasInner() {
     setContextMenu(null);
   }, [contextMenu, reactFlow]);
 
+  const handleContextMenuNewRegion = useCallback(() => {
+    if (!contextMenu) return;
+    const position = reactFlow.screenToFlowPosition({
+      x: contextMenu.x,
+      y: contextMenu.y,
+    });
+    const color = REGION_COLORS[Math.floor(Math.random() * REGION_COLORS.length)];
+    addRegion(position, { width: 400, height: 300 }, "Container", color);
+    setContextMenu(null);
+  }, [contextMenu, reactFlow, addRegion]);
+
   const handleBeautify = useCallback(() => {
     beautifyLayout();
     setContextMenu(null);
@@ -425,7 +436,7 @@ function CanvasInner() {
     }
 
     const padding = 20;
-    const name = window.prompt("Region name:", "Region") || "Region";
+    const name = window.prompt("Container name:", "Container") || "Container";
     const color = REGION_COLORS[Math.floor(Math.random() * REGION_COLORS.length)];
     addRegion(
       { x: minX - padding, y: minY - padding - 32 }, // 32px for header
@@ -481,11 +492,20 @@ function CanvasInner() {
         const fileData = e.dataTransfer.getData("application/excalicode-file");
         if (!fileData) return;
         try {
-          const { path, name } = JSON.parse(fileData);
+          const parsed = JSON.parse(fileData);
+          const { path, name, remote, sshHost, sshSessionId } = parsed;
           const position = reactFlow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
           const ext = name.includes(".") ? name.split(".").pop()?.toLowerCase() ?? "" : "";
           const tileType = extensionToTileType(ext) || "file-preview";
           addContentNode(position, tileType, { path, name });
+          // If remote file, update node data with SSH info
+          if (remote) {
+            const nodes = useCanvasStore.getState().nodes;
+            const newNode = nodes[nodes.length - 1];
+            if (newNode) {
+              useCanvasStore.getState().updateNodeData(newNode.id, { remote: true, sshSessionId, sshHost });
+            }
+          }
         } catch { /* ignore bad data */ }
       }}
       style={{ width: "100%", height: "100%" }}
@@ -516,6 +536,8 @@ function CanvasInner() {
         zoomOnPinch={true}
         zoomOnDoubleClick={false}
         selectionOnDrag={false}
+        selectionKeyCode={null}
+        zoomActivationKeyCode={null}
         fitView={false}
         defaultViewport={storedViewport}
         onMove={handleMove}
@@ -671,6 +693,30 @@ function CanvasInner() {
           >
             New Browser
           </button>
+          <button
+            onClick={handleContextMenuNewRegion}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              background: "none",
+              border: "none",
+              color: "var(--text-primary)",
+              padding: "6px 12px",
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLElement).style.background = "var(--accent)";
+              (e.target as HTMLElement).style.color = "#fff";
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLElement).style.background = "none";
+              (e.target as HTMLElement).style.color = "var(--text-primary)";
+            }}
+          >
+            New Container
+          </button>
           <hr style={{ margin: "4px 0", border: "none", borderTop: "1px solid var(--border)" }} />
           <button
             onClick={handleBeautify}
@@ -743,7 +789,7 @@ function CanvasInner() {
                 (e.target as HTMLElement).style.color = "var(--text-primary)";
               }}
             >
-              Group as Region
+              Group as Container
             </button>
           )}
         </div>

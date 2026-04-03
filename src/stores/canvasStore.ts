@@ -297,13 +297,19 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   autoGroupByCwd: () => {
-    const { nodes } = get();
+    const { nodes, pileOrder } = get();
     // Remove existing auto-generated regions
     const filteredNodes = nodes.filter(
       (n) => !(n.type === "region" && (n.data as Record<string, unknown>).autoGroup === true),
     );
-    // Detect groups by cwd
-    const groups = detectCwdGroups(filteredNodes);
+    // First rearrange terminals into grouped rows with extra gap for region headers
+    const positions = computeGridLayout(filteredNodes, pileOrder, { rowGap: 120 });
+    const rearrangedNodes = filteredNodes.map((n) => {
+      const newPos = positions.get(n.id);
+      return newPos ? { ...n, position: newPos } : n;
+    });
+    // Detect groups by cwd on rearranged positions
+    const groups = detectCwdGroups(rearrangedNodes);
     const newRegions: Node[] = [];
     let colorIdx = 0;
     for (const [cwd, members] of groups) {
@@ -325,7 +331,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       });
       colorIdx++;
     }
-    set({ nodes: [...filteredNodes, ...newRegions] });
+    set({ nodes: [...rearrangedNodes, ...newRegions] });
     forceSave();
   },
 

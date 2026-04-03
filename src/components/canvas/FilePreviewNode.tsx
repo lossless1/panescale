@@ -4,6 +4,7 @@ import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { useOpenTerminalFromTile } from "../../hooks/useOpenTerminalFromTile";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useProjectStore } from "../../stores/projectStore";
+import { sshReadRemoteFile } from "../../lib/ipc";
 import { useThemeStore } from "../../stores/themeStore";
 import { detectLanguage } from "../../lib/shikiHighlighter";
 import { CodeEditor } from "./CodeEditor";
@@ -12,6 +13,9 @@ import "../../styles/codemirror.css";
 type FilePreviewNodeData = {
   filePath: string;
   fileName: string;
+  remote?: boolean;
+  sshSessionId?: string;
+  sshHost?: string;
 };
 
 /** File icon for tile header */
@@ -32,7 +36,7 @@ function tileFileIcon(name: string): { icon: string; color: string } {
 }
 
 function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
-  const { filePath, fileName } = data as unknown as FilePreviewNodeData;
+  const { filePath, fileName, remote, sshSessionId, sshHost: _sshHost } = data as unknown as FilePreviewNodeData;
   const openTerminal = useOpenTerminalFromTile(id);
   const removeNode = useCanvasStore((s) => s.removeNode);
   const activeProject = useProjectStore((s) => s.activeProject());
@@ -61,7 +65,11 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
   useEffect(() => {
     let cancelled = false;
     setLoaded(false);
-    readTextFile(filePath)
+    setError(null);
+    const readFile = remote && sshSessionId
+      ? sshReadRemoteFile(sshSessionId, filePath)
+      : readTextFile(filePath);
+    readFile
       .then((text) => {
         if (!cancelled) {
           setContent(text);
@@ -75,7 +83,7 @@ function FilePreviewNodeInner({ id, data, selected }: NodeProps) {
     return () => {
       cancelled = true;
     };
-  }, [filePath]);
+  }, [filePath, remote, sshSessionId]);
 
   // Save handler
   const handleSave = useCallback(async () => {

@@ -74,6 +74,7 @@ function SortablePileItem({
     opacity: isDragging ? 0.5 : 1,
     display: "flex",
     alignItems: "center",
+    position: "relative" as const,
     gap: 8,
     padding: "6px 12px",
     fontSize: 13,
@@ -136,39 +137,41 @@ function SortablePileItem({
         </div>
       </div>
 
-      {/* Duplicate button */}
-      <button
-        className="pile-close"
-        onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-        style={{
-          background: "none", border: "none", color: "var(--text-secondary)",
-          cursor: "pointer", fontSize: 14, padding: "2px 4px", lineHeight: 1,
-          borderRadius: 3, flexShrink: 0, opacity: 0,
-          transition: "opacity 0.15s, color 0.15s",
-        }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
-        title="Duplicate terminal"
-      >
-        &#x2398;
-      </button>
-
-      {/* Close button */}
-      <button
-        className="pile-close"
-        onClick={(e) => { e.stopPropagation(); onClose(); }}
-        style={{
-          background: "none", border: "none", color: "var(--text-secondary)",
-          cursor: "pointer", fontSize: 16, padding: "2px 4px", lineHeight: 1,
-          borderRadius: 3, flexShrink: 0, opacity: 0,
-          transition: "opacity 0.15s, color 0.15s",
-        }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
-        title="Close terminal"
-      >
-        &#x2715;
-      </button>
+      {/* Action buttons — full height squares, appear on hover */}
+      <div className="pile-close" style={{
+        position: "absolute",
+        right: 0,
+        top: 0,
+        bottom: 0,
+        display: "flex",
+        opacity: 0,
+        transition: "opacity 0.15s",
+      }}>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+          style={{
+            background: "var(--bg-secondary)", border: "none", color: "var(--text-secondary)",
+            cursor: "pointer", fontSize: 16, width: 36, display: "flex",
+            alignItems: "center", justifyContent: "center",
+            borderLeft: "1px solid var(--border)",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--accent)"; (e.currentTarget as HTMLElement).style.background = "var(--bg-primary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; (e.currentTarget as HTMLElement).style.background = "var(--bg-secondary)"; }}
+          title="Duplicate terminal"
+        >&#x2398;</button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          style={{
+            background: "var(--bg-secondary)", border: "none", color: "var(--text-secondary)",
+            cursor: "pointer", fontSize: 18, width: 36, display: "flex",
+            alignItems: "center", justifyContent: "center",
+            borderLeft: "1px solid var(--border)",
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; (e.currentTarget as HTMLElement).style.background = "var(--bg-primary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; (e.currentTarget as HTMLElement).style.background = "var(--bg-secondary)"; }}
+          title="Close terminal"
+        >&#x2715;</button>
+      </div>
     </div>
   );
 }
@@ -188,6 +191,8 @@ export function TerminalList() {
   const activeTerminalId = useFocusModeStore((s) => s.activeTerminalId);
   const enterTerminalMode = useFocusModeStore((s) => s.enterTerminalMode);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [grouped, setGrouped] = useState(false);
+  const [sortAZ, setSortAZ] = useState(false);
 
   useEffect(() => {
     if (!activeTerminalId) setSelectedNodeId(null);
@@ -244,9 +249,16 @@ export function TerminalList() {
     setCtxMenu(null);
   }, [ctxMenu, removeNode]);
 
-  // Get terminal nodes sorted by custom pile order
+  // Get terminal nodes sorted by custom pile order or alphabetically
   const terminalNodes = useMemo(() => {
     const terminals = nodes.filter((n) => n.type === "terminal");
+    if (sortAZ) {
+      return [...terminals].sort((a, b) => {
+        const aName = ((a.data as Record<string, unknown>).customName as string) || ((a.data as Record<string, unknown>).label as string) || a.id;
+        const bName = ((b.data as Record<string, unknown>).customName as string) || ((b.data as Record<string, unknown>).label as string) || b.id;
+        return aName.localeCompare(bName);
+      });
+    }
     if (pileOrder.length === 0) return terminals;
     const orderMap = new Map(pileOrder.map((id, i) => [id, i]));
     return [...terminals].sort((a, b) => {
@@ -254,7 +266,7 @@ export function TerminalList() {
       const bi = orderMap.get(b.id) ?? Infinity;
       return ai - bi;
     });
-  }, [nodes, pileOrder]);
+  }, [nodes, pileOrder, sortAZ]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -277,6 +289,48 @@ export function TerminalList() {
 
   const bellColor = { bg: "rgba(99, 102, 241, 0.15)", hover: "rgba(99, 102, 241, 0.25)" };
 
+  // Fallback group colors when no canvas container exists for a cwd
+  const GROUP_COLORS = ["#6366f1", "#06b6d4", "#22c55e", "#f59e0b", "#ec4899", "#8b5cf6", "#ef4444", "#14b8a6"];
+
+  // Build a map from cwd -> regionColor by checking canvas region nodes
+  const cwdColorMap = useMemo(() => {
+    const regionNodes = nodes.filter((n) => n.type === "region");
+    const colorMap = new Map<string, string>();
+    for (const region of regionNodes) {
+      const rd = region.data as Record<string, unknown>;
+      const regionColor = rd.regionColor as string | undefined;
+      if (!regionColor) continue;
+      const rx = region.position.x;
+      const ry = region.position.y;
+      const rw = (region.style?.width as number) ?? 400;
+      const rh = (region.style?.height as number) ?? 300;
+      // Find terminals contained within this region and map their cwd
+      for (const tn of nodes) {
+        if (tn.type !== "terminal") continue;
+        if (tn.position.x >= rx && tn.position.y >= ry && tn.position.x < rx + rw && tn.position.y < ry + rh) {
+          const cwd = ((tn.data as Record<string, unknown>).cwd as string) ?? "~";
+          const dirName = cwd.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "~";
+          if (!colorMap.has(dirName)) colorMap.set(dirName, regionColor);
+        }
+      }
+    }
+    return colorMap;
+  }, [nodes]);
+
+  // Compute groups by cwd
+  const cwdGroups = useMemo(() => {
+    if (!grouped) return null;
+    const groups = new Map<string, typeof terminalNodes>();
+    for (const node of terminalNodes) {
+      const cwd = ((node.data as Record<string, unknown>).cwd as string) ?? "~";
+      const dirName = cwd.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "~";
+      const existing = groups.get(dirName);
+      if (existing) existing.push(node);
+      else groups.set(dirName, [node]);
+    }
+    return groups;
+  }, [grouped, terminalNodes]);
+
   if (terminalNodes.length === 0) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "var(--text-secondary)" }}>
@@ -285,12 +339,7 @@ export function TerminalList() {
     );
   }
 
-  return (
-    <div style={{ flex: 1, overflow: "auto" }}>
-      <style>{bellPulseKeyframes}</style>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVertical]}>
-        <SortableContext items={terminalNodes.map((n) => n.id)} strategy={verticalListSortingStrategy}>
-          {terminalNodes.map((node) => {
+  const renderNode = (node: Node) => {
             const nodeData = node.data as Record<string, unknown>;
             const customName = nodeData.customName as string | undefined;
             const label = nodeData.label as string | undefined;
@@ -354,9 +403,84 @@ export function TerminalList() {
                 onClose={() => removeNode(node.id)}
               />
             );
-          })}
+  };
+
+  return (
+    <div style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column" }}>
+      {/* Toolbar: Group + Sort */}
+      <div style={{
+        display: "flex", justifyContent: "flex-end", gap: 2,
+        padding: "4px 8px", borderBottom: "1px solid var(--border)", flexShrink: 0,
+      }}>
+        <button
+          onClick={() => setSortAZ((v) => !v)}
+          title={sortAZ ? "Custom order" : "Sort A-Z"}
+          style={{
+            background: "none", border: "none",
+            color: sortAZ ? "var(--accent)" : "var(--text-secondary)",
+            cursor: "pointer", padding: "3px", borderRadius: 4, display: "flex", alignItems: "center",
+            opacity: sortAZ ? 1 : 0.6,
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-secondary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = sortAZ ? "1" : "0.6"; (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M2 3h12M2 6.5h8M2 10h10M2 13.5h6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+          </svg>
+        </button>
+        <button
+          onClick={() => setGrouped((v) => !v)}
+          title={grouped ? "Ungroup" : "Group by directory"}
+          style={{
+            background: "none", border: "none",
+            color: grouped ? "var(--accent)" : "var(--text-secondary)",
+            cursor: "pointer", padding: "3px", borderRadius: 4, display: "flex", alignItems: "center",
+            opacity: grouped ? 1 : 0.6,
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-secondary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = grouped ? "1" : "0.6"; (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+            <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+          </svg>
+        </button>
+      </div>
+      <div style={{ flex: 1, overflow: "auto" }}>
+      <style>{bellPulseKeyframes}</style>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVertical]}>
+        <SortableContext items={terminalNodes.map((n) => n.id)} strategy={verticalListSortingStrategy}>
+          {grouped && cwdGroups ? Array.from(cwdGroups.entries()).flatMap(([dirName, members], gi) => {
+            const groupColor = cwdColorMap.get(dirName) ?? GROUP_COLORS[gi % GROUP_COLORS.length];
+            return [
+              <div key={`group-${dirName}`} style={{
+                padding: "4px 12px 2px",
+                fontSize: 10,
+                fontWeight: 600,
+                textTransform: "uppercase" as const,
+                letterSpacing: "0.05em",
+                color: groupColor,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: gi > 0 ? 6 : 0,
+              }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  backgroundColor: groupColor,
+                  flexShrink: 0,
+                }} />
+                {dirName}
+                <span style={{ fontSize: 9, opacity: 0.6, fontWeight: 400 }}>({members.length})</span>
+              </div>,
+              ...members.map((node) => renderNode(node)),
+            ];
+          }) : terminalNodes.map((node) => renderNode(node))}
         </SortableContext>
       </DndContext>
+      </div>
       {ctxMenu && (
         <div
           ref={ctxRef}

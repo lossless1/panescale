@@ -198,6 +198,20 @@ pub async fn ssh_read_remote_dir(
     Ok(entries)
 }
 
+/// Read a remote file's content via SSH exec channel.
+#[tauri::command]
+pub async fn ssh_read_remote_file(
+    session_id: String,
+    remote_path: String,
+    ssh_state: tauri::State<'_, SshManager>,
+) -> Result<String, String> {
+    let cmd = format!("cat {}", shell_escape(&remote_path));
+    ssh_state
+        .exec_command(&session_id, &cmd)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 fn shell_escape(s: &str) -> String {
     format!("'{}'", s.replace('\'', "'\\''"))
 }
