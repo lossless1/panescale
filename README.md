@@ -13,7 +13,6 @@
 
 <br />
 
-<!-- Replace with actual screenshot -->
 <img src="docs/screenshot.png" alt="Panescale Screenshot" width="800" />
 
 <br />
@@ -35,6 +34,7 @@ Panescale is a desktop app that gives you an infinite canvas for organizing term
 - **Full git UI** — Stage, commit, diff, branch, stash, and resolve conflicts without leaving the app
 - **SSH connections** — Connect to remote servers and open terminal tiles on the canvas
 - **Content tiles** — Drop markdown notes, images, and file previews alongside your terminals
+- **Containers** — Group tiles with colored containers, auto-group by directory
 
 Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [xterm.js](https://xtermjs.org).
 
@@ -49,7 +49,9 @@ Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [
 | **Magnetic snap** | Tiles snap to grid (~10px threshold), Cmd/Ctrl to override |
 | **Alignment guides** | Smart edge/center guides when dragging tiles near each other |
 | **Minimap** | Toggle with `M` key, click to navigate |
-| **Regions** | Select tiles and group them with named, colored regions |
+| **Containers** | Group tiles in named, colored containers — right-click header to rename, change color, or delete |
+| **Auto-group** | One-click grouping of terminals by working directory |
+| **Color picker** | 12 preset colors + custom color picker for containers |
 | **Persistent layout** | Canvas state auto-saves and restores on relaunch |
 
 ### Terminals
@@ -57,6 +59,7 @@ Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [
 | Feature | Description |
 |---------|-------------|
 | **Double-click to spawn** | Double-click empty canvas space to create a terminal |
+| **Right-click menu** | Right-click canvas to spawn a terminal, browser, or container |
 | **Drag & resize** | Title bar drag + 8-handle resize with live reflow |
 | **Search** | Cmd+F to search terminal output |
 | **Clickable URLs** | URLs in terminal output open in your browser |
@@ -75,6 +78,8 @@ Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [
 | **Fuzzy search** | Cmd+K to find files instantly |
 | **Drag to canvas** | Drop files from sidebar to create content tiles |
 | **Terminal list** | See all open terminals, click to navigate |
+| **Group by directory** | Group terminals by cwd with colors synced to canvas containers |
+| **Sort & reorder** | Sort A-Z or drag to reorder terminals |
 
 ### Git
 
@@ -95,6 +100,7 @@ Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [
 | **Connection manager** | Save host, port, user, key file |
 | **Groups** | Organize connections in folders |
 | **Remote terminals** | SSH terminals behave identically to local ones |
+| **Remote file browser** | Browse and open files on remote servers |
 
 ### Theming
 
