@@ -51,7 +51,7 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             src-tauri/target
-          key: macos-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}-v2
+          key: macos-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}-v3
           restore-keys: |
             macos-cargo-
 
