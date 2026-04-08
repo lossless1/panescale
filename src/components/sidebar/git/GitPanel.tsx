@@ -14,7 +14,11 @@ interface SelectedFile {
   staged: boolean;
 }
 
-export function GitPanel() {
+interface GitPanelProps {
+  overrideRepoPath?: string;
+}
+
+export function GitPanel({ overrideRepoPath }: GitPanelProps = {}) {
   const activeProject = useProjectStore((s) => s.activeProject());
   const {
     isRepo,
@@ -33,9 +37,30 @@ export function GitPanel() {
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
   const [errorDismissed, setErrorDismissed] = useState(false);
 
+  const repoPathToUse = overrideRepoPath || activeProject?.path;
+
+  // Debug: log re-renders
+  const renderCount = useRef(0);
+  const prevState = useRef({ repoPathToUse, isRepo, entriesLen: entries.length, currentBranch, loading, error });
   useEffect(() => {
-    if (!activeProject?.path) return;
-    const path = activeProject.path;
+    renderCount.current++;
+    const prev = prevState.current;
+    const changes: string[] = [];
+    if (prev.repoPathToUse !== repoPathToUse) changes.push(`repoPath: ${prev.repoPathToUse} → ${repoPathToUse}`);
+    if (prev.isRepo !== isRepo) changes.push(`isRepo: ${prev.isRepo} → ${isRepo}`);
+    if (prev.entriesLen !== entries.length) changes.push(`entries: ${prev.entriesLen} → ${entries.length}`);
+    if (prev.currentBranch !== currentBranch) changes.push(`branch: ${prev.currentBranch} → ${currentBranch}`);
+    if (prev.loading !== loading) changes.push(`loading: ${prev.loading} → ${loading}`);
+    if (prev.error !== error) changes.push(`error: ${prev.error} → ${error}`);
+    if (changes.length > 0) {
+      console.log(`[GitPanel] render #${renderCount.current}:`, changes.join(", "));
+    }
+    prevState.current = { repoPathToUse, isRepo, entriesLen: entries.length, currentBranch, loading, error };
+  });
+
+  useEffect(() => {
+    if (!repoPathToUse) return;
+    const path = repoPathToUse;
 
     // Full refresh on mount and project change
     refresh(path);
@@ -55,7 +80,7 @@ export function GitPanel() {
         intervalRef.current = null;
       }
     };
-  }, [activeProject?.path, refresh, refreshBranches, refreshLog, refreshStashes, refreshConflicts]);
+  }, [repoPathToUse, refresh, refreshBranches, refreshLog, refreshStashes, refreshConflicts]);
 
   // Clear selected file if it disappears from entries
   useEffect(() => {
@@ -77,7 +102,7 @@ export function GitPanel() {
     }
   };
 
-  if (!activeProject) {
+  if (!repoPathToUse) {
     return (
       <div style={centeredStyle}>
         <span style={mutedStyle}>No project open</span>
@@ -101,7 +126,7 @@ export function GitPanel() {
     );
   }
 
-  const repoPath = activeProject.path;
+  const repoPath = repoPathToUse;
 
   return (
     <div

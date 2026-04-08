@@ -32,7 +32,7 @@ interface GitState {
   refreshConflicts: (repoPath: string) => Promise<void>;
 }
 
-export const useGitStore = create<GitState>()((set) => ({
+export const useGitStore = create<GitState>()((set, get) => ({
   isRepo: false,
   entries: [],
   branches: [],
@@ -44,15 +44,30 @@ export const useGitStore = create<GitState>()((set) => ({
   error: null,
 
   refresh: async (repoPath: string) => {
-    set({ loading: true, error: null });
+    const state = get();
+    const isPolling = state.isRepo || state.entries.length > 0;
+    // Only show loading spinner on initial load, not on polling refreshes
+    if (!isPolling) {
+      set({ loading: true, error: null });
+    }
     try {
       const isRepo = await gitIsRepo(repoPath);
       if (!isRepo) {
-        set({ isRepo: false, entries: [], loading: false });
+        if (state.isRepo || state.entries.length > 0 || state.loading) {
+          set({ isRepo: false, entries: [], loading: false });
+        }
         return;
       }
       const entries = await gitStatus(repoPath);
-      set({ isRepo: true, entries, loading: false });
+      // Only update if entries actually changed to avoid unnecessary re-renders
+      const prev = get().entries;
+      const changed = entries.length !== prev.length ||
+        entries.some((e, i) => e.path !== prev[i]?.path || e.status !== prev[i]?.status);
+      if (changed) {
+        set({ isRepo: true, entries, loading: false });
+      } else if (get().loading) {
+        set({ loading: false });
+      }
     } catch (err) {
       set({ error: String(err), loading: false });
     }

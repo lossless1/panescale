@@ -98,7 +98,7 @@ function SortablePileItem({
       onMouseEnter={(e) => {
         if (!isSelected && !isActive) {
           (e.currentTarget as HTMLElement).style.backgroundColor =
-            isBellActive ? bellColor.hover : "var(--bg-secondary)";
+            isBellActive ? bellColor.hover : "rgba(255, 255, 255, 0.08)";
         }
       }}
       onMouseLeave={(e) => {
@@ -191,8 +191,8 @@ export function TerminalList() {
   const activeTerminalId = useFocusModeStore((s) => s.activeTerminalId);
   const enterTerminalMode = useFocusModeStore((s) => s.enterTerminalMode);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [grouped, setGrouped] = useState(false);
-  const [sortAZ, setSortAZ] = useState(false);
+  const [grouped, setGrouped] = useState(() => localStorage.getItem("piles-grouped") === "true");
+  const [sortAZ, setSortAZ] = useState(() => localStorage.getItem("piles-sortAZ") === "true");
 
   useEffect(() => {
     if (!activeTerminalId) setSelectedNodeId(null);
@@ -382,7 +382,8 @@ export function TerminalList() {
                 }}
                 onDuplicate={() => {
                   const nd = node.data as Record<string, unknown>;
-                  const pos = { x: node.position.x + 40, y: node.position.y + 40 };
+                  const nodeHeight = (node.style?.height as number) ?? (node.measured?.height as number) ?? 480;
+                  const pos = { x: node.position.x, y: node.position.y + nodeHeight + 40 };
                   if (nd.sshConnectionId) {
                     useCanvasStore.getState().addSshTerminalNode(pos, {
                       id: nd.sshConnectionId as string,
@@ -413,7 +414,7 @@ export function TerminalList() {
         padding: "4px 8px", borderBottom: "1px solid var(--border)", flexShrink: 0,
       }}>
         <button
-          onClick={() => setSortAZ((v) => !v)}
+          onClick={() => setSortAZ((v) => { const next = !v; localStorage.setItem("piles-sortAZ", String(next)); return next; })}
           title={sortAZ ? "Custom order" : "Sort A-Z"}
           style={{
             background: "none", border: "none",
@@ -429,7 +430,7 @@ export function TerminalList() {
           </svg>
         </button>
         <button
-          onClick={() => setGrouped((v) => !v)}
+          onClick={() => setGrouped((v) => { const next = !v; localStorage.setItem("piles-grouped", String(next)); return next; })}
           title={grouped ? "Ungroup" : "Group by directory"}
           style={{
             background: "none", border: "none",

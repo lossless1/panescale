@@ -10,7 +10,6 @@ import { FileTree } from "../sidebar/FileTree";
 import { ChronologicalFeed } from "../sidebar/ChronologicalFeed";
 import { TerminalList } from "../sidebar/TerminalList";
 import { FuzzySearch } from "../sidebar/FuzzySearch";
-import { GitPanel } from "../sidebar/git/GitPanel";
 import { SshQuickConnect } from "../sidebar/SshQuickConnect";
 import { RemoteFileTree } from "../sidebar/RemoteFileTree";
 import { SettingsModal } from "./SettingsModal";
@@ -528,7 +527,6 @@ export function Sidebar() {
         </>
       )}
       {activeTab === "terminals" && <TerminalList />}
-      {activeTab === "git" && <GitPanel />}
 
       {/* Fuzzy search overlay (manages own visibility via Cmd+K) */}
       <FuzzySearch onNavigateToFile={handleOpenFile} />

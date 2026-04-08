@@ -151,13 +151,20 @@ export function FileTreeItem({
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
+        borderRadius: 4,
+        margin: "0 4px",
+        transition: "background-color 0.1s",
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.backgroundColor =
-          "var(--bg-secondary)";
+          "rgba(255, 255, 255, 0.08)";
+        const nameEl = e.currentTarget.querySelector("[data-filename]") as HTMLElement | null;
+        if (nameEl) nameEl.style.color = "var(--text-primary)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+        const nameEl = e.currentTarget.querySelector("[data-filename]") as HTMLElement | null;
+        if (nameEl && !entry.is_dir) nameEl.style.color = "var(--text-secondary)";
       }}
     >
       {entry.is_dir ? (
@@ -185,6 +192,7 @@ export function FileTreeItem({
         </>
       )}
       <span
+        data-filename
         style={{
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -192,6 +200,7 @@ export function FileTreeItem({
           color: entry.is_dir
             ? "var(--text-primary)"
             : "var(--text-secondary)",
+          transition: "color 0.1s",
         }}
       >
         {entry.name}

@@ -596,8 +596,9 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
             const nd = data as TerminalNodeData;
             const nodes = useCanvasStore.getState().nodes;
             const thisNode = nodes.find((n) => n.id === id);
+            const nodeHeight = thisNode ? ((thisNode.style?.height as number) ?? (thisNode.measured?.height as number) ?? 480) : 480;
             const pos = thisNode
-              ? { x: thisNode.position.x + 40, y: thisNode.position.y + 40 }
+              ? { x: thisNode.position.x, y: thisNode.position.y + nodeHeight + 40 }
               : { x: 100, y: 100 };
             if (nd.sshConnectionId) {
               useCanvasStore.getState().addSshTerminalNode(pos, {

@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { Sidebar } from "./Sidebar";
+import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { UpdateToast } from "./UpdateToast";
 import { useCanvasStore } from "../../stores/canvasStore";
@@ -64,6 +65,7 @@ export function AppShell({ children }: AppShellProps) {
         >
           {children}
         </div>
+        <RightSidebar />
       </div>
       <StatusBar />
       <UpdateToast />

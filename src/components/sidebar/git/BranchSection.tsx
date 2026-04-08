@@ -22,6 +22,9 @@ export function BranchSection({ repoPath }: BranchSectionProps) {
   const [newBranchName, setNewBranchName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showAllLocal, setShowAllLocal] = useState(false);
+  const [showAllRemote, setShowAllRemote] = useState(false);
+  const BRANCH_LIMIT = 8;
 
   const localBranches = branches.filter((b) => !b.is_remote);
   const remoteBranches = branches.filter((b) => b.is_remote);
@@ -172,7 +175,7 @@ export function BranchSection({ repoPath }: BranchSectionProps) {
           )}
 
           {/* Local branches */}
-          {localBranches.map((b) => (
+          {(showAllLocal ? localBranches : localBranches.slice(0, BRANCH_LIMIT)).map((b) => (
             <div
               key={b.name}
               onClick={() => handleSwitch(b.name)}
@@ -248,6 +251,44 @@ export function BranchSection({ repoPath }: BranchSectionProps) {
             </div>
           ))}
 
+          {/* Show more local branches */}
+          {!showAllLocal && localBranches.length > BRANCH_LIMIT && (
+            <button
+              onClick={() => setShowAllLocal(true)}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "4px 8px",
+                fontSize: 11,
+                color: "var(--accent)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              Show {localBranches.length - BRANCH_LIMIT} more...
+            </button>
+          )}
+          {showAllLocal && localBranches.length > BRANCH_LIMIT && (
+            <button
+              onClick={() => setShowAllLocal(false)}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "4px 8px",
+                fontSize: 11,
+                color: "var(--text-secondary)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              Show less
+            </button>
+          )}
+
           {/* Remote branches */}
           {remoteBranches.length > 0 && (
             <>
@@ -263,22 +304,61 @@ export function BranchSection({ repoPath }: BranchSectionProps) {
                 {remotesCollapsed ? "\u25B6" : "\u25BC"} Remote (
                 {remoteBranches.length})
               </div>
-              {!remotesCollapsed &&
-                remoteBranches.map((b) => (
-                  <div
-                    key={b.name}
-                    style={{
-                      padding: "4px 8px 4px 22px",
-                      fontSize: 11,
-                      color: "var(--text-secondary)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {b.name}
-                  </div>
-                ))}
+              {!remotesCollapsed && (
+                <>
+                  {(showAllRemote ? remoteBranches : remoteBranches.slice(0, BRANCH_LIMIT)).map((b) => (
+                    <div
+                      key={b.name}
+                      style={{
+                        padding: "4px 8px 4px 22px",
+                        fontSize: 11,
+                        color: "var(--text-secondary)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {b.name}
+                    </div>
+                  ))}
+                  {!showAllRemote && remoteBranches.length > BRANCH_LIMIT && (
+                    <button
+                      onClick={() => setShowAllRemote(true)}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "4px 8px 4px 22px",
+                        fontSize: 11,
+                        color: "var(--accent)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      Show {remoteBranches.length - BRANCH_LIMIT} more...
+                    </button>
+                  )}
+                  {showAllRemote && remoteBranches.length > BRANCH_LIMIT && (
+                    <button
+                      onClick={() => setShowAllRemote(false)}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "4px 8px 4px 22px",
+                        fontSize: 11,
+                        color: "var(--text-secondary)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      Show less
+                    </button>
+                  )}
+                </>
+              )}
             </>
           )}
         </>

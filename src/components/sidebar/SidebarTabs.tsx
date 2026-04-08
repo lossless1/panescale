@@ -13,7 +13,6 @@ interface SidebarTabsProps {
 const tabKeys: { id: TabId; i18nKey: string }[] = [
   { id: "files", i18nKey: "sidebar.files" },
   { id: "terminals", i18nKey: "sidebar.piles" },
-  { id: "git", i18nKey: "sidebar.git" },
 ];
 
 export function SidebarTabs({ activeTab, onTabChange }: SidebarTabsProps) {
