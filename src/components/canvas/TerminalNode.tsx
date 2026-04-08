@@ -559,7 +559,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
             position: "absolute",
             inset: -2,
             borderRadius: 10,
-            background: "conic-gradient(from var(--gradient-angle), #6366f1, #8b5cf6, #a78bfa, #c4b5fd, #8b5cf6, #6366f1)",
+            background: "conic-gradient(from var(--gradient-angle), #7c6ce0, #8b7cf6, #a78bfa, #c4b5fd, #8b7cf6, #7c6ce0)",
             animation: "gradient-spin-" + id.replace(/[^a-zA-Z0-9]/g, '') + " 3s linear infinite",
             opacity: 0.8,
             zIndex: -1,
@@ -578,7 +578,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           boxShadow: isFocused
             ? "0 0 0 2px var(--focus-glow)"
             : isBusy
-              ? "0 0 12px rgba(99, 102, 241, 0.3)"
+              ? "0 0 12px rgba(139, 124, 246, 0.3)"
               : "0 2px 8px rgba(0,0,0,0.3)",
           background: "var(--bg-terminal)",
         }}

@@ -136,7 +136,7 @@ export function BranchSection({ repoPath }: BranchSectionProps) {
                 padding: "2px 8px",
                 fontSize: 12,
                 fontWeight: 600,
-                color: "var(--accent, #6366f1)",
+                color: "var(--accent, #8b7cf6)",
                 display: "flex",
                 alignItems: "center",
                 gap: 4,
@@ -203,7 +203,7 @@ export function BranchSection({ repoPath }: BranchSectionProps) {
                 fontSize: 12,
                 cursor: b.is_current ? "default" : "pointer",
                 color: b.is_current
-                  ? "var(--accent, #6366f1)"
+                  ? "var(--accent, #8b7cf6)"
                   : "var(--text-primary)",
                 fontWeight: b.is_current ? 600 : 400,
               }}

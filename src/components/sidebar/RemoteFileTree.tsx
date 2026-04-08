@@ -306,7 +306,7 @@ export function RemoteFileTree() {
       </div>
 
       {/* Accent left border for remote distinction */}
-      <div style={{ borderLeft: "3px solid rgba(99, 102, 241, 0.4)", minHeight: "100%" }}>
+      <div style={{ borderLeft: "3px solid var(--focus-glow)", minHeight: "100%" }}>
         {loading && (
           <div style={{ padding: 16, textAlign: "center", fontSize: 12, color: "var(--text-secondary)" }}>
             Loading remote files...

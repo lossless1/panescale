@@ -59,7 +59,7 @@ export function SidebarTabs({ activeTab, onTabChange }: SidebarTabsProps) {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                backgroundColor: "#6366f1",
+                backgroundColor: "var(--accent)",
               }} />
             )}
           </span>

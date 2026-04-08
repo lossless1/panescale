@@ -34,7 +34,7 @@ const MAX_ZOOM = 2.0;
 const ZOOM_STEP = 0.1; // Snap zoom in 10% increments (aligned to grid dot spacing)
 const RUBBER_BAND_DURATION = 150;
 
-const REGION_COLORS = ["#3b82f6", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4"];
+const REGION_COLORS = ["#8b7cf6", "#22c55e", "#ef4444", "#3b82f6", "#f97316", "#06b6d4"];
 
 const nodeTypes: NodeTypes = {
   terminal: TerminalNode,

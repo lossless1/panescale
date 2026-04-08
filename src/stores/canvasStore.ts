@@ -10,7 +10,7 @@ import { deserializeCanvas, forceSave } from "../lib/persistence";
 import { computeGridLayout } from "../lib/autoLayout";
 import { detectCwdGroups, computeRegionBounds } from "../lib/grouping";
 
-const REGION_COLORS = ["#3b82f6", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4"];
+const REGION_COLORS = ["#8b7cf6", "#22c55e", "#ef4444", "#3b82f6", "#f97316", "#06b6d4"];
 
 export interface SnapLinePositions {
   x: number | null;

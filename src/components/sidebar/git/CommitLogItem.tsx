@@ -51,7 +51,7 @@ export function CommitLogItem({
         <span
           style={{
             fontFamily: "monospace",
-            color: "var(--accent, #6366f1)",
+            color: "var(--accent, #8b7cf6)",
             flexShrink: 0,
             fontSize: 11,
           }}

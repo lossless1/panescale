@@ -163,7 +163,7 @@ export function StashSection({ repoPath }: StashSectionProps) {
                       style={{
                         fontFamily: "monospace",
                         fontSize: 10,
-                        color: "var(--accent, #6366f1)",
+                        color: "var(--accent, #8b7cf6)",
                         flexShrink: 0,
                       }}
                     >

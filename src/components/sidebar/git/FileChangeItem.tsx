@@ -92,7 +92,7 @@ export function FileChangeItem({
         cursor: "pointer",
         userSelect: "none",
         backgroundColor: selected
-          ? "rgba(99, 102, 241, 0.12)"
+          ? "rgba(139, 124, 246, 0.12)"
           : hovered
             ? "var(--bg-secondary)"
             : "transparent",

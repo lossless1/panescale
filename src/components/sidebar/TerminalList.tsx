@@ -84,7 +84,7 @@ function SortablePileItem({
     ...(isBellActive
       ? { animation: "bell-pulse 1s ease-in-out infinite", backgroundColor: bellColor.bg }
       : (isSelected || isActive)
-        ? { backgroundColor: "rgba(255, 255, 255, 0.1)" }
+        ? { backgroundColor: "rgba(139, 124, 246, 0.12)" }
         : {}),
   };
 
@@ -287,10 +287,10 @@ export function TerminalList() {
     setPileOrder(arrayMove(ids, oldIndex, newIndex));
   }, [terminalNodes, setPileOrder]);
 
-  const bellColor = { bg: "rgba(99, 102, 241, 0.15)", hover: "rgba(99, 102, 241, 0.25)" };
+  const bellColor = { bg: "rgba(139, 124, 246, 0.15)", hover: "rgba(139, 124, 246, 0.25)" };
 
   // Fallback group colors when no canvas container exists for a cwd
-  const GROUP_COLORS = ["#6366f1", "#06b6d4", "#22c55e", "#f59e0b", "#ec4899", "#8b5cf6", "#ef4444", "#14b8a6"];
+  const GROUP_COLORS = ["#8b7cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ec4899", "#a78bfa", "#ef4444", "#14b8a6"];
 
   // Build a map from cwd -> regionColor by checking canvas region nodes
   const cwdColorMap = useMemo(() => {
