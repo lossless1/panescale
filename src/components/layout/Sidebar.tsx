@@ -41,6 +41,8 @@ export function Sidebar() {
   const [showWorkspaces, setShowWorkspaces] = useState(false);
   const workspacesRef = useRef<HTMLDivElement>(null);
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
+  const [renamingWorkspaceId, setRenamingWorkspaceId] = useState<string | null>(null);
+  const [workspaceRenameValue, setWorkspaceRenameValue] = useState("");
 
   // Open settings from macOS menu bar (Panescale > Preferences)
   useEffect(() => {
@@ -53,6 +55,7 @@ export function Sidebar() {
     const close = (e: MouseEvent) => {
       if (workspacesRef.current && !workspacesRef.current.contains(e.target as Node)) {
         setShowWorkspaces(false);
+        setRenamingWorkspaceId(null);
       }
     };
     document.addEventListener("mousedown", close);
@@ -305,11 +308,26 @@ export function Sidebar() {
             }}>
               {workspaces.map((w) => {
                 const isActive = w.id === activeWorkspaceId;
+                const isRenaming = renamingWorkspaceId === w.id;
+                const commitRename = () => {
+                  const trimmed = workspaceRenameValue.trim();
+                  if (trimmed && trimmed !== w.name) {
+                    renameWorkspace(w.id, trimmed);
+                  }
+                  setRenamingWorkspaceId(null);
+                };
+                const cancelRename = () => {
+                  setRenamingWorkspaceId(null);
+                };
                 return (
                   <div
                     key={w.id}
                     role="button"
-                    onClick={() => { switchWorkspace(w.id); setShowWorkspaces(false); }}
+                    onClick={() => {
+                      if (isRenaming) return;
+                      switchWorkspace(w.id);
+                      setShowWorkspaces(false);
+                    }}
                     style={{
                       width: "100%",
                       display: "flex",
@@ -339,58 +357,86 @@ export function Sidebar() {
                       flexShrink: 0,
                     }} />
                     <div style={{ overflow: "hidden", flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: 12,
-                        fontWeight: isActive ? 600 : 400,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}>
-                        {w.name}
-                      </div>
-                    </div>
-                    {/* Rename button — stopPropagation on BOTH mousedown and click
-                        so neither the row's switch handler nor the outside-click
-                        detector interferes with the prompt. */}
-                    <span
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const next = window.prompt("Rename workspace", w.name);
-                        if (next !== null && next.trim() !== "") {
-                          renameWorkspace(w.id, next);
-                        }
-                      }}
-                      style={{
-                        opacity: 0.4,
-                        cursor: "pointer",
-                        padding: "2px 4px",
-                        flexShrink: 0,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        borderRadius: 3,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = "1";
-                        e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = "0.4";
-                        e.currentTarget.style.backgroundColor = "transparent";
-                      }}
-                      title="Rename workspace"
-                    >
-                      <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-                        <path
-                          d="M12 2l2 2-8 8-3 1 1-3 8-8z"
-                          stroke="currentColor"
-                          strokeWidth="1.3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                      {isRenaming ? (
+                        <input
+                          autoFocus
+                          value={workspaceRenameValue}
+                          onChange={(e) => setWorkspaceRenameValue(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => {
+                            e.stopPropagation();
+                            if (e.key === "Enter") commitRename();
+                            if (e.key === "Escape") cancelRename();
+                          }}
+                          onBlur={commitRename}
+                          style={{
+                            width: "100%",
+                            fontSize: 12,
+                            fontWeight: isActive ? 600 : 400,
+                            padding: "2px 6px",
+                            background: "var(--bg-secondary)",
+                            color: "var(--text-primary)",
+                            border: "1px solid var(--accent)",
+                            borderRadius: 3,
+                            outline: "none",
+                            boxSizing: "border-box",
+                          }}
                         />
-                      </svg>
-                    </span>
-                    {workspaces.length > 1 && (
+                      ) : (
+                        <div style={{
+                          fontSize: 12,
+                          fontWeight: isActive ? 600 : 400,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {w.name}
+                        </div>
+                      )}
+                    </div>
+                    {/* Rename button — enters inline rename mode. Stop propagation
+                        on both mousedown and click so the row's switch handler and
+                        the outside-click detector don't interfere. */}
+                    {!isRenaming && (
+                      <span
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setWorkspaceRenameValue(w.name);
+                          setRenamingWorkspaceId(w.id);
+                        }}
+                        style={{
+                          opacity: 0.4,
+                          cursor: "pointer",
+                          padding: "2px 4px",
+                          flexShrink: 0,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          borderRadius: 3,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = "1";
+                          e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = "0.4";
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
+                        title="Rename workspace"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                          <path
+                            d="M12 2l2 2-8 8-3 1 1-3 8-8z"
+                            stroke="currentColor"
+                            strokeWidth="1.3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                    )}
+                    {workspaces.length > 1 && !isRenaming && (
                       <span
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={(e) => { e.stopPropagation(); deleteWorkspace(w.id); }}
