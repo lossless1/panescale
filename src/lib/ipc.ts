@@ -192,12 +192,22 @@ export async function stateLoad(): Promise<CanvasSnapshot | null> {
 
 // --- Workspaces (multi-canvas persistence wrapper) ---
 
+export interface WorkspaceProject {
+  path: string;
+  name: string;
+  isRemote?: boolean;
+  sshSessionId?: string;
+  sshHost?: string;
+}
+
 export interface Workspace {
   id: string;
   name: string;
   snapshot: CanvasSnapshot;
   pileOrder: string[];
   createdAt: number;
+  projects?: WorkspaceProject[];
+  activeProjectIndex?: number;
 }
 
 export interface WorkspacesFile {

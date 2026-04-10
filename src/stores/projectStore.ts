@@ -1,7 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface Project {
+/** Schedule a save of the active workspace when projects change. Uses dynamic
+ *  import to avoid a circular dependency with workspacesStore. */
+function schedulePersist() {
+  queueMicrotask(() => {
+    import("./workspacesStore").then(({ useWorkspacesStore }) => {
+      const { activeWorkspaceId, persistActiveSnapshot } = useWorkspacesStore.getState();
+      if (activeWorkspaceId) persistActiveSnapshot();
+    });
+  });
+}
+
+export interface Project {
   path: string;
   name: string;
   isRemote?: boolean;
@@ -39,6 +50,7 @@ export const useProjectStore = create<ProjectState>()(
         const existingIndex = projects.findIndex((p) => p.path === path);
         if (existingIndex >= 0) {
           set({ activeProjectIndex: existingIndex });
+          schedulePersist();
           return;
         }
         const newProject: Project = { path, name: basename(path) };
@@ -46,6 +58,7 @@ export const useProjectStore = create<ProjectState>()(
           projects: [...projects, newProject],
           activeProjectIndex: projects.length,
         });
+        schedulePersist();
       },
 
       openRemoteProject: (remotePath: string, sshSessionId: string, sshHost: string) => {
@@ -53,10 +66,10 @@ export const useProjectStore = create<ProjectState>()(
         const displayPath = `${sshHost}:${remotePath}`;
         const existingIndex = projects.findIndex((p) => p.path === displayPath);
         if (existingIndex >= 0) {
-          // Update the sshSessionId in case of reconnection, then activate
           const updated = [...projects];
           updated[existingIndex] = { ...updated[existingIndex], sshSessionId };
           set({ projects: updated, activeProjectIndex: existingIndex });
+          schedulePersist();
           return;
         }
         const newProject: Project = {
@@ -70,6 +83,7 @@ export const useProjectStore = create<ProjectState>()(
           projects: [...projects, newProject],
           activeProjectIndex: projects.length,
         });
+        schedulePersist();
       },
 
       closeProject: (path: string) => {
@@ -87,10 +101,12 @@ export const useProjectStore = create<ProjectState>()(
           projects: newProjects,
           activeProjectIndex: Math.max(0, newIndex),
         });
+        schedulePersist();
       },
 
       setActiveProject: (index: number) => {
         set({ activeProjectIndex: index });
+        schedulePersist();
       },
 
       setViewMode: (mode: "tree" | "feed") => {
@@ -110,19 +126,19 @@ export const useProjectStore = create<ProjectState>()(
         const next = [...projects];
         const [moved] = next.splice(fromIdx, 1);
         next.splice(toIdx, 0, moved);
-        // Keep the active project pointing at the same project after reorder
         const activePath = projects[activeProjectIndex]?.path;
         const newActiveIndex = activePath
           ? next.findIndex((p) => p.path === activePath)
           : activeProjectIndex;
         set({ projects: next, activeProjectIndex: Math.max(0, newActiveIndex) });
+        schedulePersist();
       },
     }),
     {
       name: "panescale-projects",
+      // projects/activeProjectIndex are now owned by the active workspace
+      // (see workspacesStore). Only viewMode persists globally here.
       partialize: (state) => ({
-        projects: state.projects,
-        activeProjectIndex: state.activeProjectIndex,
         viewMode: state.viewMode,
       }),
     },

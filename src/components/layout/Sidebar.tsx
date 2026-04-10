@@ -351,6 +351,35 @@ export function Sidebar() {
                         {w.name}
                       </div>
                     </div>
+                    {/* Rename button */}
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const next = window.prompt("Rename workspace", w.name);
+                        if (next !== null) renameWorkspace(w.id, next);
+                      }}
+                      style={{
+                        opacity: 0.3,
+                        cursor: "pointer",
+                        padding: "0 4px",
+                        flexShrink: 0,
+                        display: "inline-flex",
+                        alignItems: "center",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.3"; }}
+                      title="Rename workspace"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M12 2l2 2-8 8-3 1 1-3 8-8z"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
                     {workspaces.length > 1 && (
                       <span
                         onClick={(e) => { e.stopPropagation(); deleteWorkspace(w.id); }}

@@ -3,10 +3,12 @@ import {
   workspacesFileSave,
   workspacesFileLoad,
   type Workspace,
+  type WorkspaceProject,
   type WorkspacesFile,
   type CanvasSnapshot,
 } from "../lib/ipc";
 import { useCanvasStore } from "./canvasStore";
+import { useProjectStore } from "./projectStore";
 import { serializeCanvas, deserializeCanvas } from "../lib/persistence";
 
 interface WorkspacesState {
@@ -29,14 +31,28 @@ function emptySnapshot(): CanvasSnapshot {
   };
 }
 
-function makeWorkspace(name: string, snapshot?: CanvasSnapshot, pileOrder?: string[]): Workspace {
+function makeWorkspace(
+  name: string,
+  snapshot?: CanvasSnapshot,
+  pileOrder?: string[],
+  projects?: WorkspaceProject[],
+): Workspace {
   return {
     id: crypto.randomUUID(),
     name,
     snapshot: snapshot ?? emptySnapshot(),
     pileOrder: pileOrder ?? [],
     createdAt: Date.now(),
+    projects: projects ?? [],
+    activeProjectIndex: 0,
   };
+}
+
+function restoreProjectsToStore(projects: WorkspaceProject[], activeIndex: number) {
+  useProjectStore.setState({
+    projects: projects as WorkspaceProject[],
+    activeProjectIndex: Math.min(activeIndex, Math.max(0, projects.length - 1)),
+  });
 }
 
 export const useWorkspacesStore = create<WorkspacesState>((set, get) => ({
@@ -63,6 +79,7 @@ export const useWorkspacesStore = create<WorkspacesState>((set, get) => ({
           hydrated: true,
         });
         useCanvasStore.setState({ hydrated: true });
+        restoreProjectsToStore([], 0);
         return;
       }
 
@@ -132,6 +149,7 @@ export const useWorkspacesStore = create<WorkspacesState>((set, get) => ({
         bellActiveNodes: new Map(),
         hydrated: true,
       });
+      restoreProjectsToStore(active.projects ?? [], active.activeProjectIndex ?? 0);
     } catch (err) {
       console.error("[workspaces] hydrate failed:", err);
       // Fallback: mark canvas hydrated so app doesn't hang on loading screen
@@ -144,10 +162,17 @@ export const useWorkspacesStore = create<WorkspacesState>((set, get) => ({
     const { workspaces, activeWorkspaceId } = get();
     if (!activeWorkspaceId) return;
     const canvasState = useCanvasStore.getState();
+    const projectState = useProjectStore.getState();
     const snapshot = serializeCanvas(canvasState);
     const nextWorkspaces = workspaces.map((w) =>
       w.id === activeWorkspaceId
-        ? { ...w, snapshot, pileOrder: canvasState.pileOrder }
+        ? {
+            ...w,
+            snapshot,
+            pileOrder: canvasState.pileOrder,
+            projects: projectState.projects as WorkspaceProject[],
+            activeProjectIndex: projectState.activeProjectIndex,
+          }
         : w,
     );
     set({ workspaces: nextWorkspaces });
@@ -178,6 +203,9 @@ export const useWorkspacesStore = create<WorkspacesState>((set, get) => ({
       pileOrder: [],
       bellActiveNodes: new Map(),
     });
+
+    // Reset projects to empty — new workspace starts clean
+    restoreProjectsToStore([], 0);
 
     const file: WorkspacesFile = {
       version: 2,
@@ -211,6 +239,9 @@ export const useWorkspacesStore = create<WorkspacesState>((set, get) => ({
       pileOrder: target.pileOrder ?? [],
       bellActiveNodes: new Map(),
     });
+
+    // Restore this workspace's projects into the project store
+    restoreProjectsToStore(target.projects ?? [], target.activeProjectIndex ?? 0);
 
     set({ activeWorkspaceId: id });
 
