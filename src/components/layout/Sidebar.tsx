@@ -7,12 +7,10 @@ import { useCanvasStore } from "../../stores/canvasStore";
 import { useWorkspacesStore } from "../../stores/workspacesStore";
 import { extensionToTileType } from "../../lib/ipc";
 import { SidebarTabs } from "../sidebar/SidebarTabs";
-import { FileTree } from "../sidebar/FileTree";
-import { ChronologicalFeed } from "../sidebar/ChronologicalFeed";
+import { ProjectsList } from "../sidebar/ProjectsList";
 import { TerminalList } from "../sidebar/TerminalList";
 import { FuzzySearch } from "../sidebar/FuzzySearch";
 import { SshQuickConnect } from "../sidebar/SshQuickConnect";
-import { RemoteFileTree } from "../sidebar/RemoteFileTree";
 import { SettingsModal } from "./SettingsModal";
 
 const DEFAULT_WIDTH = 260;
@@ -23,7 +21,7 @@ export function Sidebar() {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [collapsed, setCollapsed] = useState(false);
   const [hoverReveal, setHoverReveal] = useState(false);
-  const [activeTab, setActiveTab] = useState<"files" | "terminals" | "git">("files");
+  const [activeTab, setActiveTab] = useState<"projects" | "terminals" | "git">("projects");
   const [sshDropdownOpen, setSshDropdownOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const sshButtonRef = useRef<HTMLDivElement>(null);
@@ -31,15 +29,7 @@ export function Sidebar() {
   const startX = useRef(0);
   const startWidth = useRef(0);
 
-  const activeProject = useProjectStore((s) => s.activeProject());
-  const projects = useProjectStore((s) => s.projects);
-  const setActiveProject = useProjectStore((s) => s.setActiveProject);
-  const closeProject = useProjectStore((s) => s.closeProject);
-  const viewMode = useProjectStore((s) => s.viewMode);
-  const setViewMode = useProjectStore((s) => s.setViewMode);
   const openProject = useProjectStore((s) => s.openProject);
-  const [showProjects, setShowProjects] = useState(false);
-  const projectsRef = useRef<HTMLDivElement>(null);
 
   // Workspaces dropdown
   const workspaces = useWorkspacesStore((s) => s.workspaces);
@@ -57,17 +47,6 @@ export function Sidebar() {
     const unlisten = listen("open-settings", () => setSettingsOpen(true));
     return () => { unlisten.then((fn) => fn()); };
   }, []);
-
-  useEffect(() => {
-    if (!showProjects) return;
-    const close = (e: MouseEvent) => {
-      if (projectsRef.current && !projectsRef.current.contains(e.target as Node)) {
-        setShowProjects(false);
-      }
-    };
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [showProjects]);
 
   useEffect(() => {
     if (!showWorkspaces) return;
@@ -424,166 +403,7 @@ export function Sidebar() {
           )}
         </div>
 
-        <div style={{ position: "relative" }} ref={projectsRef}>
-          <button
-            onClick={() => setShowProjects((v) => !v)}
-            style={{
-              background: "none",
-              border: "none",
-              padding: "4px 6px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              borderRadius: 4,
-              color: "var(--text-primary)",
-              flex: 1,
-              minWidth: 0,
-              overflow: "hidden",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-secondary)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-          >
-            {/* Folder icon */}
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
-              <path d="M2 4h4l1.5 1.5H14v7.5H2V4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-            </svg>
-            <span style={{
-              fontSize: 12,
-              fontWeight: 500,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}>
-              {activeProject ? activeProject.name : "Open Folder"}
-            </span>
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
-              <path d="M2 3L4 5L6 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-
-          {showProjects && (
-            <div style={{
-              position: "absolute",
-              top: "calc(100% + 4px)",
-              left: 0,
-              right: 0,
-              minWidth: 300,
-              backgroundColor: "var(--bg-primary)",
-              border: "1px solid var(--border)",
-              borderRadius: 8,
-              boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-              padding: 4,
-              zIndex: 9999,
-            }}>
-              {projects.map((p, i) => {
-                const isActive = activeProject?.path === p.path;
-                return (
-                  <button
-                    key={p.path}
-                    onClick={() => { setActiveProject(i); setShowProjects(false); }}
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "6px 8px",
-                      border: "none",
-                      borderRadius: 6,
-                      cursor: "pointer",
-                      textAlign: "left",
-                      background: isActive ? "var(--bg-secondary)" : "transparent",
-                      color: "var(--text-primary)",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) e.currentTarget.style.background = "var(--bg-secondary)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    {/* Active dot */}
-                    <span style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: "50%",
-                      backgroundColor: isActive ? "var(--accent)" : "transparent",
-                      flexShrink: 0,
-                    }} />
-                    <div style={{ overflow: "hidden", flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: isActive ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
-                        {p.name}
-                        {p.isRemote && (
-                          <span style={{
-                            fontSize: 9,
-                            fontWeight: 600,
-                            padding: "2px 8px",
-                            borderRadius: 8,
-                            backgroundColor: "var(--accent)",
-                            color: "#fff",
-                            flexShrink: 0,
-                          }}>
-                            SSH
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 10, color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {p.path}
-                      </div>
-                    </div>
-                    {projects.length > 1 && (
-                      <span
-                        onClick={(e) => { e.stopPropagation(); closeProject(p.path); if (projects.length <= 1) setShowProjects(false); }}
-                        style={{
-                          opacity: 0.3,
-                          cursor: "pointer",
-                          fontSize: 12,
-                          padding: "0 2px",
-                          flexShrink: 0,
-                          lineHeight: 1,
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.3"; }}
-                        title="Close project"
-                      >
-                        &#x2715;
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-
-              {/* Divider */}
-              <div style={{ height: 1, backgroundColor: "var(--border)", margin: "4px 8px" }} />
-
-              {/* Open folder */}
-              <button
-                onClick={() => { handleOpenFolder(); setShowProjects(false); }}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "6px 8px",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                  textAlign: "left",
-                  background: "transparent",
-                  color: "var(--text-secondary)",
-                  fontSize: 12,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-secondary)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-              >
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.5 }}>
-                  <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-                Open Folder
-              </button>
-            </div>
-          )}
-        </div>
+        <div style={{ flex: 1 }} />
         {/* Header actions */}
         <div style={{ display: "flex", gap: 2, flexShrink: 0, alignItems: "center" }}>
           {/* SSH quick connect button */}
@@ -657,53 +477,7 @@ export function Sidebar() {
       <SidebarTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Content */}
-      {activeTab === "files" && (
-        <>
-          {/* View mode toggle: Tree / Recent */}
-          <div style={{
-            display: "flex",
-            padding: "4px 8px",
-            gap: 2,
-            flexShrink: 0,
-          }}>
-            <button
-              onClick={() => setViewMode("tree")}
-              style={{
-                flex: 1,
-                padding: "3px 0",
-                fontSize: 11,
-                fontWeight: viewMode === "tree" ? 500 : 400,
-                border: "none",
-                borderRadius: 4,
-                cursor: "pointer",
-                background: viewMode === "tree" ? "var(--bg-secondary)" : "transparent",
-                color: viewMode === "tree" ? "var(--text-primary)" : "var(--text-secondary)",
-              }}
-            >
-              Tree
-            </button>
-            <button
-              onClick={() => setViewMode("feed")}
-              style={{
-                flex: 1,
-                padding: "3px 0",
-                fontSize: 11,
-                fontWeight: viewMode === "feed" ? 500 : 400,
-                border: "none",
-                borderRadius: 4,
-                cursor: "pointer",
-                background: viewMode === "feed" ? "var(--bg-secondary)" : "transparent",
-                color: viewMode === "feed" ? "var(--text-primary)" : "var(--text-secondary)",
-              }}
-            >
-              Recent
-            </button>
-          </div>
-          {viewMode === "tree" ? (
-            activeProject?.isRemote ? <RemoteFileTree /> : <FileTree />
-          ) : <ChronologicalFeed />}
-        </>
-      )}
+      {activeTab === "projects" && <ProjectsList />}
       {activeTab === "terminals" && <TerminalList />}
 
       {/* Fuzzy search overlay (manages own visibility via Cmd+K) */}

@@ -1,7 +1,7 @@
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useT } from "../../lib/i18n";
 
-type TabId = "files" | "terminals" | "git";
+type TabId = "projects" | "terminals" | "git";
 
 export type { TabId };
 
@@ -11,7 +11,7 @@ interface SidebarTabsProps {
 }
 
 const tabKeys: { id: TabId; i18nKey: string }[] = [
-  { id: "files", i18nKey: "sidebar.files" },
+  { id: "projects", i18nKey: "sidebar.projects" },
   { id: "terminals", i18nKey: "sidebar.piles" },
 ];
 
