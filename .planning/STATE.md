@@ -197,9 +197,10 @@ None yet.
 | 260320-td0 | E2E integration testing infrastructure with 4 tmux test scenarios | 2026-03-20 | d8611fd | [260320-td0-set-up-e2e-testing-infrastructure-for-pa](./quick/260320-td0-set-up-e2e-testing-infrastructure-for-pa/) |
 | 260410-dzc | Workspaces dropdown with multiple independent canvases | 2026-04-10 | 5e83225 | [260410-dzc-add-workspaces-dropdown-with-new-workspa](./quick/260410-dzc-add-workspaces-dropdown-with-new-workspa/) |
 | 260410-ert | Rename Files tab to Projects with collapsible project sections | 2026-04-10 | ed05d6a | [260410-ert-rename-files-tab-to-projects-and-render-](./quick/260410-ert-rename-files-tab-to-projects-and-render-/) |
+| 260410-f0f | Cmd/Ctrl+Alt+Up/Down keyboard shortcut to cycle terminal piles | 2026-04-10 | 51159fb | [260410-f0f-add-cmd-alt-up-down-keyboard-shortcut-to](./quick/260410-f0f-add-cmd-alt-up-down-keyboard-shortcut-to/) |
 
 ## Session Continuity
 
 Last session: 2026-04-10
-Stopped at: Completed quick task 260410-ert projects tab refactor
+Stopped at: Completed quick task 260410-f0f pile navigation shortcut
 Resume file: None
