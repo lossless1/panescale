@@ -306,13 +306,10 @@ export function Sidebar() {
               {workspaces.map((w) => {
                 const isActive = w.id === activeWorkspaceId;
                 return (
-                  <button
+                  <div
                     key={w.id}
+                    role="button"
                     onClick={() => { switchWorkspace(w.id); setShowWorkspaces(false); }}
-                    onDoubleClick={() => {
-                      const next = window.prompt("Rename workspace", w.name);
-                      if (next !== null) renameWorkspace(w.id, next);
-                    }}
                     style={{
                       width: "100%",
                       display: "flex",
@@ -325,6 +322,7 @@ export function Sidebar() {
                       textAlign: "left",
                       background: isActive ? "var(--bg-secondary)" : "transparent",
                       color: "var(--text-primary)",
+                      userSelect: "none",
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) e.currentTarget.style.background = "var(--bg-secondary)";
@@ -351,23 +349,35 @@ export function Sidebar() {
                         {w.name}
                       </div>
                     </div>
-                    {/* Rename button */}
+                    {/* Rename button — stopPropagation on BOTH mousedown and click
+                        so neither the row's switch handler nor the outside-click
+                        detector interferes with the prompt. */}
                     <span
+                      onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
                         const next = window.prompt("Rename workspace", w.name);
-                        if (next !== null) renameWorkspace(w.id, next);
+                        if (next !== null && next.trim() !== "") {
+                          renameWorkspace(w.id, next);
+                        }
                       }}
                       style={{
-                        opacity: 0.3,
+                        opacity: 0.4,
                         cursor: "pointer",
-                        padding: "0 4px",
+                        padding: "2px 4px",
                         flexShrink: 0,
                         display: "inline-flex",
                         alignItems: "center",
+                        borderRadius: 3,
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.3"; }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = "1";
+                        e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = "0.4";
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }}
                       title="Rename workspace"
                     >
                       <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
@@ -382,6 +392,7 @@ export function Sidebar() {
                     </span>
                     {workspaces.length > 1 && (
                       <span
+                        onMouseDown={(e) => e.stopPropagation()}
                         onClick={(e) => { e.stopPropagation(); deleteWorkspace(w.id); }}
                         style={{
                           opacity: 0.3,
@@ -398,7 +409,7 @@ export function Sidebar() {
                         &#x2715;
                       </span>
                     )}
-                  </button>
+                  </div>
                 );
               })}
 

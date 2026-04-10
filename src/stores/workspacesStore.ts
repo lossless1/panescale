@@ -260,22 +260,29 @@ export const useWorkspacesStore = create<WorkspacesState>((set, get) => ({
   },
 
   renameWorkspace: async (id: string, name: string) => {
-    const { workspaces, activeWorkspaceId } = get();
     const trimmed = name.trim();
     if (!trimmed) return;
+    // Update in-memory state first so subscribers see the new name immediately.
+    const { workspaces, activeWorkspaceId } = get();
     const nextWorkspaces = workspaces.map((w) =>
       w.id === id ? { ...w, name: trimmed } : w,
     );
     set({ workspaces: nextWorkspaces });
-    const file: WorkspacesFile = {
-      version: 2,
-      activeWorkspaceId: activeWorkspaceId ?? nextWorkspaces[0]?.id ?? "",
-      workspaces: nextWorkspaces,
-    };
-    try {
-      await workspacesFileSave(file);
-    } catch (err) {
-      console.error("[workspaces] renameWorkspace save failed:", err);
+    // Persist via persistActiveSnapshot so current canvas/projects state is
+    // merged in atomically, avoiding a race where a concurrent save would
+    // overwrite the rename with stale data.
+    await get().persistActiveSnapshot();
+    // If somehow there's no active workspace, fall back to writing the file directly.
+    if (!activeWorkspaceId) {
+      try {
+        await workspacesFileSave({
+          version: 2,
+          activeWorkspaceId: nextWorkspaces[0]?.id ?? "",
+          workspaces: nextWorkspaces,
+        });
+      } catch (err) {
+        console.error("[workspaces] renameWorkspace fallback save failed:", err);
+      }
     }
   },
 
