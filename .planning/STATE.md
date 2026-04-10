@@ -198,9 +198,10 @@ None yet.
 | 260410-dzc | Workspaces dropdown with multiple independent canvases | 2026-04-10 | 5e83225 | [260410-dzc-add-workspaces-dropdown-with-new-workspa](./quick/260410-dzc-add-workspaces-dropdown-with-new-workspa/) |
 | 260410-ert | Rename Files tab to Projects with collapsible project sections | 2026-04-10 | ed05d6a | [260410-ert-rename-files-tab-to-projects-and-render-](./quick/260410-ert-rename-files-tab-to-projects-and-render-/) |
 | 260410-f0f | Cmd/Ctrl+Alt+Up/Down keyboard shortcut to cycle terminal piles | 2026-04-10 | 51159fb | [260410-f0f-add-cmd-alt-up-down-keyboard-shortcut-to](./quick/260410-f0f-add-cmd-alt-up-down-keyboard-shortcut-to/) |
+| 260410-f2f | Drag-and-drop reordering of projects in sidebar | 2026-04-10 | 0b01380 | [260410-f2f-add-drag-and-drop-reordering-to-projects](./quick/260410-f2f-add-drag-and-drop-reordering-to-projects/) |
 
 ## Session Continuity
 
 Last session: 2026-04-10
-Stopped at: Completed quick task 260410-f0f pile navigation shortcut
+Stopped at: Completed quick task 260410-f2f projects drag-and-drop
 Resume file: None
