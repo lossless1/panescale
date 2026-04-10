@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import * as path from "@tauri-apps/api/path";
 import { useProjectStore } from "../../stores/projectStore";
 import { useCanvasStore } from "../../stores/canvasStore";
+import { useWorkspacesStore } from "../../stores/workspacesStore";
 import { extensionToTileType } from "../../lib/ipc";
 import { SidebarTabs } from "../sidebar/SidebarTabs";
 import { FileTree } from "../sidebar/FileTree";
@@ -40,6 +41,17 @@ export function Sidebar() {
   const [showProjects, setShowProjects] = useState(false);
   const projectsRef = useRef<HTMLDivElement>(null);
 
+  // Workspaces dropdown
+  const workspaces = useWorkspacesStore((s) => s.workspaces);
+  const activeWorkspaceId = useWorkspacesStore((s) => s.activeWorkspaceId);
+  const createWorkspace = useWorkspacesStore((s) => s.createWorkspace);
+  const switchWorkspace = useWorkspacesStore((s) => s.switchWorkspace);
+  const renameWorkspace = useWorkspacesStore((s) => s.renameWorkspace);
+  const deleteWorkspace = useWorkspacesStore((s) => s.deleteWorkspace);
+  const [showWorkspaces, setShowWorkspaces] = useState(false);
+  const workspacesRef = useRef<HTMLDivElement>(null);
+  const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
+
   // Open settings from macOS menu bar (Panescale > Preferences)
   useEffect(() => {
     const unlisten = listen("open-settings", () => setSettingsOpen(true));
@@ -56,6 +68,17 @@ export function Sidebar() {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [showProjects]);
+
+  useEffect(() => {
+    if (!showWorkspaces) return;
+    const close = (e: MouseEvent) => {
+      if (workspacesRef.current && !workspacesRef.current.contains(e.target as Node)) {
+        setShowWorkspaces(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [showWorkspaces]);
 
   // Open a file as a tile on the canvas (used by FuzzySearch and file tree)
   const handleOpenFile = useCallback(async (filePath: string) => {
@@ -246,6 +269,161 @@ export function Sidebar() {
           flexShrink: 0,
         }}
       >
+        {/* Workspaces dropdown — first so it sits closest to traffic lights */}
+        <div style={{ position: "relative", marginRight: 6 }} ref={workspacesRef}>
+          <button
+            onClick={() => setShowWorkspaces((v) => !v)}
+            title="Workspaces"
+            style={{
+              background: "none",
+              border: "none",
+              padding: "4px 6px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              borderRadius: 4,
+              color: "var(--text-primary)",
+              maxWidth: 140,
+              minWidth: 0,
+              overflow: "hidden",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--bg-secondary)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.5 }}>
+              <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+              <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+              <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+              <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
+            </svg>
+            <span style={{
+              fontSize: 12,
+              fontWeight: 500,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}>
+              {activeWorkspace?.name ?? "Workspace"}
+            </span>
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
+              <path d="M2 3L4 5L6 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          {showWorkspaces && (
+            <div style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              left: 0,
+              minWidth: 240,
+              backgroundColor: "var(--bg-primary)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              padding: 4,
+              zIndex: 9999,
+            }}>
+              {workspaces.map((w) => {
+                const isActive = w.id === activeWorkspaceId;
+                return (
+                  <button
+                    key={w.id}
+                    onClick={() => { switchWorkspace(w.id); setShowWorkspaces(false); }}
+                    onDoubleClick={() => {
+                      const next = window.prompt("Rename workspace", w.name);
+                      if (next !== null) renameWorkspace(w.id, next);
+                    }}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "6px 8px",
+                      border: "none",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      background: isActive ? "var(--bg-secondary)" : "transparent",
+                      color: "var(--text-primary)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.background = "var(--bg-secondary)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <span style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: "50%",
+                      backgroundColor: isActive ? "var(--accent)" : "transparent",
+                      flexShrink: 0,
+                    }} />
+                    <div style={{ overflow: "hidden", flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: 12,
+                        fontWeight: isActive ? 600 : 400,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}>
+                        {w.name}
+                      </div>
+                    </div>
+                    {workspaces.length > 1 && (
+                      <span
+                        onClick={(e) => { e.stopPropagation(); deleteWorkspace(w.id); }}
+                        style={{
+                          opacity: 0.3,
+                          cursor: "pointer",
+                          fontSize: 12,
+                          padding: "0 2px",
+                          flexShrink: 0,
+                          lineHeight: 1,
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.3"; }}
+                        title="Delete workspace"
+                      >
+                        &#x2715;
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              <div style={{ height: 1, backgroundColor: "var(--border)", margin: "4px 8px" }} />
+
+              <button
+                onClick={async () => { await createWorkspace(); setShowWorkspaces(false); }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "6px 8px",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  background: "transparent",
+                  color: "var(--text-secondary)",
+                  fontSize: 12,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-secondary)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.5 }}>
+                  <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                New Workspace
+              </button>
+            </div>
+          )}
+        </div>
+
         <div style={{ position: "relative" }} ref={projectsRef}>
           <button
             onClick={() => setShowProjects((v) => !v)}

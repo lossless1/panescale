@@ -190,6 +190,36 @@ export async function stateLoad(): Promise<CanvasSnapshot | null> {
   }
 }
 
+// --- Workspaces (multi-canvas persistence wrapper) ---
+
+export interface Workspace {
+  id: string;
+  name: string;
+  snapshot: CanvasSnapshot;
+  pileOrder: string[];
+  createdAt: number;
+}
+
+export interface WorkspacesFile {
+  version: 2;
+  activeWorkspaceId: string;
+  workspaces: Workspace[];
+}
+
+export async function workspacesFileSave(file: WorkspacesFile): Promise<void> {
+  return invoke("state_save", { canvas: JSON.stringify(file) });
+}
+
+export async function workspacesFileLoad(): Promise<WorkspacesFile | null> {
+  const raw = await invoke<string | null>("state_load");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as WorkspacesFile;
+  } catch {
+    return null;
+  }
+}
+
 // --- Git ---
 
 export interface GitStatusEntry {

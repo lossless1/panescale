@@ -5,8 +5,8 @@ import {
   type NodeChange,
   applyNodeChanges,
 } from "@xyflow/react";
-import { stateLoad, ptyDefaultShell, type ContentTileType } from "../lib/ipc";
-import { deserializeCanvas, forceSave } from "../lib/persistence";
+import { ptyDefaultShell, type ContentTileType } from "../lib/ipc";
+import { forceSave } from "../lib/persistence";
 import { computeGridLayout } from "../lib/autoLayout";
 import { detectCwdGroups, computeRegionBounds } from "../lib/grouping";
 
@@ -337,18 +337,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   loadFromDisk: async () => {
     try {
-      const snapshot = await stateLoad();
-      if (snapshot) {
-        const restored = deserializeCanvas(snapshot);
-        set({
-          nodes: restored.nodes,
-          viewport: restored.viewport,
-          maxZIndex: restored.maxZIndex,
-          hydrated: true,
-        });
-      } else {
-        set({ hydrated: true });
-      }
+      const { useWorkspacesStore } = await import("./workspacesStore");
+      await useWorkspacesStore.getState().hydrate();
     } catch (err) {
       console.error("Failed to load canvas state from disk:", err);
       set({ hydrated: true });

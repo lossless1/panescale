@@ -1,5 +1,5 @@
 import { useCanvasStore } from "../stores/canvasStore";
-import { stateSave, type CanvasSnapshot, type SerializedNode } from "./ipc";
+import { type CanvasSnapshot, type SerializedNode } from "./ipc";
 import { captureAllBuffers } from "./terminalBufferRegistry";
 import type { Node } from "@xyflow/react";
 
@@ -90,16 +90,21 @@ export function deserializeCanvas(snapshot: CanvasSnapshot): {
 }
 
 /**
- * Saves the current canvas state immediately. Clears any pending debounce.
+ * Saves the current canvas state immediately, routed through the active
+ * workspace. Clears any pending debounce. No-op until workspaces are hydrated.
  */
 export function forceSave(): Promise<void> {
   if (debounceTimer) {
     clearTimeout(debounceTimer);
     debounceTimer = null;
   }
-  const state = useCanvasStore.getState();
-  const snapshot = serializeCanvas(state);
-  return stateSave(snapshot).catch((err) => {
+  // Lazy import to avoid circular deps at module load time.
+  // workspacesStore imports persistence (for serializeCanvas), and persistence
+  // imports workspacesStore — a static top-of-file import would create a cycle.
+  return import("../stores/workspacesStore").then(({ useWorkspacesStore }) => {
+    if (!useWorkspacesStore.getState().activeWorkspaceId) return;
+    return useWorkspacesStore.getState().persistActiveSnapshot();
+  }).catch((err) => {
     console.error("Failed to save canvas state:", err);
   });
 }
@@ -116,9 +121,10 @@ export function initPersistence(): void {
     }
     debounceTimer = setTimeout(() => {
       debounceTimer = null;
-      const state = useCanvasStore.getState();
-      const snapshot = serializeCanvas(state);
-      stateSave(snapshot).catch((err) => {
+      import("../stores/workspacesStore").then(({ useWorkspacesStore }) => {
+        if (!useWorkspacesStore.getState().activeWorkspaceId) return;
+        return useWorkspacesStore.getState().persistActiveSnapshot();
+      }).catch((err) => {
         console.error("Failed to auto-save canvas state:", err);
       });
     }, DEBOUNCE_MS);
