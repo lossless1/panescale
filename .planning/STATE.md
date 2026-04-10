@@ -202,9 +202,10 @@ None yet.
 | 260410-f4u | Per-workspace projects and visible workspace rename button | 2026-04-10 | c843185 | [260410-f4u-scope-projects-per-workspace-and-add-vis](./quick/260410-f4u-scope-projects-per-workspace-and-add-vis/) |
 | 260410-f8z | Collapse/expand-all button for projects tab | 2026-04-10 | 337faf9 | [260410-f8z-add-collapse-all-button-for-all-opened-p](./quick/260410-f8z-add-collapse-all-button-for-all-opened-p/) |
 | 260410-far | Selectable terminal bell and completion chime sounds | 2026-04-10 | b788414 | [260410-far-add-selectable-terminal-bell-sound-in-se](./quick/260410-far-add-selectable-terminal-bell-sound-in-se/) |
+| 260410-fg0 | Fix workspace rename broken by dblclick and nested button | 2026-04-10 | b28bdc2 | [260410-fg0-fix-workspace-rename-broken-by-dblclick-](./quick/260410-fg0-fix-workspace-rename-broken-by-dblclick-/) |
 
 ## Session Continuity
 
 Last session: 2026-04-10
-Stopped at: Completed quick task 260410-far selectable terminal sounds
+Stopped at: Completed quick task 260410-fg0 fix workspace rename
 Resume file: None
