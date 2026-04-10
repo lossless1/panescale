@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { TerminalSchemeName } from "../lib/terminalSchemes";
+import type { ChimeSound } from "../lib/audio";
 
 export type Language = "en" | "uk" | "de" | "fr" | "es" | "ja" | "zh";
 
@@ -13,6 +14,8 @@ interface SettingsState {
   language: Language;
   notificationsEnabled: boolean;
   completionChimeEnabled: boolean;
+  terminalBellSound: ChimeSound;
+  completionChimeSound: ChimeSound;
   busyThresholdSeconds: number;
   autoUpdate: boolean;
   skippedVersion: string | null;
@@ -24,6 +27,8 @@ interface SettingsState {
   setLanguage: (lang: Language) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
   setCompletionChimeEnabled: (enabled: boolean) => void;
+  setTerminalBellSound: (sound: ChimeSound) => void;
+  setCompletionChimeSound: (sound: ChimeSound) => void;
   setBusyThresholdSeconds: (seconds: number) => void;
   setAutoUpdate: (enabled: boolean) => void;
   setSkippedVersion: (version: string | null) => void;
@@ -40,6 +45,8 @@ export const useSettingsStore = create<SettingsState>()(
       language: "en" as Language,
       notificationsEnabled: true,
       completionChimeEnabled: true,
+      terminalBellSound: "classic" as ChimeSound,
+      completionChimeSound: "two-tone" as ChimeSound,
       busyThresholdSeconds: 5,
       autoUpdate: true,
       skippedVersion: null,
@@ -52,6 +59,8 @@ export const useSettingsStore = create<SettingsState>()(
       setLanguage: (language) => set({ language }),
       setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
       setCompletionChimeEnabled: (completionChimeEnabled) => set({ completionChimeEnabled }),
+      setTerminalBellSound: (terminalBellSound) => set({ terminalBellSound }),
+      setCompletionChimeSound: (completionChimeSound) => set({ completionChimeSound }),
       setBusyThresholdSeconds: (busyThresholdSeconds) => set({ busyThresholdSeconds }),
       setAutoUpdate: (autoUpdate) => set({ autoUpdate }),
       setSkippedVersion: (skippedVersion) => set({ skippedVersion }),

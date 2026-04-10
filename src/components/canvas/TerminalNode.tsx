@@ -113,7 +113,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
     term.onBell(() => {
       if (useFocusModeStore.getState().activeTerminalId !== id) {
         setBellActive(id, true);
-        playBellChime();
+        playBellChime(useSettingsStore.getState().terminalBellSound);
       }
     });
 
@@ -135,7 +135,7 @@ const TerminalNodeInner = function TerminalNodeInner({ id, data, selected }: Nod
           const settings = useSettingsStore.getState();
           if (duration > settings.busyThresholdSeconds * 1000 && useFocusModeStore.getState().activeTerminalId !== id) {
             if (settings.completionChimeEnabled) {
-              playCompletionChime();
+              playCompletionChime(settings.completionChimeSound);
             }
             // Highlight in sidebar piles tab (stays until user clicks terminal)
             setBellActive(id, true, "info");

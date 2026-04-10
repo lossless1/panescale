@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { useThemeStore, type ThemePreference } from "../../stores/themeStore";
 import { useSettingsStore, type Language } from "../../stores/settingsStore";
 import type { TerminalSchemeName } from "../../lib/terminalSchemes";
+import { CHIME_SOUNDS, playChime, type ChimeSound } from "../../lib/audio";
 import { useT } from "../../lib/i18n";
 import { enable as enableAutostart, disable as disableAutostart, isEnabled as isAutostartEnabled } from "@tauri-apps/plugin-autostart";
 
@@ -163,6 +164,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const language = useSettingsStore((s) => s.language);
   const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
   const completionChimeEnabled = useSettingsStore((s) => s.completionChimeEnabled);
+  const terminalBellSound = useSettingsStore((s) => s.terminalBellSound);
+  const completionChimeSound = useSettingsStore((s) => s.completionChimeSound);
   const busyThresholdSeconds = useSettingsStore((s) => s.busyThresholdSeconds);
   const autoUpdate = useSettingsStore((s) => s.autoUpdate);
 
@@ -174,6 +177,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
   const setCompletionChimeEnabled = useSettingsStore((s) => s.setCompletionChimeEnabled);
+  const setTerminalBellSound = useSettingsStore((s) => s.setTerminalBellSound);
+  const setCompletionChimeSound = useSettingsStore((s) => s.setCompletionChimeSound);
   const setBusyThresholdSeconds = useSettingsStore((s) => s.setBusyThresholdSeconds);
   const setAutoUpdate = useSettingsStore((s) => s.setAutoUpdate);
 
@@ -374,6 +379,75 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         <SettingRow label={t("settings.completionSound")} description={t("settings.completionSoundDesc")}>
           <ToggleSwitch checked={completionChimeEnabled} onChange={setCompletionChimeEnabled} />
         </SettingRow>
+
+        <div style={rowStyle}>
+          <label style={labelStyle}>Terminal bell sound</label>
+          <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 6 }}>
+            Played when a background terminal receives a bell signal.
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <select
+              value={terminalBellSound}
+              onChange={(e) => setTerminalBellSound(e.target.value as ChimeSound)}
+              style={{ ...selectStyle, flex: 1 }}
+            >
+              {CHIME_SOUNDS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => playChime(terminalBellSound)}
+              disabled={terminalBellSound === "none"}
+              style={{
+                padding: "0 14px",
+                fontSize: 12,
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                backgroundColor: "var(--bg-primary)",
+                color: "var(--text-primary)",
+                cursor: terminalBellSound === "none" ? "not-allowed" : "pointer",
+                opacity: terminalBellSound === "none" ? 0.4 : 1,
+              }}
+            >
+              Preview
+            </button>
+          </div>
+        </div>
+
+        <div style={rowStyle}>
+          <label style={labelStyle}>Completion chime sound</label>
+          <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 6 }}>
+            Played when a long-running terminal command finishes.
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <select
+              value={completionChimeSound}
+              onChange={(e) => setCompletionChimeSound(e.target.value as ChimeSound)}
+              style={{ ...selectStyle, flex: 1 }}
+              disabled={!completionChimeEnabled}
+            >
+              {CHIME_SOUNDS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => playChime(completionChimeSound)}
+              disabled={!completionChimeEnabled || completionChimeSound === "none"}
+              style={{
+                padding: "0 14px",
+                fontSize: 12,
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                backgroundColor: "var(--bg-primary)",
+                color: "var(--text-primary)",
+                cursor: !completionChimeEnabled || completionChimeSound === "none" ? "not-allowed" : "pointer",
+                opacity: !completionChimeEnabled || completionChimeSound === "none" ? 0.4 : 1,
+              }}
+            >
+              Preview
+            </button>
+          </div>
+        </div>
 
         <div style={rowStyle}>
           <label style={labelStyle}>{t("settings.busyThreshold")}: {busyThresholdSeconds}s</label>
