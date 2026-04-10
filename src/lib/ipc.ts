@@ -111,6 +111,7 @@ export interface FileEntry {
   size: number;
   modified_ms: number;
   created_ms: number;
+  gitignored: boolean;
 }
 
 export async function fsReadDir(path: string): Promise<FileEntry[]> {

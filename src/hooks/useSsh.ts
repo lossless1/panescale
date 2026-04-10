@@ -69,14 +69,18 @@ export function useSsh(): UseSshReturn {
       }
       spawnLock.current = true;
 
-      const channel = createChannel(term);
-      const id = await sshConnect(connectionId, password, cols, rows, channel, directParams);
-      sessionIdRef.current = id;
-      isAliveRef.current = true;
-      renderRef.current += 1;
+      try {
+        const channel = createChannel(term);
+        const id = await sshConnect(connectionId, password, cols, rows, channel, directParams);
+        sessionIdRef.current = id;
+        isAliveRef.current = true;
+        renderRef.current += 1;
 
-      wireInput(term);
-      return id;
+        wireInput(term);
+        return id;
+      } finally {
+        spawnLock.current = false;
+      }
     },
     [createChannel, wireInput],
   );

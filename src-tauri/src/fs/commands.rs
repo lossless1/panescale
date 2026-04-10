@@ -6,22 +6,36 @@ pub struct FileEntry {
     size: u64,
     modified_ms: u64,
     created_ms: u64,
+    gitignored: bool,
 }
 
 #[tauri::command]
 pub fn fs_read_dir(path: String) -> Result<Vec<FileEntry>, String> {
     let mut entries = Vec::new();
 
+    // Try to discover a git repo to check gitignore status
+    let repo = git2::Repository::discover(&path).ok();
+
     for entry in std::fs::read_dir(&path).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
         let name = entry.file_name().to_string_lossy().to_string();
 
-        // Filter out hidden files starting with "."
-        if name.starts_with('.') {
+        // Filter out system/meta dotfiles that are never useful to show
+        if name == ".DS_Store" || name == ".Thumbs.db" {
             continue;
         }
 
         let metadata = entry.metadata().map_err(|e| e.to_string())?;
+        let entry_path = entry.path();
+
+        // Check if the file is gitignored (also treats .git folder as ignored)
+        let gitignored = if name == ".git" {
+            true
+        } else {
+            repo.as_ref()
+                .and_then(|r| r.status_should_ignore(&entry_path).ok())
+                .unwrap_or(false)
+        };
 
         let modified_ms = metadata
             .modified()
@@ -39,11 +53,12 @@ pub fn fs_read_dir(path: String) -> Result<Vec<FileEntry>, String> {
 
         entries.push(FileEntry {
             name,
-            path: entry.path().to_string_lossy().to_string(),
+            path: entry_path.to_string_lossy().to_string(),
             is_dir: metadata.is_dir(),
             size: metadata.len(),
             modified_ms,
             created_ms,
+            gitignored,
         });
     }
 

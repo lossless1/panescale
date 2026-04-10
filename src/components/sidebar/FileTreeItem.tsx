@@ -154,6 +154,7 @@ export function FileTreeItem({
         borderRadius: 4,
         margin: "0 4px",
         transition: "background-color 0.1s",
+        opacity: entry.gitignored ? 0.5 : 1,
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.backgroundColor =
