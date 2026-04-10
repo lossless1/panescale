@@ -199,9 +199,10 @@ None yet.
 | 260410-ert | Rename Files tab to Projects with collapsible project sections | 2026-04-10 | ed05d6a | [260410-ert-rename-files-tab-to-projects-and-render-](./quick/260410-ert-rename-files-tab-to-projects-and-render-/) |
 | 260410-f0f | Cmd/Ctrl+Alt+Up/Down keyboard shortcut to cycle terminal piles | 2026-04-10 | 51159fb | [260410-f0f-add-cmd-alt-up-down-keyboard-shortcut-to](./quick/260410-f0f-add-cmd-alt-up-down-keyboard-shortcut-to/) |
 | 260410-f2f | Drag-and-drop reordering of projects in sidebar | 2026-04-10 | 0b01380 | [260410-f2f-add-drag-and-drop-reordering-to-projects](./quick/260410-f2f-add-drag-and-drop-reordering-to-projects/) |
+| 260410-f4u | Per-workspace projects and visible workspace rename button | 2026-04-10 | c843185 | [260410-f4u-scope-projects-per-workspace-and-add-vis](./quick/260410-f4u-scope-projects-per-workspace-and-add-vis/) |
 
 ## Session Continuity
 
 Last session: 2026-04-10
-Stopped at: Completed quick task 260410-f2f projects drag-and-drop
+Stopped at: Completed quick task 260410-f4u per-workspace projects
 Resume file: None
