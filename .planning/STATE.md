@@ -203,9 +203,10 @@ None yet.
 | 260410-f8z | Collapse/expand-all button for projects tab | 2026-04-10 | 337faf9 | [260410-f8z-add-collapse-all-button-for-all-opened-p](./quick/260410-f8z-add-collapse-all-button-for-all-opened-p/) |
 | 260410-far | Selectable terminal bell and completion chime sounds | 2026-04-10 | b788414 | [260410-far-add-selectable-terminal-bell-sound-in-se](./quick/260410-far-add-selectable-terminal-bell-sound-in-se/) |
 | 260410-fg0 | Fix workspace rename broken by dblclick and nested button | 2026-04-10 | b28bdc2 | [260410-fg0-fix-workspace-rename-broken-by-dblclick-](./quick/260410-fg0-fix-workspace-rename-broken-by-dblclick-/) |
+| 260410-fjo | Inline workspace rename (window.prompt is blocked in Tauri) | 2026-04-10 | 818b663 | [260410-fjo-replace-window-prompt-with-inline-rename](./quick/260410-fjo-replace-window-prompt-with-inline-rename/) |
 
 ## Session Continuity
 
 Last session: 2026-04-10
-Stopped at: Completed quick task 260410-fg0 fix workspace rename
+Stopped at: Completed quick task 260410-fjo inline workspace rename
 Resume file: None
