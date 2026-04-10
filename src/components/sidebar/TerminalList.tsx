@@ -268,6 +268,50 @@ export function TerminalList() {
     });
   }, [nodes, pileOrder, sortAZ]);
 
+  /** Select a terminal by id and focus it in the canvas. Shared by click + keyboard. */
+  const selectTerminal = useCallback((nodeId: string) => {
+    if (bellActiveNodes.has(nodeId)) {
+      setBellActive(nodeId, false);
+      import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
+        getCurrentWindow().setBadgeLabel("").catch(() => {});
+      });
+    }
+    setSelectedNodeId(nodeId);
+    setPanToNode(nodeId);
+    bringToFront(nodeId);
+    enterTerminalMode(nodeId);
+  }, [bellActiveNodes, setBellActive, setPanToNode, bringToFront, enterTerminalMode]);
+
+  /** Cmd/Ctrl+Alt+Up/Down navigates between terminal piles.
+   *  macOS: Cmd+Option+Up/Down. Linux/Windows: Ctrl+Alt+Up/Down. */
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      // Require Alt/Option + (Cmd on macOS OR Ctrl elsewhere)
+      const isMac = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
+      if (!e.altKey || !modifier) return;
+      if (terminalNodes.length === 0) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const currentId = activeTerminalId ?? selectedNodeId;
+      const currentIdx = terminalNodes.findIndex((n) => n.id === currentId);
+      let nextIdx: number;
+      if (currentIdx === -1) {
+        nextIdx = e.key === "ArrowDown" ? 0 : terminalNodes.length - 1;
+      } else {
+        const delta = e.key === "ArrowDown" ? 1 : -1;
+        nextIdx = (currentIdx + delta + terminalNodes.length) % terminalNodes.length;
+      }
+      const next = terminalNodes[nextIdx];
+      if (next) selectTerminal(next.id);
+    }
+    window.addEventListener("keydown", handleKey, true);
+    return () => window.removeEventListener("keydown", handleKey, true);
+  }, [terminalNodes, activeTerminalId, selectedNodeId, selectTerminal]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
@@ -364,18 +408,7 @@ export function TerminalList() {
                 displayName={displayName}
                 cwd={cwd}
                 badgeColor={badgeColor}
-                onSelect={() => {
-                  if (bellActiveNodes.has(node.id)) {
-                    setBellActive(node.id, false);
-                    import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
-                      getCurrentWindow().setBadgeLabel("").catch(() => {});
-                    });
-                  }
-                  setSelectedNodeId(node.id);
-                  setPanToNode(node.id);
-                  bringToFront(node.id);
-                  enterTerminalMode(node.id);
-                }}
+                onSelect={() => selectTerminal(node.id)}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   setCtxMenu({ x: e.clientX, y: e.clientY, nodeId: node.id });
