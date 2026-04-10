@@ -19,6 +19,7 @@ interface ProjectState {
   setViewMode: (mode: "tree" | "feed") => void;
   activeProject: () => Project | null;
   openRemoteProject: (remotePath: string, sshSessionId: string, sshHost: string) => void;
+  reorderProjects: (fromPath: string, toPath: string) => void;
 }
 
 function basename(path: string): string {
@@ -99,6 +100,22 @@ export const useProjectStore = create<ProjectState>()(
       activeProject: () => {
         const { projects, activeProjectIndex } = get();
         return projects[activeProjectIndex] ?? null;
+      },
+
+      reorderProjects: (fromPath: string, toPath: string) => {
+        const { projects, activeProjectIndex } = get();
+        const fromIdx = projects.findIndex((p) => p.path === fromPath);
+        const toIdx = projects.findIndex((p) => p.path === toPath);
+        if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+        const next = [...projects];
+        const [moved] = next.splice(fromIdx, 1);
+        next.splice(toIdx, 0, moved);
+        // Keep the active project pointing at the same project after reorder
+        const activePath = projects[activeProjectIndex]?.path;
+        const newActiveIndex = activePath
+          ? next.findIndex((p) => p.path === activePath)
+          : activeProjectIndex;
+        set({ projects: next, activeProjectIndex: Math.max(0, newActiveIndex) });
       },
     }),
     {
