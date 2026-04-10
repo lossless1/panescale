@@ -223,6 +223,17 @@ export function ProjectsList() {
     });
   }, []);
 
+  const allCollapsed = expanded.size === 0;
+  const handleCollapseOrExpandAll = useCallback(() => {
+    if (allCollapsed) {
+      // Expand all
+      setExpanded(new Set(projects.map((p) => p.path)));
+    } else {
+      // Collapse all
+      setExpanded(new Set());
+    }
+  }, [allCollapsed, projects]);
+
   const handleOpenFolder = useCallback(async () => {
     const selected = await open({ directory: true });
     if (selected) {
@@ -288,31 +299,80 @@ export function ProjectsList() {
   }
 
   return (
-    <div style={{ flex: 1, overflow: "auto" }}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        modifiers={[restrictToVertical]}
-      >
-        <SortableContext
-          items={projects.map((p) => p.path)}
-          strategy={verticalListSortingStrategy}
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* Toolbar: collapse/expand all */}
+      <div style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        padding: "4px 8px",
+        borderBottom: "1px solid var(--border)",
+        flexShrink: 0,
+      }}>
+        <button
+          onClick={handleCollapseOrExpandAll}
+          title={allCollapsed ? "Expand all projects" : "Collapse all projects"}
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--text-secondary)",
+            cursor: "pointer",
+            padding: "3px",
+            borderRadius: 4,
+            display: "flex",
+            alignItems: "center",
+            opacity: 0.6,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.opacity = "1";
+            (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-secondary)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.opacity = "0.6";
+            (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+          }}
         >
-          {projects.map((project, index) => (
-            <SortableProjectRow
-              key={project.path}
-              project={project}
-              index={index}
-              isActive={activeProject?.path === project.path}
-              isExpanded={expanded.has(project.path)}
-              onToggleExpanded={toggleExpanded}
-              onSetActive={setActiveProject}
-              onClose={closeProject}
-            />
-          ))}
-        </SortableContext>
-      </DndContext>
+          {allCollapsed ? (
+            // Expand-all icon: two chevrons pointing apart
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M4 6l4-4 4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 10l4 4 4-4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            // Collapse-all icon: two chevrons pointing together
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M4 4l4 4 4-4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 12l4-4 4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </button>
+      </div>
+
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          modifiers={[restrictToVertical]}
+        >
+          <SortableContext
+            items={projects.map((p) => p.path)}
+            strategy={verticalListSortingStrategy}
+          >
+            {projects.map((project, index) => (
+              <SortableProjectRow
+                key={project.path}
+                project={project}
+                index={index}
+                isActive={activeProject?.path === project.path}
+                isExpanded={expanded.has(project.path)}
+                onToggleExpanded={toggleExpanded}
+                onSetActive={setActiveProject}
+                onClose={closeProject}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+      </div>
     </div>
   );
 }
