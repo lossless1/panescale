@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.2.1",
+    date: "2026-04-14",
+    items: [
+      { type: "feature", text: "\"What's New\" modal — see recent changes after each update" },
+      { type: "fix", text: "Fixed workspace dropdown crash when clicking to switch workspaces" },
+    ],
+  },
+  {
     version: "0.2.0",
     date: "2026-04-10",
     items: [
