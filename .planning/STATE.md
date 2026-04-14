@@ -204,9 +204,10 @@ None yet.
 | 260410-far | Selectable terminal bell and completion chime sounds | 2026-04-10 | b788414 | [260410-far-add-selectable-terminal-bell-sound-in-se](./quick/260410-far-add-selectable-terminal-bell-sound-in-se/) |
 | 260410-fg0 | Fix workspace rename broken by dblclick and nested button | 2026-04-10 | b28bdc2 | [260410-fg0-fix-workspace-rename-broken-by-dblclick-](./quick/260410-fg0-fix-workspace-rename-broken-by-dblclick-/) |
 | 260410-fjo | Inline workspace rename (window.prompt is blocked in Tauri) | 2026-04-10 | 818b663 | [260410-fjo-replace-window-prompt-with-inline-rename](./quick/260410-fjo-replace-window-prompt-with-inline-rename/) |
+| 260414-o9w | What's New changelog modal on version update | 2026-04-14 | bd364d2 | [260414-o9w-whats-new-changelog-modal-on-version-upd](./quick/260414-o9w-whats-new-changelog-modal-on-version-upd/) |
 
 ## Session Continuity
 
-Last session: 2026-04-10
-Stopped at: Completed quick task 260410-fjo inline workspace rename
+Last session: 2026-04-14
+Stopped at: Completed quick task 260414-o9w What's New changelog modal
 Resume file: None
