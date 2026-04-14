@@ -45,7 +45,40 @@ export const EXT_LANG_MAP: Record<string, string> = {
   zig: "zig",
 };
 
+// Dotfile name to language mapping
+const DOTFILE_LANG_MAP: Record<string, string> = {
+  ".bashrc": "bash",
+  ".bash_profile": "bash",
+  ".bash_aliases": "bash",
+  ".zshrc": "bash",
+  ".zshenv": "bash",
+  ".zprofile": "bash",
+  ".profile": "bash",
+  ".gitignore": "gitignore",
+  ".gitattributes": "gitattributes",
+  ".gitmodules": "ini",
+  ".gitconfig": "ini",
+  ".editorconfig": "ini",
+  ".env": "properties",
+  ".env.local": "properties",
+  ".env.development": "properties",
+  ".env.production": "properties",
+  ".npmrc": "ini",
+  ".yarnrc": "yaml",
+  ".prettierrc": "json",
+  ".eslintrc": "json",
+  ".babelrc": "json",
+  ".dockerignore": "gitignore",
+  ".htaccess": "apacheconf",
+};
+
 export function detectLanguage(fileName: string): string {
+  const lower = fileName.toLowerCase();
+  // Check dotfile names first
+  if (lower.startsWith(".")) {
+    const dotLang = DOTFILE_LANG_MAP[lower];
+    if (dotLang) return dotLang;
+  }
   const parts = fileName.split(".");
   if (parts.length < 2) return "text";
   const ext = parts[parts.length - 1].toLowerCase();
