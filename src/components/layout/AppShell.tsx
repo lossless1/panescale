@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { RightSidebar } from "./RightSidebar";
 import { StatusBar } from "./StatusBar";
 import { UpdateToast } from "./UpdateToast";
+import { WhatsNewModal } from "./WhatsNewModal";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { spawnTerminalAtPosition } from "../../lib/spawnTerminal";
 
@@ -69,6 +70,7 @@ export function AppShell({ children }: AppShellProps) {
       </div>
       <StatusBar />
       <UpdateToast />
+      <WhatsNewModal />
     </div>
   );
 }
