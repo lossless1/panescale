@@ -143,7 +143,7 @@ function CanvasInner() {
 
   // Region group drag: capture initial positions on drag start
   const handleNodeDragStart = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
+    (_event: MouseEvent | TouchEvent, node: Node) => {
       if (node.type === "region") {
         const rw = (node.style?.width as number) ?? 400;
         const rh = (node.style?.height as number) ?? 300;
@@ -173,7 +173,7 @@ function CanvasInner() {
 
   // Magnetic snap on drag: snap node position to grid within threshold
   const handleNodeDrag = useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (event: MouseEvent | TouchEvent, node: Node) => {
       // Region group drag: move contained tiles by same delta
       if (node.type === "region" && regionDragRef.current && regionDragRef.current.regionId === node.id) {
         const dx = node.position.x - regionDragRef.current.startPos.x;
@@ -229,7 +229,7 @@ function CanvasInner() {
   );
 
   const handleNodeDragStop = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
+    (_event: MouseEvent | TouchEvent, node: Node) => {
       setSnapLines(null);
       setAlignGuides([]);
       regionDragRef.current = null;
