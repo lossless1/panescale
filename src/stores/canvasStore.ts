@@ -8,7 +8,7 @@ import {
 import { ptyDefaultShell, type ContentTileType } from "../lib/ipc";
 import { forceSave } from "../lib/persistence";
 import { computeGridLayout } from "../lib/autoLayout";
-import { detectCwdGroups, computeRegionBounds } from "../lib/grouping";
+import { detectCwdGroups, detectTypeGroups, computeRegionBounds } from "../lib/grouping";
 
 const REGION_COLORS = ["#8b7cf6", "#22c55e", "#ef4444", "#3b82f6", "#f97316", "#06b6d4"];
 
@@ -308,20 +308,27 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       const newPos = positions.get(n.id);
       return newPos ? { ...n, position: newPos } : n;
     });
-    // Detect groups by cwd on rearranged positions
+    // Detect groups on rearranged positions: terminals by cwd, other tiles by type
     const groups = detectCwdGroups(rearrangedNodes);
+    const namedGroups: Array<[string, typeof rearrangedNodes]> = [];
+    for (const [cwd, members] of groups) {
+      const dirName = cwd.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "~";
+      namedGroups.push([dirName, members]);
+    }
+    for (const [name, members] of detectTypeGroups(rearrangedNodes)) {
+      namedGroups.push([name, members]);
+    }
     const newRegions: Node[] = [];
     let colorIdx = 0;
-    for (const [cwd, members] of groups) {
+    for (const [name, members] of namedGroups) {
       const bounds = computeRegionBounds(members);
-      const dirName = cwd.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "~";
       const id = crypto.randomUUID();
       newRegions.push({
         id,
         type: "region",
         position: { x: bounds.x, y: bounds.y },
         data: {
-          regionName: dirName,
+          regionName: name,
           regionColor: REGION_COLORS[colorIdx % REGION_COLORS.length],
           autoGroup: true,
         },

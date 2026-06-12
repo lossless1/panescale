@@ -43,6 +43,40 @@ export function detectCwdGroups(nodes: GroupNode[]): Map<string, GroupNode[]> {
   return groups;
 }
 
+const TYPE_GROUP_NAMES: Record<string, string> = {
+  webview: "Browser",
+  note: "Notes",
+  image: "Images",
+  "file-preview": "Files",
+};
+
+/**
+ * Group non-terminal content tiles (browser, note, image, file-preview) by
+ * node type so they can be framed alongside the cwd-based terminal groups.
+ *
+ * Terminal and region nodes are skipped. Single-member groups are kept so
+ * every tile ends up inside a frame. Returns a Map keyed by display name.
+ */
+export function detectTypeGroups(nodes: GroupNode[]): Map<string, GroupNode[]> {
+  const groups = new Map<string, GroupNode[]>();
+
+  for (const node of nodes) {
+    if (!node.type || node.type === "terminal" || node.type === "region") continue;
+
+    const name =
+      TYPE_GROUP_NAMES[node.type] ??
+      node.type.charAt(0).toUpperCase() + node.type.slice(1);
+    const existing = groups.get(name);
+    if (existing) {
+      existing.push(node);
+    } else {
+      groups.set(name, [node]);
+    }
+  }
+
+  return groups;
+}
+
 /**
  * Compute the bounding box for a region that wraps the given member nodes.
  *

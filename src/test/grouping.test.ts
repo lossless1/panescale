@@ -83,12 +83,12 @@ describe("computeRegionBounds", () => {
     ];
     const bounds = computeRegionBounds(members);
 
-    // Default padding=20, headerHeight=32
+    // Default padding=30, headerHeight=44
     // minX=100, minY=100, maxX=800+640=1440, maxY=100+480=580
-    expect(bounds.x).toBe(100 - 20); // 80
-    expect(bounds.y).toBe(100 - 20 - 32); // 48
-    expect(bounds.width).toBe(1440 - 100 + 20 * 2); // 1380
-    expect(bounds.height).toBe(580 - 100 + 20 * 2 + 32); // 552
+    expect(bounds.x).toBe(100 - 30); // 70
+    expect(bounds.y).toBe(100 - 30 - 44); // 26
+    expect(bounds.width).toBe(1440 - 100 + 30 * 2); // 1400
+    expect(bounds.height).toBe(580 - 100 + 30 * 2 + 44); // 584
   });
 
   it("supports configurable padding and headerHeight", () => {
