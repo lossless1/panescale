@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo.png" alt="Panescale logo" width="120" />
+<img src="src-tauri/icons/icon.png" alt="Panescale logo" width="120" />
 
 # Panescale
 
