@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/logo.png" alt="Panescale logo" width="120" />
+
 # Panescale
 
 **Terminals, files, and code — arranged on an infinite canvas.**
@@ -34,6 +36,8 @@ Panescale is a desktop app that gives you an infinite canvas for organizing term
 - **Full git UI** — Stage, commit, diff, branch, stash, and resolve conflicts without leaving the app
 - **SSH connections** — Connect to remote servers and open terminal tiles on the canvas
 - **Content tiles** — Drop markdown notes, images, and file previews alongside your terminals
+- **Browser tiles** — Embed live web pages right on the canvas, next to your terminals
+- **Workspaces** — Keep separate canvases per project and switch between them instantly
 - **Containers** — Group tiles with colored containers, auto-group by directory
 
 Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [xterm.js](https://xtermjs.org).
@@ -69,6 +73,32 @@ Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [
 | **Bell notifications** | Audio chime + sidebar pulse when a process completes |
 | **tmux persistence** | Sessions survive app restarts (transparent, auto-installed) |
 
+### Browser & Content Tiles
+
+<div align="center">
+<img src="docs/screenshot-2.png" alt="Browser tile, code preview, and file tree on the canvas" width="800" />
+</div>
+
+| Feature | Description |
+|---------|-------------|
+| **Browser tiles** | Embed live web pages on the canvas with a URL bar, history suggestions, and reload |
+| **Open external** | Send any browser tile's page to your system browser in one click |
+| **Markdown notes** | Drop rendered markdown notes anywhere on the canvas |
+| **File previews** | Open files as tiles with syntax-highlighted code editing |
+| **Images** | Drag images onto the canvas as resizable tiles |
+
+### Workspaces
+
+<div align="center">
+<img src="docs/screenshot-4.png" alt="Workspace switcher" width="500" />
+</div>
+
+| Feature | Description |
+|---------|-------------|
+| **Multiple canvases** | Each workspace has its own canvas, tiles, and layout |
+| **Instant switching** | Jump between workspaces from the sidebar dropdown |
+| **Rename inline** | Rename workspaces directly from the switcher |
+
 ### Sidebar
 
 | Feature | Description |
@@ -95,9 +125,15 @@ Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [
 
 ### SSH
 
+<div align="center">
+<img src="docs/screenshot-3.png" alt="SSH quick connect menu" width="500" />
+</div>
+
 | Feature | Description |
 |---------|-------------|
+| **Quick connect** | New connection and recently connected hosts, one click from the sidebar |
 | **Connection manager** | Save host, port, user, key file |
+| **SSH config** | Edit your SSH config straight from the app |
 | **Groups** | Organize connections in folders |
 | **Remote terminals** | SSH terminals behave identically to local ones |
 | **Remote file browser** | Browse and open files on remote servers |
@@ -125,13 +161,13 @@ Built with [Tauri v2](https://tauri.app) (Rust) + [React](https://react.dev) + [
 
 ### Build from source
 
-**Prerequisites:** [Rust](https://rustup.rs), [Node.js 20+](https://nodejs.org), platform-specific [Tauri dependencies](https://v2.tauri.app/start/prerequisites/)
+**Prerequisites:** [Rust](https://rustup.rs), [Node.js 20+](https://nodejs.org), [pnpm](https://pnpm.io), platform-specific [Tauri dependencies](https://v2.tauri.app/start/prerequisites/)
 
 ```bash
 git clone https://github.com/lossless1/panescale.git
 cd panescale
-npm install
-npm run tauri dev
+pnpm install
+pnpm tauri dev
 ```
 
 ## Stack
