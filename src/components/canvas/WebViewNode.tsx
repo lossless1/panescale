@@ -88,6 +88,24 @@ function UrlSuggestions({
   );
 }
 
+// ── Clipping ──
+// Native child webviews always render above the DOM, so they must never
+// extend past the canvas area or they cover the sidebars/status bar.
+
+function clipRectToCanvas(el: HTMLElement): { left: number; top: number; width: number; height: number } {
+  const rect = el.getBoundingClientRect();
+  const container = el.closest(".react-flow");
+  if (!container) {
+    return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+  }
+  const c = container.getBoundingClientRect();
+  const left = Math.max(rect.left, c.left);
+  const top = Math.max(rect.top, c.top);
+  const width = Math.min(rect.right, c.right) - left;
+  const height = Math.min(rect.bottom, c.bottom) - top;
+  return { left, top, width, height };
+}
+
 // ── Main Component ──
 
 function WebViewNodeInner({ id, data, selected }: NodeProps) {
@@ -101,6 +119,7 @@ function WebViewNodeInner({ id, data, selected }: NodeProps) {
   const placeholderRef = useRef<HTMLDivElement>(null);
   const webviewRef = useRef<Webview | null>(null);
   const counterRef = useRef(0);
+  const hiddenRef = useRef(false);
 
   const lastUrlRef = useRef(url);
   if (url !== lastUrlRef.current) {
@@ -113,8 +132,18 @@ function WebViewNodeInner({ id, data, selected }: NodeProps) {
     const el = placeholderRef.current;
     const wv = webviewRef.current;
     if (!el || !wv) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
+    const rect = clipRectToCanvas(el);
+    if (rect.width <= 0 || rect.height <= 0) {
+      if (!hiddenRef.current) {
+        hiddenRef.current = true;
+        wv.hide().catch(() => {});
+      }
+      return;
+    }
+    if (hiddenRef.current) {
+      hiddenRef.current = false;
+      wv.show().catch(() => {});
+    }
     wv.setPosition(new LogicalPosition(Math.round(rect.left), Math.round(rect.top))).catch(() => {});
     wv.setSize(new LogicalSize(Math.round(rect.width), Math.round(rect.height))).catch(() => {});
   }, []);
@@ -132,7 +161,7 @@ function WebViewNodeInner({ id, data, selected }: NodeProps) {
 
       const label = `bv${++counterRef.current}`;
       const el = placeholderRef.current;
-      const rect = el?.getBoundingClientRect();
+      const rect = el ? clipRectToCanvas(el) : null;
       setStatus("Loading...");
 
       try {
@@ -141,8 +170,8 @@ function WebViewNodeInner({ id, data, selected }: NodeProps) {
           url: currentUrl,
           x: rect ? Math.round(rect.left) : 100,
           y: rect ? Math.round(rect.top) : 100,
-          width: rect ? Math.round(rect.width) : 400,
-          height: rect ? Math.round(rect.height) : 300,
+          width: rect ? Math.max(1, Math.round(rect.width)) : 400,
+          height: rect ? Math.max(1, Math.round(rect.height)) : 300,
           javascriptDisabled: false,
           userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
         });
@@ -190,7 +219,7 @@ function WebViewNodeInner({ id, data, selected }: NodeProps) {
     const tick = () => {
       const wv = webviewRef.current;
       if (wv && el) {
-        const rect = el.getBoundingClientRect();
+        const rect = clipRectToCanvas(el);
         const left = Math.round(rect.left);
         const top = Math.round(rect.top);
         const width = Math.round(rect.width);
@@ -200,8 +229,15 @@ function WebViewNodeInner({ id, data, selected }: NodeProps) {
         if (left !== lastLeft || top !== lastTop || width !== lastWidth || height !== lastHeight) {
           lastLeft = left; lastTop = top; lastWidth = width; lastHeight = height;
           if (width > 0 && height > 0) {
+            if (hiddenRef.current) {
+              hiddenRef.current = false;
+              wv.show().catch(() => {});
+            }
             wv.setPosition(new LogicalPosition(left, top)).catch(() => {});
             wv.setSize(new LogicalSize(width, height)).catch(() => {});
+          } else if (!hiddenRef.current) {
+            hiddenRef.current = true;
+            wv.hide().catch(() => {});
           }
         }
         if (zoom !== lastZoom) {
