@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.2.2",
+    date: "2026-06-19",
+    items: [
+      { type: "fix", text: "Browser tiles no longer render over the sidebar when dragged across it" },
+      { type: "improvement", text: "Auto-group now frames browser, note, image, and file tiles by type — not just terminals" },
+      { type: "improvement", text: "Refreshed app icon with a violet border" },
+    ],
+  },
+  {
     version: "0.2.1",
     date: "2026-04-14",
     items: [
